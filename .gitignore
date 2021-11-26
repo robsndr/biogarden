@@ -41,6 +41,7 @@ $RECYCLE.BIN/
 *.msm
 *.msp
 *.exe
+*.pdb
 
 # Windows shortcuts
 *.lnk
