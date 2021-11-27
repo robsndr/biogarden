@@ -1,4 +1,5 @@
 use std::io;
+mod fasta;
 
 // count number of chars in dna sequence
 fn count_nuclea(dna : &String) -> [u16; 24] {
@@ -72,7 +73,6 @@ fn fibo(n: usize, k: u64) -> u64 {
     memory[n -1]
 }
 
-
 // fn fibo_die(n: usize, m: usize) -> u64 {
 //     // F1 == F2 == 1
 //     // Initialize the vector with 1's 
@@ -111,33 +111,4 @@ fn hamming_distance(s1: &String, s2: &String) -> Result<u32, io::Error> {
 
 fn find_repeats(s: &String, t: &String) -> Vec<usize> {
     s.match_indices(t).map(|(i, _)|i).collect()
-}
-
-fn main() {
-    // >Rosalind_2484 -0.48629442
-
-    let mut my_str1 : String = String::from("GATATATGCATATACTT");
-
-    let mut my_str2 : String = String::from("ATAT");
-
-    // print!("{}", complement_dna(&my_str));
-    
-    // print!("{}", mendel_first_law(15, 17, 19));
-
-    // print!("{}", expected_offspring(18137, 16426, 18904, 18674, 18160, 18728));
-
-    // print!("{}", fibo_die(6, 3));
-
-    // print!("{}", gc_content(&my_str));
-
-    // match hamming_distance(&my_str1, &my_str2) {
-    //     Ok(value) => {
-    //         print!("{}", value);
-    //     }
-    //     Err(err) => {
-    //         println!("Error calculating the hamming distance: {}", err);
-    //     }
-    // }
-
-    print!("{:#?}", find_repeats(&my_str1, &my_str2));
 }
