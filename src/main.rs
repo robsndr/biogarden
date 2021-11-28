@@ -187,11 +187,51 @@ pub fn knuth_morris_pratt(st: String, pat: String) -> Vec<usize> {
     ret
 }
 
+// N{P}[ST]{P}
+pub fn generate_motifs(target: &Vec<u8>, result: &mut Vec<String>, i: usize, temp: &mut Vec<u8>) {
+
+    if i == target.len() {
+        result.push(std::str::from_utf8(temp).unwrap().to_string());
+        return;
+    }
+
+    let alphabet = String::from("FLSYCWLPHQRITMNKSVADEG").into_bytes();
+    let mut alternatives = Vec::<u8>::new();
+    let mut j = i;
+    if target[j] == b'[' {
+        j += 1;
+        while j < target.len() && target[j] != b']' {
+            alternatives.push(target[j]);
+            j += 1;
+        }
+        for elem in alternatives {
+            temp.push(elem);
+            generate_motifs(target, result, j + 1, temp);
+            temp.pop();
+        }
+    }
+    else if target[j] == b'{' {
+        j += 1;
+        for elem in alphabet {
+            if elem != target[j] {
+                temp.push(elem);
+                generate_motifs(target, result, j + 2, temp);
+                temp.pop();
+            }
+        }
+        j += 2;
+    }
+    else{
+        temp.push(target[i]);
+        generate_motifs(target, result, i + 1, temp);
+        temp.pop();
+    }
+}
 
 
 fn main() {
     
-    let mut my_str1 : String = String::from("CAGCCGCGCATCATCACAAGGTATCACAAATCACAAGGATCACAAAATCACAACTCGATCACAATATCACAAATCACAAATATCACAACATCACAATTTGATCACAATAACCCACCAGAGGATCACAAGATCACAACCATCACAAATCACAAAAAACAAATCACAAAGTCTTCCTTTATCACAAATCACAATCAATCACAATGATCACAATAAGTATCACAAGACGTCCAATCACAAGATCACAAGATCACAAGATCACAAATCACAAATCACAAATCACAACATCACAAAAATCACAATCTGACAATCACAACAATCACAAATCACAACGGGACAAAATCACAATTTATCACAAATCACAAACGGCGATCACAAATCACAACTTAATCACAACTTAATCACAAGCTGTATATCACAAGCCTGTCCGATCACAAAAAATGCATCACAAACTTTGATCACAAATCACAAGCATCACAAATCACAACGCGTATCACAAATCACAAATCACAACCGCAATCACAATTATCACAAGATCACAACATCACAATCTATCACAAATCACAAATCACAACATCACAATATCACAACATCACAAGTACTCATCACAAATCACAAATCAGATCACAACAATCACAACGATCACAAGTCATCACAAATCACAACGCGCCAATCGGGGATCACAATTGAATCACAAATCACAAATCACAACTCATCACAAATCACAAATCACAAAACGCATCACAATTCGCGCGTCACATCACAACCGATCACAACACGATCACAAATCACAATCTAGATCACAA");
+    let mut my_str1 : String = String::from("N{P}AG[STYRFV]{P}");
     let mut my_str2 : String = String::from("ATCACAAAT");
 
     // print!("{}", complement_dna(&my_str));
@@ -199,6 +239,8 @@ fn main() {
     // print!("{}", expected_offspring(18137, 16426, 18904, 18674, 18160, 18728));
     // print!("{}", fibo_die(6, 3));
     // print!("{}", gc_content(&my_str));
+    // print!("{:#?}", find_repeats(&my_str1, &my_str2));
+    // print!("{:#?}", knuth_morris_pratt(my_str1, my_str2));
 
     // match hamming_distance(&my_str1, &my_str2) {
     //     Ok(value) => {
@@ -209,9 +251,14 @@ fn main() {
     //     }
     // }
 
-    // print!("{:#?}", find_repeats(&my_str1, &my_str2));
+    // let temp: u8 = b'{';
+    let tar = my_str1.into_bytes();
+    let mut res = Vec::<String>::new();
+    let mut temp = Vec::<u8>::new();
 
-    print!("{:#?}", knuth_morris_pratt(my_str1, my_str2));
+    // print!("{}", );
+    generate_motifs(&tar, &mut res, 0, &mut temp);
+    println!("{:#?}", res);
 
     // fasta::print_hello();
 }
