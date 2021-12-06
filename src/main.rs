@@ -1,5 +1,5 @@
 use std::io;
-mod fasta;
+mod dna;
 use std::collections::HashMap;
 use ndarray::prelude::*;
 
@@ -16,20 +16,6 @@ fn count_nuclea(dna : &String) -> [u16; 24] {
 fn transcribe_rna(dna : &String) -> String {
     dna.replace("T", "U")
 }
-
-fn complement_dna(dna : &String) -> String {
-    let mut t: String = dna.chars().rev().collect();
-    // A <-> T
-    t = t.replace("A", "AR");
-    t = t.replace("T", "A");
-    t = t.replace("AR", "T");
-    // G <-> C
-    t = t.replace("G", "GR");
-    t = t.replace("C", "G");
-    t = t.replace("GR", "C");
-    return t;
-}
-
 
 fn mendel_first_law(k: u16, m: u16, n: u16 ) -> f32 {
     
@@ -318,12 +304,36 @@ pub fn encode_output(arr: &Array1<u16>) -> Vec::<char> {
 }
 
 
+// pub fn permute(arr: &, res: &Vec<Array1<u8>>) -> {
+//     void perm(char* s, int n, int i){
+//         if i >= n-1 {
+//             print(s);
+//         }
+//         else {
+//           perm(s, n, i+1);
+//           for (int j = i+1; j<n; j++){
+//             swap(s[i], s[j]);
+//             perm(s, n, i+1);
+//             swap(s[i], s[j]);
+//           }
+//         }
+//       }
+      
+//       perm("ABC", 3, 0);
+// }
+
+use dna::DNA;
+
 fn main() {
     
-    let mut my_str1 : String = String::from("MKNKFKTQEELVNHLKTVGFVFANSEIYNGLANAWDYGPLGVLLKNNLKNLWWKEFVTKQKDVVGLDSAIILNPLVWKASGHLDNFSDPLIDCKNCKARYRADKLIESFDENIHIAENSSNEEFAKVLNDYEISCPTCKQFNWTEIRHFNLMFKTYQGVIEDAKNVVYLRPETAQGIFVNFKNVQRSMRLHLPFGIAQIGKSFRNEITPGNFIFRTREFEQMEIEFFLKEESAYDIFDKYLNQIENWLVSACGLSLNNLRKHEHPKEELSHYSKKTIDFEYNFLHGFSELYGIAYRTNYDLSVHMNLSKKDLTYFDEQTKEKYVPHVIEPSVGVERLLYAILTEATFIEKLENDDERILMDLKYDLAPYKIAVMPLVNKLKDKAEEIYGKILDLNISATFDNSGSIGKRYRRQDAIGTIYCLTIDFDSLDDQQDPSFTIRERNSMAQKRIKLSELPLYLNQKAHEDFQRQCQK");
+    let mut my_str1 : String = String::from("AAAACCCGGT");
     let mut my_str2 : String = String::from("N{P}[ST]{P}");
 
-    // print!("{}", complement_dna(&my_str));
+    
+    let mut d : DNA = DNA::from(my_str1);
+    print!("{}", d);
+    d.complement();
+    print!("{}", d);
     // print!("{}", mendel_first_law(15, 17, 19));
     // print!("{}", expected_offspring(18137, 16426, 18904, 18674, 18160, 18728));
     // print!("{}", fibo_die(6, 3));
@@ -352,12 +362,15 @@ fn main() {
     // G == [0,0,1,0]
     // T == [0,0,0,1]
 
-    let mut arr = array![[b'A', b'T', b'C', b'C', b'A', b'G', b'C', b'T'],
-                         [b'G', b'G', b'G', b'C', b'A', b'A', b'C', b'T'],
-                         [b'A', b'T', b'G', b'G', b'A', b'T', b'C', b'T'],
-                         [b'A', b'A', b'G', b'C', b'A', b'A', b'C', b'C'],
-                         [b'T', b'T', b'G', b'G', b'A', b'A', b'C', b'T'],
-                         [b'A', b'T', b'G', b'C', b'C', b'A', b'T', b'T'],
-                         [b'A', b'T', b'G', b'G', b'C', b'A', b'C', b'T']];
-    print!("{:#?}", encode_output(&calc_consensus(&calc_profile(&encode_input(&arr)))));
+    // let mut arr = array![[b'A', b'T', b'C', b'C', b'A', b'G', b'C', b'T'],
+    //                      [b'G', b'G', b'G', b'C', b'A', b'A', b'C', b'T'],
+    //                      [b'A', b'T', b'G', b'G', b'A', b'T', b'C', b'T'],
+    //                      [b'A', b'A', b'G', b'C', b'A', b'A', b'C', b'C'],
+    //                      [b'T', b'T', b'G', b'G', b'A', b'A', b'C', b'T'],
+    //                      [b'A', b'T', b'G', b'C', b'C', b'A', b'T', b'T'],
+    //                      [b'A', b'T', b'G', b'G', b'C', b'A', b'C', b'T']];
+    // print!("{:#?}", encode_output(&calc_consensus(&calc_profile(&encode_input(&arr)))));
+
+
+
 }
