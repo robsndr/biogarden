@@ -59,9 +59,16 @@ impl From<&DNA> for String {
     }
 }
 
+impl From<&[u8]> for DNA {
+    fn from(s: &[u8]) -> Self {
+        DNA { nuclea: s.to_vec() }
+    }
+}
+
+
 impl fmt::Display for DNA {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let temp = String::from(self);
+        let temp = std::str::from_utf8(&self.nuclea).unwrap();
         write!(f, "----------\nDNA: \n{}\n----------\n", temp)
     }
 }

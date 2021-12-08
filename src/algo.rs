@@ -1,4 +1,5 @@
 use std::io;
+use ndarray::prelude::*;
 
 pub fn mendel_first_law(k: u16, m: u16, n: u16 ) -> f32 {
     
@@ -83,4 +84,29 @@ pub fn knuth_morris_pratt(st: &[u8], pat: &[u8]) -> Vec<usize> {
         }
     }
     ret
+}
+
+pub fn calc_profile(arr: &Array3<u16>) -> Array2::<u16>  {
+    // Squash tensor into 2d array 
+    // Sum the occurs of letters different letters
+    // Transpose at the end to get expected shape
+    arr.sum_axis(Axis(0)).reversed_axes()
+}
+
+pub fn calc_consensus(arr: &Array2<u16>) -> Array1<u16> {
+    // Allocate container for result
+    let mut consensus = Array1::<u16>::zeros((arr.len_of(Axis(1))));
+    // Calculate maximum index for every dimension in array
+    for (i, ax) in arr.axis_iter(Axis(1)).enumerate() {
+        let mut max : u16 = 0;
+        let mut index : usize = 0;
+        for (j, it) in ax.indexed_iter() {
+            if *it > max {
+                max = *it;
+                index = j;
+            }
+        }
+        consensus[i] = index as u16;
+    }
+    consensus
 }

@@ -2,8 +2,12 @@ mod dna;
 mod rna;
 mod protein;
 mod algo;
+mod io;
 use dna::DNA;
 use ndarray::prelude::*;
+
+use io::fasta::Record;
+use io::fasta::{FastaRead, Reader};
 
 // N{P}[ST]{P}
 pub fn generate_motifs(target: &Vec<u8>, result: &mut Vec<String>, i: usize, temp: &mut Vec<u8>) {
@@ -89,31 +93,7 @@ pub fn encode_input(arr: &Array2<u8>) -> Array3::<u16> {
     converted
 }
 
-pub fn calc_profile(arr: &Array3<u16>) -> Array2::<u16>  {
-    // Squash tensor into 2d array 
-    // Sum the occurs of letters different letters
-    // Transpose at the end to get expected shape
-    arr.sum_axis(Axis(0)).reversed_axes()
-}
 
-
-pub fn calc_consensus(arr: &Array2<u16>) -> Array1<u16> {
-    // Allocate container for result
-    let mut consensus = Array1::<u16>::zeros((arr.len_of(Axis(1))));
-    // Calculate maximum index for every dimension in array
-    for (i, ax) in arr.axis_iter(Axis(1)).enumerate() {
-        let mut max : u16 = 0;
-        let mut index : usize = 0;
-        for (j, it) in ax.indexed_iter() {
-            if *it > max {
-                max = *it;
-                index = j;
-            }
-        }
-        consensus[i] = index as u16;
-    }
-    consensus
-}
 
 pub fn encode_output(arr: &Array1<u16>) -> Vec::<char> {
     // Tensor with result encoding
@@ -139,23 +119,6 @@ pub fn encode_output(arr: &Array1<u16>) -> Vec::<char> {
     out
 }
 
-// pub fn permute(arr: &, res: &Vec<Array1<u8>>) -> {
-//     void perm(char* s, int n, int i){
-//         if i >= n-1 {
-//             print(s);
-//         }
-//         else {
-//           perm(s, n, i+1);
-//           for (int j = i+1; j<n; j++){
-//             swap(s[i], s[j]);
-//             perm(s, n, i+1);
-//             swap(s[i], s[j]);
-//           }
-//         }
-//       }
-      
-//       perm("ABC", 3, 0);
-// }
 
 fn main() {
     
@@ -209,4 +172,20 @@ fn main() {
     //                      [b'A', b'T', b'G', b'G', b'C', b'A', b'C', b'T']];
     // print!("{:#?}", encode_output(&calc_consensus(&calc_profile(&encode_input(&arr)))));
 
+
+
+    // const fasta_file: &'static [u8] = b">id desc";
+    let mut reader = Reader::from_file(std::path::Path::new(r"C:\Users\Robert\Desktop\biotech\src\in.fasta")).unwrap();
+    let mut record = Record::new();
+    //
+    // // Check for errors parsing the record
+    loop {
+        reader
+        .read(&mut record)
+        .expect("fasta reader: got an io::Error or could not read_line()");
+        if record.is_empty() {
+            break;
+        }
+        print!("{}\n", dna::DNA::from(record.seq()));
+    } 
 }
