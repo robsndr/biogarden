@@ -1,13 +1,15 @@
 use std::fmt; // Import `fmt`
+use ndarray::prelude::*;
 
 #[derive(Debug)]
 pub struct DNA {
     nuclea: Vec<u8>,
+    curr: usize,
 }
 
 impl DNA {
     pub fn new() -> DNA {
-        DNA { nuclea: Vec::<u8>::new() }
+        DNA { nuclea: Vec::<u8>::new(), curr: 0}
     }
 
     // Complement the DNA string by reversing in the first step.
@@ -45,31 +47,69 @@ impl DNA {
         }
         gc_count as f64 / self.nuclea.len() as f64
     }
-}
 
-impl From<String> for DNA {
-    fn from(s: String) -> Self {
-        DNA { nuclea: s.into_bytes() }
+    pub fn len(&self) -> usize {
+        self.nuclea.len()
     }
 }
 
+
+// Type Conversion Traits
+// String <-> DNA
+impl From<String> for DNA {
+    fn from(s: String) -> Self {
+        DNA { nuclea: s.into_bytes(), curr: 0 }
+    }
+}
+// &[u8] <-> DNA
+impl From<&[u8]> for DNA {
+    fn from(s: &[u8]) -> Self {
+        DNA { nuclea: s.to_vec(), curr: 0 }
+    }
+}
+// DNA <-> String
 impl From<&DNA> for String {
     fn from(dna: &DNA) -> Self {
         dna.nuclea.iter().map(|&c| c as char).collect::<String>()
     }
 }
+// And we'll implement IntoIterator
+impl IntoIterator for DNA {
+    type Item = u8;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
 
-impl From<&[u8]> for DNA {
-    fn from(s: &[u8]) -> Self {
-        DNA { nuclea: s.to_vec() }
+    fn into_iter(self) -> Self::IntoIter {
+        self.nuclea.into_iter()
     }
 }
 
+// Utility Traits
+// Iterator Trait
+// impl Iterator for DNA {
+//     // We can refer to this type using Self::Item
+//     type Item = u8;
+    
+//     fn next(&mut self) -> Option<Self::Item> {
+//         if (self.curr+1)==self.nuclea.len() {
+//             return None
+//         }
+//         self.curr+=1;
+//         Some(self.nuclea[self.curr])
+//     }
+// }
+// ExactSizeIterator : Iterator
+// impl ExactSizeIterator for DNA{
+//     fn len(&self) -> usize { 
+//         self.nuclea.len()
+//     }
+// }
 
+// Debug Traits
+// Display 
 impl fmt::Display for DNA {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let temp = std::str::from_utf8(&self.nuclea).unwrap();
-        write!(f, "----------\nDNA: \n{}\n----------\n", temp)
+        write!(f, "{}", temp)
     }
 }
 

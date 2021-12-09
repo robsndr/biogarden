@@ -1,9 +1,11 @@
 mod dna;
 mod rna;
+mod ds;
 mod protein;
 mod algo;
 mod io;
 use dna::DNA;
+use ds::tile;
 use ndarray::prelude::*;
 
 use io::fasta::Record;
@@ -66,59 +68,6 @@ fn search_motifs(st: String, pat: String) -> Vec<usize> {
     pos
 }
 
-// Consensus and Profile
-pub fn encode_input(arr: &Array2<u8>) -> Array3::<u16> {
-    // Tensor with result encoding
-    let mut converted = Array3::<u16>::zeros((arr.len_of(Axis(0)), arr.len_of(Axis(1)), 4));
-    // Encode 2D input char arry into output tensor
-    // A => [1,0,0,0], B => [0,1,0,0]
-    // C => [0,0,1,0], D => [0,0,0,1]
-    for ((i, j), value) in arr.indexed_iter() {
-            match value {
-                b'A' => {
-                    converted[(i,j,0)] = 1;
-                },
-                b'C' => {
-                    converted[(i,j,1)] = 1
-                },
-                b'G' => {
-                    converted[(i,j,2)] = 1
-                },
-                b'T' => {
-                    converted[(i,j,3)] = 1
-                },
-                _ => ()
-            }
-    }
-    converted
-}
-
-
-
-pub fn encode_output(arr: &Array1<u16>) -> Vec::<char> {
-    // Tensor with result encoding
-    let mut out : Vec<char> = vec![];
-
-    for (i, value) in arr.indexed_iter() {
-            match value {
-                0 => {
-                    out.push('A');
-                },
-                1 => {
-                    out.push('C');
-                },
-                2 => {
-                    out.push('G');
-                },
-                3 => {
-                    out.push('T');
-                },
-                _ => ()
-            }
-    }
-    out
-}
-
 
 fn main() {
     
@@ -126,14 +75,18 @@ fn main() {
     let mut my_str2 : String = String::from("N{P}[ST]{P}");
     
     let mut d : DNA = DNA::from(my_str1);
-    print!("{}", d);
-    print!("{:?}\n", d.count());
-    // d.complement();
+    print!("{}", &d);
+    // print!("{:?}\n", &d.count());
+    d.complement();
     print!("{}", d);
     print!("{}", rna::RNA::from(&d));
     print!("{}\n", d.gc_content());
     let rna = rna::RNA::from(&d);
-    print!("{}\n", protein::Protein::from(&rna));
+    // print!("{}\n", protein::Protein::from(&rna));
+
+    // for x in d {
+    //     print!("{} ", x as char);
+    // }
 
     // print!("{}", mendel_first_law(15, 17, 19));
     // print!("{}", expected_offspring(18137, 16426, 18904, 18674, 18160, 18728));
@@ -177,6 +130,7 @@ fn main() {
     // const fasta_file: &'static [u8] = b">id desc";
     let mut reader = Reader::from_file(std::path::Path::new(r"C:\Users\Robert\Desktop\biotech\src\in.fasta")).unwrap();
     let mut record = Record::new();
+    let mut matrix = tile::Tile::<DNA>::new();
     //
     // // Check for errors parsing the record
     loop {
@@ -186,6 +140,9 @@ fn main() {
         if record.is_empty() {
             break;
         }
-        print!("{}\n", dna::DNA::from(record.seq()));
+        matrix.push(dna::DNA::from(record.seq()));
+        // print!("{}\n", Array2::<u16>::from(&dna::DNA::from(record.seq())));
     } 
+
+    print!("{}", matrix);
 }
