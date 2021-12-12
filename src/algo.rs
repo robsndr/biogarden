@@ -1,5 +1,6 @@
 use std::io;
 use ndarray::prelude::*;
+use super::DNA;
 
 pub fn mendel_first_law(k: u16, m: u16, n: u16 ) -> f32 {
     
@@ -93,9 +94,9 @@ pub fn calc_profile(arr: &Array3<u16>) -> Array2::<u16>  {
     arr.sum_axis(Axis(0)).reversed_axes()
 }
 
-pub fn calc_consensus(arr: &Array2<u16>) -> Array1<u16> {
+pub fn calc_consensus(arr: &Array2<u16>) -> Array1<u8> {
     // Allocate container for result
-    let mut consensus = Array1::<u16>::zeros((arr.len_of(Axis(1))));
+    let mut consensus = Array1::<u8>::zeros((arr.len_of(Axis(1))));
     // Calculate maximum index for every dimension in array
     for (i, ax) in arr.axis_iter(Axis(1)).enumerate() {
         let mut max : u16 = 0;
@@ -106,7 +107,95 @@ pub fn calc_consensus(arr: &Array2<u16>) -> Array1<u16> {
                 index = j;
             }
         }
-        consensus[i] = index as u16;
+        consensus[i] = index as u8;
     }
     consensus
 }
+
+
+pub fn permutations<T: Clone>(n : usize, a : &mut Vec<T>, result : &mut Vec<Vec<T>>) {
+    if n == 1 {
+        result.push(a.clone());
+    }
+    else {
+        for i in  0 .. n - 1 {
+            permutations(n - 1, a, result);
+
+            if n % 2 == 0 {
+                a.swap(i, n - 1);
+            }
+            else {
+                a.swap(0, n - 1);
+            }
+        }
+        permutations(n - 1, a, result);
+    }
+}
+
+
+pub fn overlap_graph<T: Iterator<Item=DNA>>(tile: T) {
+
+    for dna in tile {
+
+        print!("{}\n", dna);
+    }
+
+
+}
+
+// N{P}[ST]{P}
+// pub fn generate_motifs(target: &Vec<u8>, result: &mut Vec<String>, i: usize, temp: &mut Vec<u8>) {
+
+//     if i == target.len() {
+//         result.push(std::str::from_utf8(temp).unwrap().to_string());
+//         return;
+//     }
+
+//     let alphabet = String::from("FLSYCWPHQRITMNKVADEG").into_bytes();
+//     let mut alternatives = Vec::<u8>::new();
+//     let mut j = i;
+//     if target[j] == b'[' {
+//         j += 1;
+//         while j < target.len() && target[j] != b']' {
+//             alternatives.push(target[j]);
+//             j += 1;
+//         }
+//         for elem in alternatives {
+//             temp.push(elem);
+//             generate_motifs(target, result, j + 1, temp);
+//             temp.pop();
+//         }
+//     }
+//     else if target[j] == b'{' {
+//         j += 1;
+//         for elem in alphabet {
+//             if elem != target[j] {
+//                 temp.push(elem);
+//                 generate_motifs(target, result, j + 2, temp);
+//                 temp.pop();
+//             }
+//         }
+//         j += 2;
+//     }
+//     else{
+//         temp.push(target[i]);
+//         generate_motifs(target, result, i + 1, temp);
+//         temp.pop();
+//     }
+// }
+
+// fn search_motifs(st: String, pat: String) -> Vec<usize> {
+
+//     let st = st.into_bytes();
+//     let pat = pat.into_bytes();
+//     let mut res = Vec::<String>::new();
+//     let mut temp = Vec::<u8>::new();
+
+//     generate_motifs(&pat, &mut res, 0, &mut temp);
+
+//     let mut pos = Vec::<usize>::new();
+//     for elem in &res {
+//         pos.append(&mut knuth_morris_pratt(&st, elem.as_bytes()));    
+//     }
+//     pos
+// }

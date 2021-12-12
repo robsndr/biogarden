@@ -1,15 +1,18 @@
 use std::fmt; // Import `fmt`
 use ndarray::prelude::*;
+use super::io::fasta;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DNA {
     nuclea: Vec<u8>,
     curr: usize,
+    id: Option<String>,
 }
 
 impl DNA {
+
     pub fn new() -> DNA {
-        DNA { nuclea: Vec::<u8>::new(), curr: 0}
+        DNA { nuclea: Vec::<u8>::new(), curr: 0, id: None}
     }
 
     // Complement the DNA string by reversing in the first step.
@@ -47,69 +50,72 @@ impl DNA {
         }
         gc_count as f64 / self.nuclea.len() as f64
     }
-
-    pub fn len(&self) -> usize {
-        self.nuclea.len()
-    }
 }
 
-
-// Type Conversion Traits
-// String <-> DNA
+/*** Type-Conversion Traits ***/ 
+// String -> DNA
 impl From<String> for DNA {
     fn from(s: String) -> Self {
-        DNA { nuclea: s.into_bytes(), curr: 0 }
+        DNA { nuclea: s.into_bytes(), curr: 0, id: None }
     }
 }
-// &[u8] <-> DNA
+// &[u8] -> DNA
 impl From<&[u8]> for DNA {
     fn from(s: &[u8]) -> Self {
-        DNA { nuclea: s.to_vec(), curr: 0 }
+        DNA { nuclea: s.to_vec(), curr: 0, id: None }
     }
 }
-// DNA <-> String
+// Array1 -> DNA
+impl From<Array1<u8>> for DNA {
+    fn from(a: Array1<u8>) -> Self {
+        DNA { nuclea: a.to_vec(), curr: 0, id: None }
+    }
+}
+// fasta::Record -> DNA
+impl From<fasta::Record> for DNA {
+    fn from(r: fasta::Record) -> Self {
+        DNA { nuclea: r.seq().to_vec(),  curr: 0, id: Some(r.id().to_string()) }
+    }
+}
+// String <- DNA
 impl From<&DNA> for String {
     fn from(dna: &DNA) -> Self {
         dna.nuclea.iter().map(|&c| c as char).collect::<String>()
     }
 }
-// And we'll implement IntoIterator
-impl IntoIterator for DNA {
-    type Item = u8;
-    type IntoIter = std::vec::IntoIter<Self::Item>;
 
-    fn into_iter(self) -> Self::IntoIter {
-        self.nuclea.into_iter()
+/*** Utility Traits ***/ 
+// Iterator Trait
+impl Iterator for DNA {
+    // We can refer to this type using Self::Item
+    type Item = u8;
+    
+    fn next(&mut self) -> Option<Self::Item> {
+        if (self.curr+1) > self.nuclea.len() {
+            return None
+        }
+        let idx = self.curr;
+        self.curr+=1;
+        Some(self.nuclea[idx])
+    }
+}
+// ExactSizeIterator : Iterator
+impl ExactSizeIterator for DNA{
+    fn len(&self) -> usize { 
+        self.nuclea.len()
     }
 }
 
-// Utility Traits
-// Iterator Trait
-// impl Iterator for DNA {
-//     // We can refer to this type using Self::Item
-//     type Item = u8;
-    
-//     fn next(&mut self) -> Option<Self::Item> {
-//         if (self.curr+1)==self.nuclea.len() {
-//             return None
-//         }
-//         self.curr+=1;
-//         Some(self.nuclea[self.curr])
-//     }
-// }
-// ExactSizeIterator : Iterator
-// impl ExactSizeIterator for DNA{
-//     fn len(&self) -> usize { 
-//         self.nuclea.len()
-//     }
-// }
-
-// Debug Traits
+/*** Debug Traits ***/ 
 // Display 
 impl fmt::Display for DNA {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let temp = std::str::from_utf8(&self.nuclea).unwrap();
+        let mut temp : String;
+        match &self.id {
+            Some(p) => temp = p.to_string() + "\n",
+            None => temp = "".to_string(),
+        }
+        temp += std::str::from_utf8(&self.nuclea).unwrap();
         write!(f, "{}", temp)
     }
 }
-
