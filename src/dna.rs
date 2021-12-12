@@ -50,6 +50,10 @@ impl DNA {
         }
         gc_count as f64 / self.nuclea.len() as f64
     }
+
+    pub fn len(&self) -> usize {
+        self.nuclea.len()
+    }
 }
 
 /*** Type-Conversion Traits ***/ 

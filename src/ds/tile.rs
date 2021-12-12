@@ -4,6 +4,7 @@ use ndarray::prelude::*;
 
 
 #[derive(Debug)]
+<<<<<<< HEAD
 pub struct Tile<T> 
     where T:  Iterator<Item=u8> + ExactSizeIterator + fmt::Display + From<String> 
 {
@@ -16,6 +17,15 @@ impl<T> Tile<T>
 {
     pub fn new() -> Tile<T> {
         Tile::<T>{ data: Vec::new(), curr: 0 }
+=======
+pub struct Tile<T: ExactSizeIterator + Iterator + fmt::Display> {
+    data: Vec<T>,
+}
+
+impl<T:ExactSizeIterator + Iterator + fmt::Display> Tile<T> {
+    pub fn new() -> Tile<T> {
+        Tile::<T>{ data: Vec::new() }
+>>>>>>> f2d6b30b5dd36c6aab6feff01d6f2848ac118c25
     }
 
     pub fn push(&mut self, value: T) {
@@ -25,6 +35,7 @@ impl<T> Tile<T>
     pub fn pop(&mut self) -> Option<T> {
         self.data.pop()
     }
+<<<<<<< HEAD
 
     // Convert tile into Array2 
     // TODO: move into From method
@@ -125,3 +136,44 @@ impl<T> fmt::Display for Tile<T>
         Ok(())
     }
 }
+=======
+}
+
+impl<T: ExactSizeIterator + Iterator + fmt::Display> fmt::Display for Tile<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        for x in &self.data {
+            write!(f,"{}\n", x);
+        }
+        Ok(())
+    }
+}
+
+// Tile <-> Array3<u16>
+impl<T: ExactSizeIterator + Iterator + fmt::Display> From<&Tile<T>> for Array2<u16> {
+    fn from(tile: &Tile<T>) -> Self {
+        let mut converted = Array2::<u16>::zeros((tile.data.len(), tile.data.first().iter().len()));
+        for x in tile.data.iter() {
+            for value in x.iter() {
+                // converted[(i,j)] = value;
+            }
+        }  
+        converted
+    }
+}
+// Array2<u16> <-> DNA
+// impl From<Array1<u16>> for DNA {
+//     fn from(arr: Array1<u16>) -> Self {
+//         let mut temp = DNA::new();
+//         for (i, value) in arr.indexed_iter() {
+//                 match value {
+//                     0 => temp.nuclea.push(b'A'),
+//                     1 => temp.nuclea.push(b'C'),
+//                     2 => temp.nuclea.push(b'G'),
+//                     3 => temp.nuclea.push(b'T'),
+//                     _ => ()
+//                 }
+//         }
+//         temp
+//     }
+// }
+>>>>>>> f2d6b30b5dd36c6aab6feff01d6f2848ac118c25
