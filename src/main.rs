@@ -93,5 +93,13 @@ fn main() {
     //     print!("{:?}\n", x);
     // }
 
-    algo::overlap_graph(matrix);
+    algo::overlap_graph(&matrix);
+
+    algo::overlap_graph(&matrix);
+
+    algo::overlap_graph(&matrix);
+
+    algo::overlap_graph(&matrix);
+
+
 }

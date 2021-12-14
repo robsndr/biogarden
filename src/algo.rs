@@ -1,6 +1,7 @@
 use std::io;
 use ndarray::prelude::*;
 use super::DNA;
+use std::fmt; // Import `fmt`
 
 pub fn mendel_first_law(k: u16, m: u16, n: u16 ) -> f32 {
     
@@ -133,13 +134,12 @@ pub fn permutations<T: Clone>(n : usize, a : &mut Vec<T>, result : &mut Vec<Vec<
 }
 
 
-pub fn overlap_graph<T: Iterator<Item=DNA>>(tile: T) {
+pub fn overlap_graph<'a, T>(tile: T) 
+    where T: IntoIterator, T::Item: fmt::Display{
 
     for dna in tile {
-
         print!("{}\n", dna);
     }
-
 
 }
 
