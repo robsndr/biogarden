@@ -1,28 +1,24 @@
-use crate::dna;
 use std::fmt; // Import `fmt`
 use ndarray::prelude::*;
 
+use crate::sequence::Sequence;
 
 #[derive(Debug)]
-pub struct Tile<T> 
-    where T:  Iterator<Item=u8> + ExactSizeIterator + fmt::Display + From<String> 
-{
-    data: Vec<T>,
-    curr: usize
+pub struct Tile {
+    data: Vec<Sequence>,
 }
 
-impl<'a, T> Tile<T>
-    where T: 'a + Iterator<Item=u8> + ExactSizeIterator + fmt::Display + From<String>  
+impl Tile
 {
-    pub fn new() -> Tile<T> {
-        Tile::<T>{ data: Vec::new(), curr: 0 }
+    pub fn new() -> Tile {
+        Tile{ data: Vec::new() }
     }
 
-    pub fn push(&mut self, value: T) {
+    pub fn push(&mut self, value: Sequence) {
         self.data.push(value);
     }
 
-    pub fn pop(&mut self) -> Option<T> {
+    pub fn pop(&mut self) -> Option<Sequence> {
         self.data.pop()
     }
 
@@ -54,29 +50,27 @@ impl<'a, T> Tile<T>
     }
 }
 
+/*** Type-Conversion Traits ***/ 
 // Array2<u16> <-> DNA
-impl<'a, T> From<Array2<u16>> for Tile<T> 
-    where T: 'a + Iterator<Item=u8> + ExactSizeIterator + fmt::Display + From<String> 
+impl From<Array2<u16>> for Tile 
 {
     fn from(arr: Array2<u16>) -> Self {
-        let mut temp = Tile::<T>::new();
+        let mut temp = Tile::new();
         for (i, ax) in arr.axis_iter(Axis(0)).enumerate() {
             let mut s : String = "".to_string();
             for (j, value) in ax.indexed_iter() {
                 s.push((*value as u8) as char)
             }
-            temp.push(T::from(s));
+            temp.push(Sequence::from(s));
         }
         temp
     }
 }
-
 // Array3<u16> <-> DNA
-impl<'a, T> From<Array3<u16>> for Tile<T> 
-    where T: 'a + Iterator<Item=u8> + ExactSizeIterator + fmt::Display + From<String> 
+impl From<Array3<u16>> for Tile 
 {
     fn from(arr: Array3<u16>) -> Self {
-        let mut temp = Tile::<T>::new();
+        let mut temp = Tile::new();
         for (i, ax1) in arr.axis_iter(Axis(0)).enumerate() {
             let mut s : String = "".to_string();
             for (j, ax2) in ax1.axis_iter(Axis(0)).enumerate() {
@@ -87,7 +81,7 @@ impl<'a, T> From<Array3<u16>> for Tile<T>
                     }
                 }
             }
-            temp.push(T::from(s));
+            temp.push(Sequence::from(s));
         }
         temp
     }
@@ -95,22 +89,19 @@ impl<'a, T> From<Array3<u16>> for Tile<T>
 
 /*** Utility Traits ***/ 
 // Iterator Trait
-// TODO: Refactor into streaming iterator such that Clone not needed
-// Note: Streaming iterator is currently not supported -> check rust::futures
-impl<'a, T> IntoIterator for &'a Tile<T> 
-    where T: 'a + Iterator<Item=u8> + ExactSizeIterator + fmt::Display + From<String> 
+impl IntoIterator for Tile 
 {
-    type Item = <std::slice::Iter<'a, T> as Iterator>::Item;
-    type IntoIter = std::slice::Iter<'a, T>;
+    type Item = Sequence;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.data.as_slice().into_iter()
+        self.data.into_iter()
     }
 }
 
-
-impl<'a, T> fmt::Display for Tile<T> 
-    where T: 'a + Iterator<Item=u8> + ExactSizeIterator + fmt::Display + From<String>
+/*** Debug Traits */
+// Display
+impl fmt::Display for Tile 
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for x in &self.data {

@@ -1,35 +1,45 @@
-mod dna;
-mod rna;
+mod sequence;
 mod ds;
-mod protein;
 mod algo;
 mod io;
-use dna::DNA;
-use ds::tile;
-use ndarray::prelude::*;
 
 use io::fasta::Record;
 use io::fasta::{FastaRead, Reader};
 
+use ds::tile::Tile;
+use sequence::Sequence;
+use ndarray::prelude::*;
+
+
 fn main() {
     
-    let mut my_str1 : String = String::from("AUGGCCAUGGCGCCCAGAACUGAGAUCAAUAGUACCCGUAUUAACGGGUGA");
-    let mut my_str2 : String = String::from("N{P}[ST]{P}");
+    let mut test_string : String = String::from("AUGGCCAUGGCGCCCAGAACUGAGAUCAAUAGUACCCGUAUUAACGGGUGA");
+    // let mut my_str2 : String = String::from("N{P}[ST]{P}");
     
-    // let mut d : DNA = DNA::from(my_str1);
-    // print!("{}", &d);
-    // print!("{:?}\n", &d.count());
-    // d.complement();
-    // print!("{}", d);
-    // print!("{}", rna::RNA::from(&d));
-    // print!("{}\n", d.gc_content());
-    // let rna = rna::RNA::from(&d);
-    // print!("{}\n", protein::Protein::from(&rna));
-    // print!("{}", mendel_first_law(15, 17, 19));
-    // print!("{}", expected_offspring(18137, 16426, 18904, 18674, 18160, 18728));
-    // print!("{}", fibo_die(6, 3));
-    // print!("{}", gc_content(&my_str));
-    // print!("{:#?}", find_repeats(&my_str1, &my_str2));
+    
+    let mut test_string : Sequence = Sequence::from(test_string);
+    // print!("Count: {:?}\n", algo::count(&test_string));
+    
+    // test_string = algo::complement_dna(test_string);
+    // print!("Complement: {}\n", test_string);
+    
+    // test_string = algo::transcribe_dna(test_string);
+    // print!("Transcribe: {}", test_string);
+
+    // let gc = algo::gc_content(&test_string);
+    // print!("GC: {}\n", gc);
+
+    // let rna = algo::transcribe_dna(test_string);
+    // print!("RNA: {}\n", rna);
+    
+    // let protein = algo::tranlate_rna(test_string);
+    // print!("{}\n", protein);
+
+    // print!("{}", algo::mendel_first_law(18, 19, 23));
+
+    // print!("{}", algo::expected_offspring(18137, 16426, 18904, 18674, 18160, 18728));
+    
+    // TODO:
     // print!("{:#?}", knuth_morris_pratt(my_str1, my_str2));
     // match hamming_distance(&my_str1, &my_str2) {
     //     Ok(value) => {
@@ -39,19 +49,8 @@ fn main() {
     //         println!("Error calculating the hamming distance: {}", err);
     //     }
     // }
-
     // search_motifs(my_str1, my_str2);
     // println!("{:#?}", search_motifs(my_str1, my_str2));
-
-    // for ((x, y, z), val) in a.indexed_iter() {
-    //     println!("{:?} {:?} {:?}", x, y, z);
-    // }
-
-    // A == [1,0,0,0]
-    // C == [0,1,0,0]
-    // G == [0,0,1,0]
-    // T == [0,0,0,1]
-
     // let mut arr = array![[b'A', b'T', b'C', b'C', b'A', b'G', b'C', b'T'],
     //                      [b'G', b'G', b'G', b'C', b'A', b'A', b'C', b'T'],
     //                      [b'A', b'T', b'G', b'G', b'A', b'T', b'C', b'T'],
@@ -61,14 +60,11 @@ fn main() {
     //                      [b'A', b'T', b'G', b'G', b'C', b'A', b'C', b'T']];
     // print!("{:#?}", encode_output(&calc_consensus(&calc_profile(&encode_input(&arr)))));
 
-
-
-    // const fasta_file: &'static [u8] = b">id desc";
     let mut reader = Reader::from_file(std::path::Path::new(r"C:\Users\Robert\Desktop\biotech\src\in.fasta")).unwrap();
     let mut record = Record::new();
-    let mut matrix = tile::Tile::<dna::DNA>::new();
+    let mut matrix = Tile::new();
 
-    // // Check for errors parsing the record
+    // // // Check for errors parsing the record
     loop {
         reader
         .read(&mut record)
@@ -76,15 +72,13 @@ fn main() {
         if record.is_empty() {
             break;
         }
-        matrix.push(dna::DNA::from(record.clone()));
+        matrix.push(Sequence::from(record.clone()));
     } 
-    // print!("{}", matrix);
-    // print!("{}", a);
-    // print!("{}", tile::Tile::<protein::Protein>::from(a));
-    // let a  = matrix.into_array3();
-    // let profile = algo::calc_profile(&a);
-    // print!("Profile: {:#?}", profile);
-    // print!("{}", dna::DNA::from(algo::calc_consensus(&profile)));
+    print!("{}", matrix);
+    let a  = matrix.into_array3();
+    let profile = algo::calc_profile(&a);
+    print!("Profile: {:#?}", profile);
+    print!("{}", Sequence::from(algo::calc_consensus(&profile)));
 
     // let mut permutes : Vec<Vec<u32>> = vec![];
     // let mut x = vec![1,2,3,4,5]; 
@@ -93,13 +87,5 @@ fn main() {
     //     print!("{:?}\n", x);
     // }
 
-    algo::overlap_graph(&matrix);
-
-    algo::overlap_graph(&matrix);
-
-    algo::overlap_graph(&matrix);
-
-    algo::overlap_graph(&matrix);
-
-
+    // algo::overlap_graph(&matrix);
 }

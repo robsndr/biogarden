@@ -1,7 +1,89 @@
 use std::io;
 use ndarray::prelude::*;
-use super::DNA;
+use std::collections::HashMap;
 use std::fmt; // Import `fmt`
+
+use super::Sequence;
+
+// Complement the Sequence string by reversing in the first step.
+// Swap: 'A' <-> 'T' and 'G' <-> 'C'
+pub fn complement_dna(seq: Sequence) -> Sequence {
+    let mut t: String = seq.into_iter().rev().map(|c| c as char).collect::<String>();
+    // A <-> T
+    t = t.replace("A", "X");
+    t = t.replace("T", "A");
+    t = t.replace("X", "T");
+    // G <-> C
+    t = t.replace("G", "X");
+    t = t.replace("C", "G");
+    t = t.replace("X", "C");
+    Sequence::from(t)
+}
+
+// Count number of chars in Sequence sequence
+// Return array with numbers representing #occur of given char
+// count[0] == count ['A'] and count[23] == count['Z']
+pub fn count(seq: &Sequence) -> [u16; 24] {
+    let mut count: [u16; 24] = [0; 24];
+    for c in seq.into_iter() {
+        count[(*c as usize) - 65] += 1;
+    }
+    return count;
+}
+
+pub fn gc_content(seq: &Sequence) -> f64 {
+    let mut gc_count : u32 = 0;
+    for c in seq {
+        if *c == b'G' ||  *c == b'C' {
+            gc_count += 1;
+        }
+    }
+    gc_count as f64 / seq.len() as f64
+}
+
+pub fn tranlate_rna(rna: Sequence) -> Sequence {
+    // mRNA <-> amino-acid translation table (codon table)
+    let codon_table: HashMap<&str, &str> = HashMap::from(
+        [ ("UUU", "F"),    ("CUU", "L"),   ("AUU", "I"),   ("GUU", "V"),
+            ("UUC", "F"),    ("CUC", "L"),   ("AUC", "I"),   ("GUC", "V"),
+            ("UUA", "L"),    ("CUA", "L"),   ("AUA", "I"),   ("GUA", "V"),
+            ("UUG", "L"),    ("CUG", "L"),   ("AUG", "M"),   ("GUG", "V"),
+            ("UCU", "S"),    ("CCU", "P"),   ("ACU", "T"),   ("GCU", "A"),
+            ("UCC", "S"),    ("CCC", "P"),   ("ACC", "T"),   ("GCC", "A"),
+            ("UCA", "S"),    ("CCA", "P"),   ("ACA", "T"),   ("GCA", "A"),
+            ("UCG", "S"),    ("CCG", "P"),   ("ACG", "T"),   ("GCG", "A"),
+            ("UAU", "Y"),    ("CAU", "H"),   ("AAU", "N"),   ("GAU", "D"),
+            ("UAC", "Y"),    ("CAC", "H"),   ("AAC", "N"),   ("GAC", "D"),
+            ("UAA", "Stop"), ("CAA", "Q"),   ("AAA", "K"),   ("GAA", "E"),
+            ("UAG", "Stop"), ("CAG", "Q"),   ("AAG", "K"),   ("GAG", "E"),
+            ("UGU", "C"),    ("CGU", "R"),   ("AGU", "S"),   ("GGU", "G"),
+            ("UGC", "C"),    ("CGC", "R"),   ("AGC", "S"),   ("GGC", "G"),
+            ("UGA", "Stop"), ("CGA", "R"),   ("AGA", "R"),   ("GGA", "G"),
+            ("UGG", "W"),    ("CGG", "R"),   ("AGG", "R"),   ("GGG", "G") ]);
+    // Container for final result of transcription
+    let mut amino_acid: String = String::new();
+    // Run the translation 
+    let s = String::from(rna);
+    let mut z = s.chars().peekable();
+    while z.peek().is_some() {
+        let chunk: String = z.by_ref().take(3).collect();
+        match codon_table.get(&chunk as &str) {
+            Some(value) => {
+                if value == &"Stop"{
+                    break;
+                }
+                amino_acid.push_str(value);
+            },
+            None => println!("Codon not found in codon table.")
+        }
+    }
+    Sequence::from(amino_acid)
+}
+
+pub fn transcribe_dna(dna: Sequence) -> Sequence {
+    let temp = String::from(dna);
+    Sequence::from(temp.replace("T", "U"))
+}
 
 pub fn mendel_first_law(k: u16, m: u16, n: u16 ) -> f32 {
     
