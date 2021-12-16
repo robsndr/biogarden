@@ -237,11 +237,17 @@ pub fn reverse_palindromes(seq: &Sequence, n: usize, m: usize) -> Vec<(usize, us
     let mut palindromes : Vec<(usize, usize)> = vec![];
     let complements: HashMap<u8, u8> = HashMap::from([(b'A', b'T'), (b'T', b'A'),
                                                             (b'G', b'C'), (b'C', b'G')]);
+
+    // iterate over every offset within the initial string
     for i in 0..seq.len() {
+        // iterate over possible lengths of palindromic substrings
         for j in n..(m+1) {
+            // break if potential substring cannot fit 
             if i + j > seq.len() {
                 break;
             } 
+            // check if substring with length `j` at offset `i` 
+            // is a reverse palindrome
             let mut is_palindrome = true;
             for k in 0..j {
                 if seq.chain[i+k] != complements[&seq.chain[i+j-1-k]] {
@@ -249,6 +255,7 @@ pub fn reverse_palindromes(seq: &Sequence, n: usize, m: usize) -> Vec<(usize, us
                     break;
                 }
             }
+            // append (offset, length) into result set
             if is_palindrome {
                 palindromes.push((i+1,j));
             }
