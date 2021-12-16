@@ -5,7 +5,7 @@ use std::fmt; // Import `fmt`
 
 #[derive(Debug, Clone)]
 pub struct Sequence {
-    chain: Vec<u8>,
+    pub chain: Vec<u8>,
     id: Option<String>,
 }
 
@@ -13,6 +13,10 @@ impl Sequence {
 
     pub fn new() -> Sequence {
         Sequence { chain: Vec::<u8>::new(), id: None}
+    }
+
+    pub fn push(&mut self, x: u8) -> () {
+        self.chain.push(x);
     }
 
     pub fn len(&self) -> usize {
@@ -79,15 +83,21 @@ impl IntoIterator for Sequence {
     }
 }
 
+impl FromIterator<u8> for Sequence {
+    fn from_iter<I: IntoIterator<Item=u8>>(iter: I) -> Self {
+        let mut s = Sequence::new();
+        for i in iter {
+            s.push(i);
+        }
+        s
+    }
+}
+
 /*** Debug Traits ***/ 
 // Display 
 impl fmt::Display for Sequence {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut temp : String;
-        match &self.id {
-            Some(p) => temp = p.to_string() + "\n",
-            None => temp = "".to_string(),
-        }
+        let mut temp : String = String::from("");
         temp += std::str::from_utf8(&self.chain).unwrap();
         write!(f, "{}", temp)
     }

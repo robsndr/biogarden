@@ -128,7 +128,9 @@ pub fn fibo(n: usize, k: u64) -> u64 {
     memory[n -1]
 }
 
-pub fn hamming_distance(s1: &String, s2: &String) -> Result<u32, io::Error> {
+pub fn hamming_distance(s1: &Sequence, s2: &Sequence) -> u32 {
+    let s1 = s1.to_string();
+    let s2 = s2.to_string();
     let both = s1.chars().zip(s2.chars());
     let mut hamming : u32 = 0;
     for pair in both {
@@ -136,11 +138,14 @@ pub fn hamming_distance(s1: &String, s2: &String) -> Result<u32, io::Error> {
             hamming += 1;
         }
     }
-    Ok(hamming)
+    hamming
 }
 
-pub fn knuth_morris_pratt(st: &[u8], pat: &[u8]) -> Vec<usize> {
+pub fn knuth_morris_pratt(seq: &Sequence, pat: &Sequence) -> Vec<usize> {
    
+    let seq = seq.to_string().into_bytes();
+    let pat = pat.to_string().into_bytes();
+
     // Build the partial match table
     let mut partial = vec![0];
     for i in 1..pat.len() {
@@ -155,7 +160,7 @@ pub fn knuth_morris_pratt(st: &[u8], pat: &[u8]) -> Vec<usize> {
     let mut ret = vec![];
     let mut j = 0;
 
-    for (i, &c) in st.iter().enumerate() {
+    for (i, &c) in seq.iter().enumerate() {
         while j > 0 && c != pat[j] {
             j = partial[j - 1];
         }
@@ -225,6 +230,33 @@ pub fn overlap_graph<'a, T>(tile: T)
 
 }
 
+// Find all reverse-palindromes within seq of n <= length <= m
+// Return tuples containing position and length of each palindrome
+pub fn reverse_palindromes(seq: &Sequence, n: usize, m: usize) -> Vec<(usize, usize)>{
+
+    let mut palindromes : Vec<(usize, usize)> = vec![];
+    let complements: HashMap<u8, u8> = HashMap::from([(b'A', b'T'), (b'T', b'A'),
+                                                            (b'G', b'C'), (b'C', b'G')]);
+    for i in 0..seq.len() {
+        for j in n..(m+1) {
+            if i + j > seq.len() {
+                break;
+            } 
+            let mut is_palindrome = true;
+            for k in 0..j {
+                if seq.chain[i+k] != complements[&seq.chain[i+j-1-k]] {
+                    is_palindrome = false;
+                    break;
+                }
+            }
+            if is_palindrome {
+                palindromes.push((i+1,j));
+            }
+        }    
+    }
+    palindromes
+}
+
 // N{P}[ST]{P}
 // pub fn generate_motifs(target: &Vec<u8>, result: &mut Vec<String>, i: usize, temp: &mut Vec<u8>) {
 
@@ -281,3 +313,7 @@ pub fn overlap_graph<'a, T>(tile: T)
 //     }
 //     pos
 // }
+
+
+// TCAATGCATGCGGGTCTATATGCAT
+// ATGCATATAGACCCGCATGCATTGA

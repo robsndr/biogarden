@@ -13,11 +13,12 @@ use ndarray::prelude::*;
 
 fn main() {
     
-    let mut test_string : String = String::from("AUGGCCAUGGCGCCCAGAACUGAGAUCAAUAGUACCCGUAUUAACGGGUGA");
-    // let mut my_str2 : String = String::from("N{P}[ST]{P}");
-    
-    
+    let mut test_string : String = String::from("TCAATGCATGCGGGTCTATATGCAT");
+    let mut test_string2 : String = String::from("CATCGTAATGACGGCCT");
+
     let mut test_string : Sequence = Sequence::from(test_string);
+    let mut test_string2 : Sequence = Sequence::from(test_string2);
+
     // print!("Count: {:?}\n", algo::count(&test_string));
     
     // test_string = algo::complement_dna(test_string);
@@ -35,20 +36,46 @@ fn main() {
     // let protein = algo::tranlate_rna(test_string);
     // print!("{}\n", protein);
 
-    // print!("{}", algo::mendel_first_law(18, 19, 23));
+    // let mendel = algo::mendel_first_law(18, 19, 23);
+    // print!("{}", mendel);
 
-    // print!("{}", algo::expected_offspring(18137, 16426, 18904, 18674, 18160, 18728));
+    // let offspring =  algo::expected_offspring(18137, 16426, 18904, 18674, 18160, 18728);
+    // print!("{}", offspring);
     
-    // TODO:
-    // print!("{:#?}", knuth_morris_pratt(my_str1, my_str2));
-    // match hamming_distance(&my_str1, &my_str2) {
-    //     Ok(value) => {
-    //         print!("{}", value);
+    // print!("KMP: {:?}", algo::knuth_morris_pratt(&test_string, &test_string2));
+    
+    // print!("Hamming: {:?}", algo::hamming_distance(&test_string, &test_string2));
+
+    // Reader based 
+    // let mut reader = Reader::from_file(std::path::Path::new(r"C:\Users\Robert\Desktop\biotech\src\in.fasta")).unwrap();
+    // let mut record = Record::new();
+    // let mut matrix = Tile::new();
+    // loop {
+    //     reader
+    //     .read(&mut record)
+    //     .expect("fasta reader: got an io::Error or could not read_line()");
+    //     if record.is_empty() {
+    //         break;
     //     }
-    //     Err(err) => {
-    //         println!("Error calculating the hamming distance: {}", err);
-    //     }
+    //     matrix.push(Sequence::from(record.clone()));
+    // } 
+    // print!("{}", matrix);
+    // let a  = matrix.into_array3();
+    // let profile = algo::calc_profile(&a);
+    // print!("Profile: {:#?}", profile);
+    // print!("{}", Sequence::from(algo::calc_consensus(&profile)));
+
+
+    // Permutations
+    // let mut permutes : Vec<Vec<u32>> = vec![];
+    // let mut x = vec![1,2,3,4,5]; 
+    // algo::permutations(5, &mut x, &mut permutes);
+    // for x in &permutes {
+    //     print!("{:?}\n", x);
     // }
+    // algo::overlap_graph(&matrix);
+
+
     // search_motifs(my_str1, my_str2);
     // println!("{:#?}", search_motifs(my_str1, my_str2));
     // let mut arr = array![[b'A', b'T', b'C', b'C', b'A', b'G', b'C', b'T'],
@@ -60,32 +87,4 @@ fn main() {
     //                      [b'A', b'T', b'G', b'G', b'C', b'A', b'C', b'T']];
     // print!("{:#?}", encode_output(&calc_consensus(&calc_profile(&encode_input(&arr)))));
 
-    let mut reader = Reader::from_file(std::path::Path::new(r"C:\Users\Robert\Desktop\biotech\src\in.fasta")).unwrap();
-    let mut record = Record::new();
-    let mut matrix = Tile::new();
-
-    // // // Check for errors parsing the record
-    loop {
-        reader
-        .read(&mut record)
-        .expect("fasta reader: got an io::Error or could not read_line()");
-        if record.is_empty() {
-            break;
-        }
-        matrix.push(Sequence::from(record.clone()));
-    } 
-    print!("{}", matrix);
-    let a  = matrix.into_array3();
-    let profile = algo::calc_profile(&a);
-    print!("Profile: {:#?}", profile);
-    print!("{}", Sequence::from(algo::calc_consensus(&profile)));
-
-    // let mut permutes : Vec<Vec<u32>> = vec![];
-    // let mut x = vec![1,2,3,4,5]; 
-    // algo::permutations(5, &mut x, &mut permutes);
-    // for x in &permutes {
-    //     print!("{:?}\n", x);
-    // }
-
-    // algo::overlap_graph(&matrix);
 }
