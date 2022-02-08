@@ -1,3 +1,5 @@
+// #![warn(missing_debug_implementations, missing_docs)]
+
 mod sequence;
 mod ds;
 mod algo;
@@ -86,5 +88,40 @@ fn main() {
     //                      [b'A', b'T', b'G', b'C', b'C', b'A', b'T', b'T'],
     //                      [b'A', b'T', b'G', b'G', b'C', b'A', b'C', b'T']];
     // print!("{:#?}", encode_output(&calc_consensus(&calc_profile(&encode_input(&arr)))));
+
+
+    // Reader based 
+    let mut reader = Reader::from_file(std::path::Path::new(r"C:\Users\Robert\Desktop\biotech\src\in.fasta")).unwrap();
+    let mut record = Record::new();
+    let mut matrix = Tile::new();
+
+    reader
+    .read(&mut record)
+    .expect("fasta reader: got an io::Error or could not read_line()");
+    let mut pre_rna = Sequence::from(record.clone());
+    
+    loop {
+        reader
+        .read(&mut record)
+        .expect("fasta reader: got an io::Error or could not read_line()");
+        if record.is_empty() {
+            break;
+        }
+        matrix.push(Sequence::from(record.clone()));
+    } 
+
+    print!("{}\n", pre_rna);
+
+    algo::rna_splice(&mut pre_rna, &matrix);
+    pre_rna = algo::transcribe_dna(pre_rna);
+    pre_rna = algo::tranlate_rna(pre_rna);
+
+    print!("{}", pre_rna);
+
+    // let a  = matrix.into_array3();
+    // let profile = algo::calc_profile(&a);
+    // print!("Profile: {:#?}", profile);
+    // print!("{}", Sequence::from(algo::calc_consensus(&profile)))
+
 
 }

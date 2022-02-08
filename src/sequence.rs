@@ -1,3 +1,4 @@
+#![warn(missing_debug_implementations)]
 use ndarray::prelude::*;
 use super::io::fasta;
 

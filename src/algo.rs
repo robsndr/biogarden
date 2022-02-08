@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::fmt; // Import `fmt`
 
 use super::Sequence;
+use super::Tile;
 
 // Complement the Sequence string by reversing in the first step.
 // Swap: 'A' <-> 'T' and 'G' <-> 'C'
@@ -227,11 +228,10 @@ pub fn overlap_graph<'a, T>(tile: T)
     for dna in tile {
         print!("{}\n", dna);
     }
-
 }
 
 // Find all reverse-palindromes within seq of n <= length <= m
-// Return tuples containing position and length of each palindrome
+// Return tuples containing position and length of each palindrome O(n^3)?
 pub fn reverse_palindromes(seq: &Sequence, n: usize, m: usize) -> Vec<(usize, usize)>{
 
     let mut palindromes : Vec<(usize, usize)> = vec![];
@@ -262,6 +262,16 @@ pub fn reverse_palindromes(seq: &Sequence, n: usize, m: usize) -> Vec<(usize, us
         }    
     }
     palindromes
+}
+
+pub fn rna_splice(pre_rna: &mut Sequence, introns: &Tile) {
+
+    for i in introns {
+        let res = knuth_morris_pratt(pre_rna, i);
+        for index in res {
+            pre_rna.chain.drain(index..(index+i.len()));
+        }
+    }
 }
 
 // N{P}[ST]{P}

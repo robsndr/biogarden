@@ -1,5 +1,6 @@
 use std::fmt; // Import `fmt`
 use ndarray::prelude::*;
+use std::ops::{Index, IndexMut};
 
 use crate::sequence::Sequence;
 
@@ -99,6 +100,16 @@ impl IntoIterator for Tile
     }
 }
 
+impl<'a> IntoIterator for &'a Tile {
+
+    type Item = <std::slice::Iter<'a, Sequence> as Iterator>::Item;
+    type IntoIter = std::slice::Iter<'a, Sequence>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        (&self.data).iter()
+    }
+}
+
 /*** Debug Traits */
 // Display
 impl fmt::Display for Tile 
@@ -108,5 +119,18 @@ impl fmt::Display for Tile
             write!(f,"{}\n", x);
         }
         Ok(())
+    }
+}
+
+impl Index<usize> for Tile {
+    type Output = Sequence;
+    fn index<'a>(&'a self, i: usize) -> &'a Sequence {
+        &self.data[i]
+    }
+}
+
+impl IndexMut<usize> for Tile {
+    fn index_mut<'a>(&'a mut self, i: usize) -> &'a mut Sequence {
+        &mut self.data[i]
     }
 }
