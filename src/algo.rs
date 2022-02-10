@@ -43,55 +43,64 @@ pub fn gc_content(seq: &Sequence) -> f64 {
     gc_count as f64 / seq.len() as f64
 }
 
-// TODO: Cleanup and refactor
+// Make parametrizable number of sequences to find
 pub fn translate_rna(rna: Sequence) -> Vec<Sequence> {
 
     let mut proteins : Vec<Sequence> = vec![];
 
     // mRNA <-> amino-acid translation table (codon table)
-    let codon_table: HashMap<&str, &str> = HashMap::from(
-        [ ("UUU", "F"),    ("CUU", "L"),   ("AUU", "I"),   ("GUU", "V"),
-            ("UUC", "F"),    ("CUC", "L"),   ("AUC", "I"),   ("GUC", "V"),
-            ("UUA", "L"),    ("CUA", "L"),   ("AUA", "I"),   ("GUA", "V"),
-            ("UUG", "L"),    ("CUG", "L"),   ("AUG", "M"),   ("GUG", "V"),
-            ("UCU", "S"),    ("CCU", "P"),   ("ACU", "T"),   ("GCU", "A"),
-            ("UCC", "S"),    ("CCC", "P"),   ("ACC", "T"),   ("GCC", "A"),
-            ("UCA", "S"),    ("CCA", "P"),   ("ACA", "T"),   ("GCA", "A"),
-            ("UCG", "S"),    ("CCG", "P"),   ("ACG", "T"),   ("GCG", "A"),
-            ("UAU", "Y"),    ("CAU", "H"),   ("AAU", "N"),   ("GAU", "D"),
-            ("UAC", "Y"),    ("CAC", "H"),   ("AAC", "N"),   ("GAC", "D"),
-            ("UAA", "Stop"), ("CAA", "Q"),   ("AAA", "K"),   ("GAA", "E"),
-            ("UAG", "Stop"), ("CAG", "Q"),   ("AAG", "K"),   ("GAG", "E"),
-            ("UGU", "C"),    ("CGU", "R"),   ("AGU", "S"),   ("GGU", "G"),
-            ("UGC", "C"),    ("CGC", "R"),   ("AGC", "S"),   ("GGC", "G"),
-            ("UGA", "Stop"), ("CGA", "R"),   ("AGA", "R"),   ("GGA", "G"),
-            ("UGG", "W"),    ("CGG", "R"),   ("AGG", "R"),   ("GGG", "G") ]);
+    let codon_table: HashMap<&str, &str> = HashMap::from([   
+        ("UUU", "F"),    ("CUU", "L"),   ("AUU", "I"),   ("GUU", "V"),
+        ("UUC", "F"),    ("CUC", "L"),   ("AUC", "I"),   ("GUC", "V"),
+        ("UUA", "L"),    ("CUA", "L"),   ("AUA", "I"),   ("GUA", "V"),
+        ("UUG", "L"),    ("CUG", "L"),   ("AUG", "M"),   ("GUG", "V"),
+        ("UCU", "S"),    ("CCU", "P"),   ("ACU", "T"),   ("GCU", "A"),
+        ("UCC", "S"),    ("CCC", "P"),   ("ACC", "T"),   ("GCC", "A"),
+        ("UCA", "S"),    ("CCA", "P"),   ("ACA", "T"),   ("GCA", "A"),
+        ("UCG", "S"),    ("CCG", "P"),   ("ACG", "T"),   ("GCG", "A"),
+        ("UAU", "Y"),    ("CAU", "H"),   ("AAU", "N"),   ("GAU", "D"),
+        ("UAC", "Y"),    ("CAC", "H"),   ("AAC", "N"),   ("GAC", "D"),
+        ("UAA", "Stop"), ("CAA", "Q"),   ("AAA", "K"),   ("GAA", "E"),
+        ("UAG", "Stop"), ("CAG", "Q"),   ("AAG", "K"),   ("GAG", "E"),
+        ("UGU", "C"),    ("CGU", "R"),   ("AGU", "S"),   ("GGU", "G"),
+        ("UGC", "C"),    ("CGC", "R"),   ("AGC", "S"),   ("GGC", "G"),
+        ("UGA", "Stop"), ("CGA", "R"),   ("AGA", "R"),   ("GGA", "G"),
+        ("UGG", "W"),    ("CGG", "R"),   ("AGG", "R"),   ("GGG", "G") 
+    ]);
     // Container for final result of transcription
     let mut amino_acid: String = String::new();
     // Run the translation 
     let s = String::from(rna);
     let mut z = s.chars().peekable();
-    // Iterate until start codon `AUG` is reached
+    // Iterate until end of strand is reached
     while z.peek().is_some() {
         amino_acid.clear();
+        // Iterate over strand until start codon found
         while z.peek().is_some() {
+            // Take 3 characters from strand, that denote codon
             let chunk: String = z.by_ref().take(3).collect();
+            // Check for start codon
             if chunk == "AUG"{
                 amino_acid.push_str(codon_table.get(&chunk as &str).unwrap());
                 break;
             }
         }
-        // Decode until `Stop` codon reached
-        let mut xxx = z.clone();
-        while xxx.peek().is_some() {
-            let chunk: String = xxx.by_ref().take(3).collect();
+        // Copy current iterator to resume search for start codon at that position
+        let mut zi = z.clone(); 
+        // Decode until stop codon reached
+        while zi.peek().is_some() {
+            // Take 3 characters from strand, that denote codon
+            let chunk: String = zi.by_ref().take(3).collect();
             match codon_table.get(&chunk as &str) {
                 Some(value) => {
+                    // If stop codon reached, store current protein strand and proceed 
                     if value == &"Stop"{
                         proteins.push(Sequence::from(amino_acid.clone()));
                         break;
                     }
-                    amino_acid.push_str(value);
+                    else {
+                        amino_acid.push_str(value);
+                    }
                 },
                 None => {
                     print!("value: {}\n", &chunk);
@@ -279,14 +288,15 @@ pub fn reverse_palindromes(seq: &Sequence, n: usize, m: usize) -> Vec<(usize, us
     palindromes
 }
 
-pub fn rna_splice(pre_rna: &mut Sequence, introns: &Tile) {
+pub fn rna_splice(mut pre_rna: Sequence, introns: &Tile) -> Sequence {
 
     for intr in introns {
-        let res = knuth_morris_pratt(pre_rna, intr);
+        let res = knuth_morris_pratt(&pre_rna, intr);
         for index in res {
             pre_rna.chain.drain(index..(index + intr.len()));
         }
     }
+    pre_rna
 }
 
 pub fn open_reading_frames(dna: &Sequence) -> Vec<Sequence> {
@@ -306,6 +316,27 @@ pub fn open_reading_frames(dna: &Sequence) -> Vec<Sequence> {
         }    
     }
     reading_frames
+}
+
+
+pub fn infer_number_rna(protein: &Sequence) -> u128 {
+
+    let codon_combs: HashMap<u8, u128> = HashMap::from([   
+        ('F' as u8, 2),   ('I' as u8, 3),   ('V' as u8, 4),   ('L' as u8, 6),   
+        ('S' as u8, 6),   ('P' as u8, 4),   ('M' as u8, 1),   ('T' as u8, 4),   
+        ('A' as u8, 4),   ('Y' as u8, 2),   ('-' as u8, 3),   ('H' as u8, 2),   
+        ('N' as u8, 2),   ('D' as u8, 2),   ('Q' as u8, 2),   ('K' as u8, 2),   
+        ('E' as u8, 2),   ('C' as u8, 2),   ('G' as u8, 4),   ('R' as u8, 6),      
+        ('W' as u8, 1)
+    ]);
+
+    // Initialize with 3 as for number of STOP codons
+    let mut rna_combinations : u128 = 3;
+    // Compute number of combinations
+    for amino in protein {
+        rna_combinations = (rna_combinations * codon_combs.get(amino).unwrap()) % 1000000;
+    }   
+    rna_combinations
 }
 
 // N{P}[ST]{P}
