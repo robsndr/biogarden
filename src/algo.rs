@@ -1,6 +1,7 @@
 use std::io;
 use ndarray::prelude::*;
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::fmt; // Import `fmt`
 
 use super::Sequence;
@@ -42,7 +43,11 @@ pub fn gc_content(seq: &Sequence) -> f64 {
     gc_count as f64 / seq.len() as f64
 }
 
-pub fn tranlate_rna(rna: Sequence) -> Sequence {
+// TODO: Cleanup and refactor
+pub fn translate_rna(rna: Sequence) -> Vec<Sequence> {
+
+    let mut proteins : Vec<Sequence> = vec![];
+
     // mRNA <-> amino-acid translation table (codon table)
     let codon_table: HashMap<&str, &str> = HashMap::from(
         [ ("UUU", "F"),    ("CUU", "L"),   ("AUU", "I"),   ("GUU", "V"),
@@ -66,19 +71,38 @@ pub fn tranlate_rna(rna: Sequence) -> Sequence {
     // Run the translation 
     let s = String::from(rna);
     let mut z = s.chars().peekable();
+    // Iterate until start codon `AUG` is reached
     while z.peek().is_some() {
-        let chunk: String = z.by_ref().take(3).collect();
-        match codon_table.get(&chunk as &str) {
-            Some(value) => {
-                if value == &"Stop"{
+        amino_acid.clear();
+        while z.peek().is_some() {
+            let chunk: String = z.by_ref().take(3).collect();
+            if chunk == "AUG"{
+                amino_acid.push_str(codon_table.get(&chunk as &str).unwrap());
+                break;
+            }
+        }
+        // Decode until `Stop` codon reached
+        let mut xxx = z.clone();
+        while xxx.peek().is_some() {
+            let chunk: String = xxx.by_ref().take(3).collect();
+            match codon_table.get(&chunk as &str) {
+                Some(value) => {
+                    if value == &"Stop"{
+                        proteins.push(Sequence::from(amino_acid.clone()));
+                        break;
+                    }
+                    amino_acid.push_str(value);
+                },
+                None => {
+                    print!("value: {}\n", &chunk);
+                    println!("Codon not found in codon table.");
                     break;
                 }
-                amino_acid.push_str(value);
-            },
-            None => println!("Codon not found in codon table.")
+                
+            }
         }
     }
-    Sequence::from(amino_acid)
+    proteins
 }
 
 pub fn transcribe_dna(dna: Sequence) -> Sequence {
@@ -221,15 +245,6 @@ pub fn permutations<T: Clone>(n : usize, a : &mut Vec<T>, result : &mut Vec<Vec<
     }
 }
 
-
-pub fn overlap_graph<'a, T>(tile: T) 
-    where T: IntoIterator, T::Item: fmt::Display{
-
-    for dna in tile {
-        print!("{}\n", dna);
-    }
-}
-
 // Find all reverse-palindromes within seq of n <= length <= m
 // Return tuples containing position and length of each palindrome O(n^3)?
 pub fn reverse_palindromes(seq: &Sequence, n: usize, m: usize) -> Vec<(usize, usize)>{
@@ -266,12 +281,31 @@ pub fn reverse_palindromes(seq: &Sequence, n: usize, m: usize) -> Vec<(usize, us
 
 pub fn rna_splice(pre_rna: &mut Sequence, introns: &Tile) {
 
-    for i in introns {
-        let res = knuth_morris_pratt(pre_rna, i);
+    for intr in introns {
+        let res = knuth_morris_pratt(pre_rna, intr);
         for index in res {
-            pre_rna.chain.drain(index..(index+i.len()));
+            pre_rna.chain.drain(index..(index + intr.len()));
         }
     }
+}
+
+pub fn open_reading_frames(dna: &Sequence) -> Vec<Sequence> {
+
+    let mut reading_frames : Vec<Sequence> = vec![];
+
+    let mut strands : Vec<Sequence> = vec![];
+    strands.push(dna.clone());
+    strands.push(complement_dna(dna.clone()));
+
+    for strand in &strands {
+        for i in 0..3 {
+            let mut temp: Sequence = strand.clone();
+            temp.chain.drain(0..i);
+            temp = transcribe_dna(temp);
+            reading_frames.extend(translate_rna(temp));
+        }    
+    }
+    reading_frames
 }
 
 // N{P}[ST]{P}

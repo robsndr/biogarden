@@ -106,7 +106,7 @@ impl<'a> IntoIterator for &'a Tile {
     type IntoIter = std::slice::Iter<'a, Sequence>;
 
     fn into_iter(self) -> Self::IntoIter {
-        (&self.data).iter()
+        (&self.data).into_iter() // can also be .iter()
     }
 }
 

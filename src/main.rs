@@ -90,33 +90,45 @@ fn main() {
     // print!("{:#?}", encode_output(&calc_consensus(&calc_profile(&encode_input(&arr)))));
 
 
-    // Reader based 
+    // Splice RNA
+    // let mut reader = Reader::from_file(std::path::Path::new(r"C:\Users\Robert\Desktop\biotech\src\in.fasta")).unwrap();
+    // let mut record = Record::new();
+    // let mut matrix = Tile::new();
+    //
+    // .read(&mut record)
+    // .expect("fasta reader: got an io::Error or could not read_line()");
+    // let mut pre_rna = Sequence::from(record.clone());
+    // loop {
+    //     reader
+    //     .read(&mut record)
+    //     .expect("fasta reader: got an io::Error or could not read_line()");
+    //     if record.is_empty() {
+    //         break;
+    //     }
+    //     matrix.push(Sequence::from(record.clone()));
+    // } 
+    // algo::rna_splice(&mut pre_rna, &matrix);
+    // pre_rna = algo::transcribe_dna(pre_rna);
+    // pre_rna = algo::tranlate_rna(pre_rna);
+    // print!("{}", pre_rna);
+
+
+    // Open Reading Frames
     let mut reader = Reader::from_file(std::path::Path::new(r"C:\Users\Robert\Desktop\biotech\src\in.fasta")).unwrap();
     let mut record = Record::new();
     let mut matrix = Tile::new();
-
+    
     reader
     .read(&mut record)
     .expect("fasta reader: got an io::Error or could not read_line()");
-    let mut pre_rna = Sequence::from(record.clone());
+    let mut dna = Sequence::from(record.clone());
     
-    loop {
-        reader
-        .read(&mut record)
-        .expect("fasta reader: got an io::Error or could not read_line()");
-        if record.is_empty() {
-            break;
-        }
-        matrix.push(Sequence::from(record.clone()));
-    } 
+    let frames = algo::open_reading_frames(&dna);
 
-    print!("{}\n", pre_rna);
+    for f in &frames {
+        print!("{}\n", f);
+    }
 
-    algo::rna_splice(&mut pre_rna, &matrix);
-    pre_rna = algo::transcribe_dna(pre_rna);
-    pre_rna = algo::tranlate_rna(pre_rna);
-
-    print!("{}", pre_rna);
 
     // let a  = matrix.into_array3();
     // let profile = algo::calc_profile(&a);
