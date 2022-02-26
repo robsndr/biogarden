@@ -14,39 +14,6 @@ use ndarray::prelude::*;
 
 
 fn main() {
-    
-    let mut test_string : String = String::from("TCAATGCATGCGGGTCTATATGCAT");
-    let mut test_string2 : String = String::from("CATCGTAATGACGGCCT");
-
-    let mut test_string : Sequence = Sequence::from(test_string);
-    let mut test_string2 : Sequence = Sequence::from(test_string2);
-
-    // print!("Count: {:?}\n", algo::count(&test_string));
-    
-    // test_string = algo::complement_dna(test_string);
-    // print!("Complement: {}\n", test_string);
-    
-    // test_string = algo::transcribe_dna(test_string);
-    // print!("Transcribe: {}", test_string);
-
-    // let gc = algo::gc_content(&test_string);
-    // print!("GC: {}\n", gc);
-
-    // let rna = algo::transcribe_dna(test_string);
-    // print!("RNA: {}\n", rna);
-    
-    // let protein = algo::tranlate_rna(test_string);
-    // print!("{}\n", protein);
-
-    // let mendel = algo::mendel_first_law(18, 19, 23);
-    // print!("{}", mendel);
-
-    // let offspring =  algo::expected_offspring(18137, 16426, 18904, 18674, 18160, 18728);
-    // print!("{}", offspring);
-    
-    // print!("KMP: {:?}", algo::knuth_morris_pratt(&test_string, &test_string2));
-    
-    // print!("Hamming: {:?}", algo::hamming_distance(&test_string, &test_string2));
 
     // Reader based 
     // let mut reader = Reader::from_file(std::path::Path::new(r"C:\Users\Robert\Desktop\biotech\src\in.fasta")).unwrap();
@@ -135,6 +102,22 @@ fn main() {
 
 
     // Infer RNA 
+    // let mut reader = Reader::from_file(std::path::Path::new(r"C:\Users\Robert\Desktop\biotech\src\in.fasta")).unwrap();
+    // let mut record = Record::new();
+    // let mut matrix = Tile::new();
+    
+    // reader
+    // .read(&mut record)
+    // .expect("fasta reader: got an io::Error or could not read_line()");
+    // let protein = Sequence::from(record.clone());
+    
+    // let num = algo::infer_number_rna(&protein);
+
+    // print!("{}", num);
+
+
+
+    // Infer RNA 
     let mut reader = Reader::from_file(std::path::Path::new(r"C:\Users\Robert\Desktop\biotech\src\in.fasta")).unwrap();
     let mut record = Record::new();
     let mut matrix = Tile::new();
@@ -144,9 +127,11 @@ fn main() {
     .expect("fasta reader: got an io::Error or could not read_line()");
     let protein = Sequence::from(record.clone());
     
-    let num = algo::infer_number_rna(&protein);
+    let num : f64 = algo::weighted_mass(&protein);
 
     print!("{}", num);
+
+
     // let a  = matrix.into_array3();
     // let profile = algo::calc_profile(&a);
     // print!("Profile: {:#?}", profile);

@@ -7,10 +7,27 @@ use std::fmt; // Import `fmt`
 use super::Sequence;
 use super::Tile;
 
+// Count number of chars in Sequence sequence
+// Return array with numbers representing #occur of given char
+// count[0] == count ['A'] and count[23] == count['Z']
+pub fn count_nucleotides(seq: &Sequence) -> [u16; 4] {
+    let mut count: [u16; 24] = [0; 24];
+    for c in seq.into_iter() {
+        count[(*c as usize) - 65] += 1;
+    }
+    return [count[0], count[2], count[6], count[19]];
+}
+
+// Transcribe the DNS sequence into RNA
+pub fn transcribe_dna(dna: Sequence) -> Sequence {
+    let temp = String::from(dna);
+    Sequence::from(temp.replace("T", "U"))
+}
+
 // Complement the Sequence string by reversing in the first step.
 // Swap: 'A' <-> 'T' and 'G' <-> 'C'
 pub fn complement_dna(seq: Sequence) -> Sequence {
-    let mut t: String = seq.into_iter().rev().map(|c| c as char).collect::<String>();
+    let mut t = seq.into_iter().rev().map(|c| c as char).collect::<String>();
     // A <-> T
     t = t.replace("A", "X");
     t = t.replace("T", "A");
@@ -22,17 +39,8 @@ pub fn complement_dna(seq: Sequence) -> Sequence {
     Sequence::from(t)
 }
 
-// Count number of chars in Sequence sequence
-// Return array with numbers representing #occur of given char
-// count[0] == count ['A'] and count[23] == count['Z']
-pub fn count(seq: &Sequence) -> [u16; 24] {
-    let mut count: [u16; 24] = [0; 24];
-    for c in seq.into_iter() {
-        count[(*c as usize) - 65] += 1;
-    }
-    return count;
-}
-
+// Percentage of G/C nucleotides in sequence
+// Return percentage value
 pub fn gc_content(seq: &Sequence) -> f64 {
     let mut gc_count : u32 = 0;
     for c in seq {
@@ -49,7 +57,7 @@ pub fn translate_rna(rna: Sequence) -> Vec<Sequence> {
     let mut proteins : Vec<Sequence> = vec![];
 
     // mRNA <-> amino-acid translation table (codon table)
-    let codon_table: HashMap<&str, &str> = HashMap::from([   
+    let codon_table = HashMap::from([   
         ("UUU", "F"),    ("CUU", "L"),   ("AUU", "I"),   ("GUU", "V"),
         ("UUC", "F"),    ("CUC", "L"),   ("AUC", "I"),   ("GUC", "V"),
         ("UUA", "L"),    ("CUA", "L"),   ("AUA", "I"),   ("GUA", "V"),
@@ -68,7 +76,7 @@ pub fn translate_rna(rna: Sequence) -> Vec<Sequence> {
         ("UGG", "W"),    ("CGG", "R"),   ("AGG", "R"),   ("GGG", "G") 
     ]);
     // Container for final result of transcription
-    let mut amino_acid: String = String::new();
+    let mut amino_acid = String::new();
     // Run the translation 
     let s = String::from(rna);
     let mut z = s.chars().peekable();
@@ -112,11 +120,6 @@ pub fn translate_rna(rna: Sequence) -> Vec<Sequence> {
         }
     }
     proteins
-}
-
-pub fn transcribe_dna(dna: Sequence) -> Sequence {
-    let temp = String::from(dna);
-    Sequence::from(temp.replace("T", "U"))
 }
 
 pub fn mendel_first_law(k: u16, m: u16, n: u16 ) -> f32 {
@@ -259,8 +262,8 @@ pub fn permutations<T: Clone>(n : usize, a : &mut Vec<T>, result : &mut Vec<Vec<
 pub fn reverse_palindromes(seq: &Sequence, n: usize, m: usize) -> Vec<(usize, usize)>{
 
     let mut palindromes : Vec<(usize, usize)> = vec![];
-    let complements: HashMap<u8, u8> = HashMap::from([(b'A', b'T'), (b'T', b'A'),
-                                                            (b'G', b'C'), (b'C', b'G')]);
+    let complements = HashMap::from([(b'A', b'T'), (b'T', b'A'),
+                                     (b'G', b'C'), (b'C', b'G')]);
 
     // iterate over every offset within the initial string
     for i in 0..seq.len() {
@@ -318,7 +321,6 @@ pub fn open_reading_frames(dna: &Sequence) -> Vec<Sequence> {
     reading_frames
 }
 
-
 pub fn infer_number_rna(protein: &Sequence) -> u128 {
 
     let codon_combs: HashMap<u8, u128> = HashMap::from([   
@@ -339,14 +341,31 @@ pub fn infer_number_rna(protein: &Sequence) -> u128 {
     rna_combinations
 }
 
+pub fn weighted_mass(protein: &Sequence) -> f64 {
+
+    let monoisotopic_mass_table : HashMap<u8, f64> = HashMap::from([   
+        ('F' as u8, 147.06841),   ('I' as u8, 113.08406),   ('V' as u8, 99.06841),   ('L' as u8, 113.08406),   
+        ('S' as u8, 87.03203),    ('P' as u8, 97.05276),    ('M' as u8, 131.04049),  ('T' as u8, 101.04768),   
+        ('A' as u8, 71.03711),    ('Y' as u8, 163.06333 ),  ('-' as u8, 0.0),        ('H' as u8, 137.05891),   
+        ('N' as u8, 114.04293),   ('D' as u8, 115.02694),   ('Q' as u8, 128.05858),  ('K' as u8, 128.09496),   
+        ('E' as u8, 129.04259),   ('C' as u8, 103.00919),   ('G' as u8, 57.02146),   ('R' as u8, 156.10111),      
+        ('W' as u8, 186.07931)
+    ]);
+
+    let mut mass : f64 = 0.0;
+    for amino in protein.into_iter() {
+        mass += monoisotopic_mass_table.get(amino).unwrap(); 
+    }
+    mass
+}
 // N{P}[ST]{P}
 // pub fn generate_motifs(target: &Vec<u8>, result: &mut Vec<String>, i: usize, temp: &mut Vec<u8>) {
-
+//
 //     if i == target.len() {
 //         result.push(std::str::from_utf8(temp).unwrap().to_string());
 //         return;
 //     }
-
+//
 //     let alphabet = String::from("FLSYCWPHQRITMNKVADEG").into_bytes();
 //     let mut alternatives = Vec::<u8>::new();
 //     let mut j = i;
@@ -381,14 +400,14 @@ pub fn infer_number_rna(protein: &Sequence) -> u128 {
 // }
 
 // fn search_motifs(st: String, pat: String) -> Vec<usize> {
-
+//
 //     let st = st.into_bytes();
 //     let pat = pat.into_bytes();
 //     let mut res = Vec::<String>::new();
 //     let mut temp = Vec::<u8>::new();
-
+//
 //     generate_motifs(&pat, &mut res, 0, &mut temp);
-
+//
 //     let mut pos = Vec::<usize>::new();
 //     for elem in &res {
 //         pos.append(&mut knuth_morris_pratt(&st, elem.as_bytes()));    
@@ -397,5 +416,88 @@ pub fn infer_number_rna(protein: &Sequence) -> u128 {
 // }
 
 
-// TCAATGCATGCGGGTCTATATGCAT
-// ATGCATATAGACCCGCATGCATTGA
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_count_nucleotides() {
+        let input = Sequence::from("AGCTTTTCATTCTGACTGCAACGGGCAATATGTCT\
+                                  CTGTGTGGAATTAAAAAAAGAGTGTCTGATGCAGC");
+        assert_eq!([20, 12, 17, 21], count_nucleotides(&input));
+    }
+
+    #[test]
+    fn test_transcribe_dna() {
+        let input = Sequence::from("GATGGAACTTGACTACGTAAATT");
+        let result = Sequence::from("GAUGGAACUUGACUACGUAAAUU");
+        assert_eq!(result, transcribe_dna(input))
+    }
+
+    #[test]
+    fn test_complement_dna() {
+        let input = Sequence::from("AAAACCCGGT");
+        let result = Sequence::from("ACCGGGTTTT");
+        assert_eq!(result, complement_dna(input));
+    }
+
+    #[test]
+    fn test_gc_content() {
+        let input = Sequence::from("CCTGCGGAAGATCGGCACTAGAATAGCCAG\
+                                    AACCGTTTCTCTGAGGCTTCCGGCCTTCCC");
+        let result : f64 = 0.5833333333333334;
+        assert_eq!(result, gc_content(&input));
+    }
+
+    #[test]
+    fn test_translate_rna() {
+        let input = Sequence::from("AUGGCCAUGGCGCCCAGAACUGAGA\
+                                    UCAAUAGUACCCGUAUUAACGGGUGA");
+        let result = Sequence::from("MAMAPRTEINSTRING");
+        assert_eq!(result, *translate_rna(input).first().unwrap());
+    }
+
+    #[test]
+    fn test_hamming_distance() {
+        let input1 = Sequence::from("GAGCCTACTAACGGGAT");
+        let input2 = Sequence::from("CATCGTAATGACGGCCT");
+        let result : u32 = 7;
+        assert_eq!(result, hamming_distance(&input1, &input2));
+
+    }
+
+    #[test]
+    fn test_mendel_first_law() {
+        let k: u16 = 2;
+        let m: u16 = 2;
+        let n: u16 = 2;
+        assert_eq!(0.7833333, 
+                    mendel_first_law(k, m, n));
+    }
+
+    #[test]
+    fn test_expected_offspring() {
+        let x: u16 = 18137;
+        let y: u16 = 16426;
+        let z: u16 = 18904;
+        let q: u16 = 18674;
+        let p: u16 = 18160;
+        let r: u16 = 18728;
+        assert_eq!(153105.0, expected_offspring(x, y, z, q, p, r));
+    }
+
+    #[test]
+    fn test_fibo() {
+        let n: usize = 5;
+        let k: u64 = 3;
+        assert_eq!(19, fibo(n, k));
+    }
+
+    #[test]
+    fn test_substring_positions() {
+        let seq = Sequence::from("GATATATGCATATACTT");
+        let pat = Sequence::from("ATAT");
+        assert_eq!(vec![1, 3, 9] ,knuth_morris_pratt(&seq, &pat));
+    }
+
+}

@@ -25,6 +25,12 @@ impl Sequence {
     }
 }
 
+impl PartialEq for Sequence {
+    fn eq(&self, other: &Self) -> bool {
+        self.chain == other.chain
+    }
+}
+
 /*** Type-Conversion Traits ***/ 
 // String -> Sequence
 impl From<String> for Sequence {
@@ -32,6 +38,16 @@ impl From<String> for Sequence {
         Sequence { chain: s.into_bytes(), id: None }
     }
 }
+
+/*** Type-Conversion Traits ***/ 
+// String -> Sequence
+impl From<&str> for Sequence {
+    fn from(s: &str) -> Self {
+        Sequence { chain: Vec::from(s.as_bytes()), id: None }
+    }
+
+}
+
 // &[u8] -> Sequence
 impl From<&[u8]> for Sequence {
     fn from(s: &[u8]) -> Self {
