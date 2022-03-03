@@ -9,6 +9,8 @@ use io::fasta::Record;
 use io::fasta::{FastaRead, Reader};
 
 use ds::tile::Tile;
+use std::fs::File;
+use std::io::prelude::*;
 use sequence::Sequence;
 use ndarray::prelude::*;
 
@@ -127,15 +129,26 @@ fn main() {
     .expect("fasta reader: got an io::Error or could not read_line()");
     let protein = Sequence::from(record.clone());
     
-    let num : f64 = algo::weighted_mass(&protein);
+    // let num : f64 = algo::weighted_mass(&protein);
 
-    print!("{}", num);
-
+    // print!("{}", num);
 
     // let a  = matrix.into_array3();
     // let profile = algo::calc_profile(&a);
-    // print!("Profile: {:#?}", profile);
     // print!("{}", Sequence::from(algo::calc_consensus(&profile)))
 
 
+    // CAGCATGGTATCACAGCAGAG
+
+    let seq = Sequence::from("A");
+    let pat = Sequence::from("CAGCATGGTATCACAGCAGAG");
+
+    let x  = algo::knuth_morris_pratt(&seq, &protein);
+
+
+    let mut f = File::create("output.txt").expect("Unable to create file");                                                                                                          
+    
+    for i in &x{            
+        write!(f, "{} ", i);                                                                                                                                                                                                                                                                              
+    }   
 }

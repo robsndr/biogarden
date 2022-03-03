@@ -237,7 +237,6 @@ pub fn calc_consensus(arr: &Array2<u16>) -> Array1<u8> {
     consensus
 }
 
-
 pub fn permutations<T: Clone>(n : usize, a : &mut Vec<T>, result : &mut Vec<Vec<T>>) {
     if n == 1 {
         result.push(a.clone());
@@ -358,6 +357,28 @@ pub fn weighted_mass(protein: &Sequence) -> f64 {
     }
     mass
 }
+
+pub fn random_substrings(seq: &Sequence, gc_content: &[f64]) -> Vec<f64> {
+
+    let mut probabilities : Vec<f64> = vec![];
+    let mut prob_map : HashMap<u8, f64> = HashMap::from([ ('A' as u8, 1.0), ('C' as u8, 1.0), ('T' as u8, 1.0), ('G' as u8, 1.0)]);
+
+    for x in gc_content {
+        *prob_map.get_mut(&('G' as u8)).unwrap() = x / 2.0;
+        *prob_map.get_mut(&('C' as u8)).unwrap() = x / 2.0;
+        *prob_map.get_mut(&('T' as u8)).unwrap() = (1.0-x) / 2.0;
+        *prob_map.get_mut(&('A' as u8)).unwrap() = (1.0-x) / 2.0;
+        // calculate probability of given string
+        // for provided GC content
+        let mut prop = 1.0;
+        for c in seq {
+            prop *= prob_map[c]
+        }
+        probabilities.push(prop.log10());
+    }
+    return probabilities;
+}
+
 // N{P}[ST]{P}
 // pub fn generate_motifs(target: &Vec<u8>, result: &mut Vec<String>, i: usize, temp: &mut Vec<u8>) {
 //
@@ -497,7 +518,16 @@ mod tests {
     fn test_substring_positions() {
         let seq = Sequence::from("GATATATGCATATACTT");
         let pat = Sequence::from("ATAT");
-        assert_eq!(vec![1, 3, 9] ,knuth_morris_pratt(&seq, &pat));
+        assert_eq!(vec![1, 3, 9], knuth_morris_pratt(&seq, &pat));
+    }
+
+    #[test]
+    fn test_random_substring() {
+        let seq = Sequence::from("GACGGACAAGGGCCCCCGTGTATTGTACTTGGGCCCATGTGCC\
+                                    CGACCTCGGTAAGTCCATCAGGAGTGCACGAGGACCACCATTTCAAGAAA");
+        let arr =  [0.110, 0.127, 0.183, 0.256];
+        assert_eq!(vec![ -80.82637701756781, -77.85362263786175, 
+                            -70.59699957974087, -64.49615401338707], random_substrings(&seq, &arr));
     }
 
 }

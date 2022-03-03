@@ -91,6 +91,7 @@ impl<'a> IntoIterator for &'a Sequence {
     }
 }
 
+
 impl IntoIterator for Sequence {
     type Item = u8;
     type IntoIter = std::vec::IntoIter<Self::Item>;
@@ -119,3 +120,4 @@ impl fmt::Display for Sequence {
         write!(f, "{}", temp)
     }
 }
+
