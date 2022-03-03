@@ -6,6 +6,7 @@ use std::fmt; // Import `fmt`
 
 use super::Sequence;
 use super::Tile;
+use super::Graph;
 
 // Count number of chars in Sequence sequence
 // Return array with numbers representing #occur of given char
@@ -377,6 +378,27 @@ pub fn random_substrings(seq: &Sequence, gc_content: &[f64]) -> Vec<f64> {
         probabilities.push(prop.log10());
     }
     return probabilities;
+}
+
+pub fn overlap_graph(sequences: &Tile, k: usize) -> Graph::<u32, u32> {
+
+    for (i, seq) in sequences.into_iter().enumerate() {
+        let last = seq.into_iter().rev().take(k).rev();
+        for (j, seq2) in sequences.into_iter().enumerate() {
+            if j == i {
+             continue;
+            }
+            let first = seq2.into_iter().take(k);
+            if first.zip(last.clone()).filter(|&(a, b)| a != b).count() == 0 {
+                print!("{}   {}\n\n", seq, seq2);
+            }
+        }
+    }
+    let mut g = Graph::<u32, u32>::new();
+    g.add_node(12);
+    g.add_node(12);
+
+    g
 }
 
 // N{P}[ST]{P}

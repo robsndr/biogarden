@@ -9,6 +9,7 @@ use io::fasta::Record;
 use io::fasta::{FastaRead, Reader};
 
 use ds::tile::Tile;
+use ds::graph::*;
 use std::fs::File;
 use std::io::prelude::*;
 use sequence::Sequence;
@@ -120,14 +121,14 @@ fn main() {
 
 
     // Infer RNA 
-    let mut reader = Reader::from_file(std::path::Path::new(r"C:\Users\Robert\Desktop\biotech\src\in.fasta")).unwrap();
-    let mut record = Record::new();
-    let mut matrix = Tile::new();
+    // let mut reader = Reader::from_file(std::path::Path::new(r"C:\Users\Robert\Desktop\biotech\src\in.fasta")).unwrap();
+    // let mut record = Record::new();
+    // let mut matrix = Tile::new();
     
-    reader
-    .read(&mut record)
-    .expect("fasta reader: got an io::Error or could not read_line()");
-    let protein = Sequence::from(record.clone());
+    // reader
+    // .read(&mut record)
+    // .expect("fasta reader: got an io::Error or could not read_line()");
+    // let protein = Sequence::from(record.clone());
     
     // let num : f64 = algo::weighted_mass(&protein);
 
@@ -140,15 +141,41 @@ fn main() {
 
     // CAGCATGGTATCACAGCAGAG
 
-    let seq = Sequence::from("A");
-    let pat = Sequence::from("CAGCATGGTATCACAGCAGAG");
+    // let seq = Sequence::from("A");
+    // let pat = Sequence::from("CAGCATGGTATCACAGCAGAG");
 
-    let x  = algo::knuth_morris_pratt(&seq, &protein);
+    // let x  = algo::knuth_morris_pratt(&seq, &protein);
 
 
-    let mut f = File::create("output.txt").expect("Unable to create file");                                                                                                          
+    // let mut f = File::create("output.txt").expect("Unable to create file");                                                                                                          
     
-    for i in &x{            
-        write!(f, "{} ", i);                                                                                                                                                                                                                                                                              
-    }   
+    // for i in &x{            
+    //     write!(f, "{} ", i);                                                                                                                                                                                                                                                                              
+    // }   
+
+    // Overlap Graph
+    let mut reader = Reader::from_file(std::path::Path::new(r"C:\Users\Robert\Desktop\biotech\src\in.fasta")).unwrap();
+    let mut record = Record::new();
+    let mut matrix = Tile::new();
+    
+    reader
+    .read(&mut record)
+    .expect("fasta reader: got an io::Error or could not read_line()");
+    let mut pre_rna = Sequence::from(record.clone());
+    loop {
+        reader
+        .read(&mut record)
+        .expect("fasta reader: got an io::Error or could not read_line()");
+        if record.is_empty() {
+            break;
+        }
+        matrix.push(Sequence::from(record.clone()));
+    } 
+    let g = algo::overlap_graph(&matrix, 3);
+
+    // let mut g = Graph::<u32, u32>::new();
+    // g.add_node(12);
+    // g.add_node(12);
+
+    // println!("{:#?}", g);
 }
