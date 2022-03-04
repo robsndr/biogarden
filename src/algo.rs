@@ -380,24 +380,30 @@ pub fn random_substrings(seq: &Sequence, gc_content: &[f64]) -> Vec<f64> {
     return probabilities;
 }
 
-pub fn overlap_graph(sequences: &Tile, k: usize) -> Graph::<u32, u32> {
+pub fn overlap_graph(sequences: &Tile, k: usize) -> Graph::<Sequence, u8> {
 
+    // Instantiate empty graph
+    let mut g = Graph::<Sequence, u8>::new();
+    
+    // Add all nodes to  graph
+    let mut node_ids : Vec<u64> = vec![];
+    for seq in sequences {
+        node_ids.push(g.add_node(seq.clone()));
+    }
+
+    // Connect overlap graph
     for (i, seq) in sequences.into_iter().enumerate() {
         let last = seq.into_iter().rev().take(k).rev();
         for (j, seq2) in sequences.into_iter().enumerate() {
-            if j == i {
-             continue;
-            }
-            let first = seq2.into_iter().take(k);
-            if first.zip(last.clone()).filter(|&(a, b)| a != b).count() == 0 {
-                print!("{}   {}\n\n", seq, seq2);
+            if j != i {
+                let first = seq2.into_iter().take(k);
+                // Check if suffix of `seq` is equal to prefix of `seq2`
+                if first.zip(last.clone()).filter(|&(a, b)| a != b).count() == 0 {
+                    g.add_edge(&node_ids[i], &node_ids[j], 0).unwrap_or(());
+                }
             }
         }
     }
-    let mut g = Graph::<u32, u32>::new();
-    g.add_node(12);
-    g.add_node(12);
-
     g
 }
 

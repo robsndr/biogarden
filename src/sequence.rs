@@ -7,7 +7,7 @@ use std::fmt; // Import `fmt`
 #[derive(Debug, Clone)]
 pub struct Sequence {
     pub chain: Vec<u8>,
-    id: Option<String>,
+    pub id: Option<String>,
 }
 
 impl Sequence {

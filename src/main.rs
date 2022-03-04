@@ -136,46 +136,34 @@ fn main() {
 
     // let a  = matrix.into_array3();
     // let profile = algo::calc_profile(&a);
-    // print!("{}", Sequence::from(algo::calc_consensus(&profile)))
-
-
-    // CAGCATGGTATCACAGCAGAG
+    // print!("{}", Sequence::from(algo::calc_consensus(&profile))
 
     // let seq = Sequence::from("A");
     // let pat = Sequence::from("CAGCATGGTATCACAGCAGAG");
 
     // let x  = algo::knuth_morris_pratt(&seq, &protein);
-
-
     // let mut f = File::create("output.txt").expect("Unable to create file");                                                                                                          
-    
     // for i in &x{            
     //     write!(f, "{} ", i);                                                                                                                                                                                                                                                                              
     // }   
 
     // Overlap Graph
-    let mut reader = Reader::from_file(std::path::Path::new(r"C:\Users\Robert\Desktop\biotech\src\in.fasta")).unwrap();
-    let mut record = Record::new();
-    let mut matrix = Tile::new();
+    // let mut reader = Reader::from_file(std::path::Path::new(r"C:\Users\Robert\Desktop\biotech\src\in.fasta")).unwrap();
+    // let mut record = Record::new();
+    // let mut matrix = Tile::new();
+    // loop {
+    //     reader
+    //     .read(&mut record)
+    //     .expect("fasta reader: got an io::Error or could not read_line()");
+    //     if record.is_empty() {
+    //         break;
+    //     }
+    //     matrix.push(Sequence::from(record.clone()));
+    // } 
+    // let g = algo::overlap_graph(&matrix, 3);
+    // for (start, end) in g.edges() {
+    //     print!("{} {}\n", start.data.id.as_ref().unwrap(), end.data.id.as_ref().unwrap())
+    // }
+
     
-    reader
-    .read(&mut record)
-    .expect("fasta reader: got an io::Error or could not read_line()");
-    let mut pre_rna = Sequence::from(record.clone());
-    loop {
-        reader
-        .read(&mut record)
-        .expect("fasta reader: got an io::Error or could not read_line()");
-        if record.is_empty() {
-            break;
-        }
-        matrix.push(Sequence::from(record.clone()));
-    } 
-    let g = algo::overlap_graph(&matrix, 3);
-
-    // let mut g = Graph::<u32, u32>::new();
-    // g.add_node(12);
-    // g.add_node(12);
-
-    // println!("{:#?}", g);
 }
