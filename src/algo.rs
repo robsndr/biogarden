@@ -3,6 +3,7 @@ use ndarray::prelude::*;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fmt; // Import `fmt`
+use statrs::function::factorial::{binomial, factorial};
 
 use super::Sequence;
 use super::Tile;
@@ -169,14 +170,7 @@ pub fn fibo(n: usize, k: u64) -> u64 {
 pub fn hamming_distance(s1: &Sequence, s2: &Sequence) -> u32 {
     let s1 = s1.to_string();
     let s2 = s2.to_string();
-    let both = s1.chars().zip(s2.chars());
-    let mut hamming : u32 = 0;
-    for pair in both {
-        if pair.0 != pair.1 {
-            hamming += 1;
-        }
-    }
-    hamming
+    s1.chars().zip(s2.chars()).filter(|&(a, b)| a != b).count() as u32
 }
 
 pub fn knuth_morris_pratt(seq: &Sequence, pat: &Sequence) -> Vec<usize> {
@@ -407,6 +401,38 @@ pub fn overlap_graph(sequences: &Tile, k: usize) -> Graph::<Sequence, u8> {
     g
 }
 
+pub fn partial_permutations(n: u64, k: u64) -> u64 {
+    let combinations = binomial(n, k);
+    let permutations = factorial(k);
+    (combinations * permutations) as u64 % 1000000
+}
+
+pub fn transition_transversion_ratio(s1: &Sequence, s2: &Sequence) -> f32 {
+    let s1 = s1.to_string();
+    let s2 = s2.to_string();
+    let missmatch_iter = s1.chars().zip(s2.chars()).filter(|&(a, b)| a != b);
+    let hamming = missmatch_iter.clone().count() as f32;
+    let mut transitions : f32 = 0.0;
+    for (a, b) in missmatch_iter {
+        // C <-> T 
+        if (a == 'C' && b == 'T') || (a == 'T' && b == 'C'){
+            transitions += 1.0;
+        }
+        // A <-> G
+        if (a == 'A' && b == 'G') || (a == 'G' && b == 'A'){
+            transitions += 1.0;
+        }
+    }
+    let transversions = hamming  - transitions;
+    transitions / transversions
+}
+
+pub fn connected_components(g: &Graph<String, u8>) {
+
+    
+
+}
+
 // N{P}[ST]{P}
 // pub fn generate_motifs(target: &Vec<u8>, result: &mut Vec<String>, i: usize, temp: &mut Vec<u8>) {
 //
@@ -558,4 +584,19 @@ mod tests {
                             -70.59699957974087, -64.49615401338707], random_substrings(&seq, &arr));
     }
 
+    #[test]
+    fn test_partial_permutations() {
+        let part = partial_permutations(21, 7);
+        assert_eq!(51200, part);
+    }
+
+    #[test]
+    fn test_transition_transversion_ratio() {
+        let a = Sequence::from("GCAACGCACAACGAAAACCCTTAGGGACTGGATTATTTCGT\
+                                GATCGTTGTAGTTATTGGAAGTACGGGCATCAACCCAGTT");
+        let b = Sequence::from("TTATCTGACAAAGAAAGCCGTCAACGGCTGGATAATTTCGC\
+                                GATCGTGCTGGTTACTGGCGGTACGAGTGTTCCTTTGGGT");
+        let ratio = transition_transversion_ratio(&a, &b);
+        assert_eq!(1.21428571429, ratio);
+    }
 }

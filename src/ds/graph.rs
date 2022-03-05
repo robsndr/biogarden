@@ -124,6 +124,13 @@ impl<N, E> Graph<N, E> {
         self.edges.iter().map(|(_, e)| (self.nodes.get(&e.start).unwrap(), self.nodes.get(&e.end).unwrap()))
     }
 
+    pub fn out_neighbors<'a>(&'a self, id: u64) -> Box<dyn Iterator<Item=u64>+'a> {
+        match self.nodes.get(&id) {
+            Some(x) => Box::new(x.outgoing.iter().map(|idx| self.edges.get(idx).unwrap().end)),
+            _ => Box::new(::std::iter::empty())
+        }
+    }
+
     // pub fn node(&self, id: u64) -> &N {
     //     self.nodes.get(id).unwrap()
     // }
@@ -135,12 +142,7 @@ impl<N, E> Graph<N, E> {
     //     }
     // }
 
-    // pub fn out_neighbors(&self, id: &VertexId) -> VertexIter<'_> {
-    //     match self.outbound_table.get(id) {
-    //         Some(iter) => VertexIter(Box::new(iter.iter().rev().map(AsRef::as_ref))),
-    //         None => VertexIter(Box::new(iter::empty())),
-    //     }
-    // }
+
 
 
     // pub fn remove(&mut self, id: &VertexId) {

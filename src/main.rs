@@ -165,5 +165,23 @@ fn main() {
     //     print!("{} {}\n", start.data.id.as_ref().unwrap(), end.data.id.as_ref().unwrap())
     // }
 
+    // Transitions / Transversions
+    // let mut reader = Reader::from_file(std::path::Path::new(r"C:\Users\Robert\Desktop\biotech\src\in.fasta")).unwrap();
+    // let mut record = Record::new();
     
+    // reader
+    // .read(&mut record)
+    // .expect("fasta reader: got an io::Error or could not read_line()");
+    // let mut a = Sequence::from(record.clone());
+
+    // reader
+    // .read(&mut record)
+    // .expect("fasta reader: got an io::Error or could not read_line()");
+    // let mut b = Sequence::from(record.clone());
+
+    // let ratio = algo::transition_transversion_ratio(&a, &b);
+    // print!("Ratio -> {}", ratio);
+
+
+    // Connected Components
 }
