@@ -8,6 +8,7 @@ use statrs::function::factorial::{binomial, factorial};
 use super::Sequence;
 use super::Tile;
 use super::Graph;
+use super::Dfs;
 
 // Count number of chars in Sequence sequence
 // Return array with numbers representing #occur of given char
@@ -427,10 +428,27 @@ pub fn transition_transversion_ratio(s1: &Sequence, s2: &Sequence) -> f32 {
     transitions / transversions
 }
 
-pub fn connected_components(g: &Graph<String, u8>) {
+pub fn connected_components(g: &Graph<u64, u8>) -> (u32, Vec<Vec<u64>>) {
 
+    let mut processed = HashSet::<u64>::new();
+    let mut dfs = Dfs::new(g);
+    let mut ctr : u32 = 0;
+    let mut cc : Vec<u64> = vec![];
+    let mut components : Vec<Vec<u64>> = vec![];
     
-
+    for n in g.nodes() {
+        if !processed.contains(n) {
+            dfs.init(n);
+            cc.clear();
+            while let Ok(id) = dfs.process_node() {
+                processed.insert(id);
+                cc.push(id);
+            }
+            components.push(cc.clone());
+            ctr += 1;
+        }
+    }
+    (ctr, components)
 }
 
 // N{P}[ST]{P}

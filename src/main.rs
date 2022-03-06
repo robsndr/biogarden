@@ -14,7 +14,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use sequence::Sequence;
 use ndarray::prelude::*;
-
+use std::io::{BufReader};
 
 fn main() {
 
@@ -184,4 +184,28 @@ fn main() {
 
 
     // Connected Components
+    let file = File::open(r"C:\Users\Robert\Desktop\biotech\src\in.fasta").unwrap();
+    let reader = BufReader::new(file);
+
+    let mut g = Graph::<u64, u8>::new();
+    let mut node_ids : Vec<u64> = vec![];
+
+    // Add all nodes to  graph
+    let mut vertices : u64 = 850;    
+    for seq in 0..vertices {
+        node_ids.push(g.add_node(seq.clone()));
+    }
+    for result in reader.lines() {
+        let line = result.unwrap();
+        let vec: Vec<&str> = line
+           .split(" ")
+           .collect();
+        
+        g.add_edge(&node_ids[(vec[0].parse::<u64>().unwrap()-1) as usize], &(node_ids[(vec[1].parse::<u64>().unwrap()-1) as usize]), 0);
+        g.add_edge(&node_ids[(vec[1].parse::<u64>().unwrap()-1) as usize], &node_ids[(vec[0].parse::<u64>().unwrap()-1) as usize], 0);
+    }
+
+    let (cc, a) = algo::connected_components(&g);
+    print!("{} ", cc-1);
+
 }
