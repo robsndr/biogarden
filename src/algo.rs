@@ -430,8 +430,9 @@ pub fn transition_transversion_ratio(s1: &Sequence, s2: &Sequence) -> f32 {
 
 pub fn connected_components(g: &Graph<u64, u8>) -> (u32, Vec<Vec<u64>>) {
 
-    let mut processed = HashSet::<u64>::new();
     let mut dfs = Dfs::new(g);
+
+    let mut processed = HashSet::<u64>::new();
     let mut ctr : u32 = 0;
     let mut cc : Vec<u64> = vec![];
     let mut components : Vec<Vec<u64>> = vec![];
@@ -450,6 +451,89 @@ pub fn connected_components(g: &Graph<u64, u8>) -> (u32, Vec<Vec<u64>>) {
     }
     (ctr, components)
 }
+
+
+pub fn p_distance_matrix(matrix: &Tile) -> Array2<f32> {
+
+    let (rows, columns) = matrix.size();
+    let mut distances =  Array2::<f32>::zeros((rows, rows));
+    let mut p_dist : f32 = 0.0;
+    
+    for (i, a_row) in matrix.into_iter().enumerate() {
+        for (j, b_row) in matrix.into_iter().enumerate() {
+            p_dist = 0.0;
+            if i != j {
+                p_dist = a_row.into_iter().zip(b_row).filter(|(a,b)| a != b).count() as f32;
+            }
+            distances[(i,j)] = p_dist / (columns as f32);
+            distances[(j,i)] = p_dist / (columns as f32);
+        }
+    }
+    distances
+}
+
+// Greedy search for shortest common superstring
+pub fn subsequences(a: &Sequence, b: &Sequence, limit: Option<usize>) -> Vec<Vec<usize>> {
+
+    let mut result = vec![];
+    let mut temp = Vec::<usize>::new();
+    let a_idx: usize = 0;
+    let b_idx: usize = 0; 
+
+    pub fn subsequences_recursive(a: &Sequence, a_idx: usize,b: &Sequence, b_idx: usize, 
+                                     temp: &mut Vec<usize>, result: &mut Vec<Vec<usize>>,
+                                     limit: Option<usize>) 
+    {
+        if b_idx == b.len() {
+            result.push(temp.clone());
+            return;
+        }
+        for i in a_idx..a.len() {
+            if limit.is_some() && result.len() == limit.unwrap() {
+                return;
+            }
+            if b[b_idx] == a[i] {
+                temp.push(i);
+                subsequences_recursive(a, i+1, b, b_idx+1, temp, result, limit);
+                temp.pop();
+            }
+        }   
+    }
+
+    subsequences_recursive(a, a_idx, b, b_idx, &mut temp, &mut result, limit);
+    return result;
+}
+
+
+
+// Greedy search for shortest common superstring
+// pub fn shortest_common_superstring(sequences: &Tile) -> Sequence {
+
+//     let mut subsequence_set = HashSet::<Sequence>::new();
+//     let mut k : usize = 0;
+//     for seq in sequences {
+//         subsequence_set.insert(seq.clone());
+//         // find max length of subsequence used
+//         if seq.len() > k {
+//             k = seq.len();
+//         }
+//     }
+
+//     k = 150;
+
+//     while k > 1 {
+//         let grph = overlap_graph(sequences,  k);
+//         if grph.edge_count() > 0 {
+//             let e = grph.edges().next().unwrap();
+//             // print!("{:#?}", e);
+//         }
+//         // print!("ALOHA");
+//         k = k-1;
+//     }
+
+//     Sequence::new()
+// }
+
 
 // N{P}[ST]{P}
 // pub fn generate_motifs(target: &Vec<u8>, result: &mut Vec<String>, i: usize, temp: &mut Vec<u8>) {

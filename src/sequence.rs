@@ -1,7 +1,8 @@
 #![warn(missing_debug_implementations)]
 use ndarray::prelude::*;
 use super::io::fasta;
-
+use std::hash::{Hash, Hasher};
+use std::ops::{Index, IndexMut};
 use std::fmt; // Import `fmt`
 
 #[derive(Debug, Clone)]
@@ -24,6 +25,15 @@ impl Sequence {
         self.chain.len()
     }
 }
+
+impl Hash for Sequence {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
+        self.chain.hash(state);
+    }
+}
+
+impl Eq for Sequence {}
 
 impl PartialEq for Sequence {
     fn eq(&self, other: &Self) -> bool {
@@ -121,3 +131,15 @@ impl fmt::Display for Sequence {
     }
 }
 
+impl Index<usize> for Sequence {
+    type Output = u8;
+    fn index<'a>(&'a self, i: usize) -> &'a u8 {
+        &self.chain[i]
+    }
+}
+
+// impl IndexMut<usize> for Sequence {
+//     fn index_mut<'a>(&'a mut self, i: usize) -> &'a mut Sequence {
+//         &mut self.data[i]
+//     }
+// }

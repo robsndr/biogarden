@@ -184,28 +184,52 @@ fn main() {
 
 
     // Connected Components
-    let file = File::open(r"C:\Users\Robert\Desktop\biotech\src\in.fasta").unwrap();
-    let reader = BufReader::new(file);
+    // let file = File::open(r"C:\Users\Robert\Desktop\biotech\src\in.fasta").unwrap();
+    // let reader = BufReader::new(file);
 
-    let mut g = Graph::<u64, u8>::new();
-    let mut node_ids : Vec<u64> = vec![];
+    // let mut g = Graph::<u64, u8>::new();
+    // let mut node_ids : Vec<u64> = vec![];
 
-    // Add all nodes to  graph
-    let mut vertices : u64 = 850;    
-    for seq in 0..vertices {
-        node_ids.push(g.add_node(seq.clone()));
-    }
-    for result in reader.lines() {
-        let line = result.unwrap();
-        let vec: Vec<&str> = line
-           .split(" ")
-           .collect();
+    // // Add all nodes to  graph
+    // let mut vertices : u64 = 850;    
+    // for seq in 0..vertices {
+    //     node_ids.push(g.add_node(seq.clone()));
+    // }
+    // for result in reader.lines() {
+    //     let line = result.unwrap();
+    //     let vec: Vec<&str> = line
+    //        .split(" ")
+    //        .collect();
         
-        g.add_edge(&node_ids[(vec[0].parse::<u64>().unwrap()-1) as usize], &(node_ids[(vec[1].parse::<u64>().unwrap()-1) as usize]), 0);
-        g.add_edge(&node_ids[(vec[1].parse::<u64>().unwrap()-1) as usize], &node_ids[(vec[0].parse::<u64>().unwrap()-1) as usize], 0);
-    }
+    //     g.add_edge(&node_ids[(vec[0].parse::<u64>().unwrap()-1) as usize], &(node_ids[(vec[1].parse::<u64>().unwrap()-1) as usize]), 0);
+    //     g.add_edge(&node_ids[(vec[1].parse::<u64>().unwrap()-1) as usize], &node_ids[(vec[0].parse::<u64>().unwrap()-1) as usize], 0);
+    // }
 
-    let (cc, a) = algo::connected_components(&g);
-    print!("{} ", cc-1);
+    // let (cc, a) = algo::connected_components(&g);
+    // print!("{} ", cc-1);
 
+
+    // Distance matrix
+    let mut reader = Reader::from_file(std::path::Path::new(r"C:\Users\Robert\Desktop\biotech\src\in.fasta")).unwrap();
+    let mut record = Record::new();
+    let mut matrix = Tile::new();
+
+    reader
+    .read(&mut record)
+    .expect("fasta reader: got an io::Error or could not read_line()");
+    let mut a = Sequence::from(record.clone());
+
+    reader
+    .read(&mut record)
+    .expect("fasta reader: got an io::Error or could not read_line()");
+    let mut b = Sequence::from(record.clone());
+
+    // let a = algo::p_distance_matrix(&matrix);
+    
+
+    let mut result = Vec::<usize>::new();
+    let a_idx: usize = 0;
+    let b_idx: usize = 0;
+    let a = algo::subsequences(&a, &b, Some(3));
+    print!("{:?}", a);
 }

@@ -23,6 +23,10 @@ impl Tile
         self.data.pop()
     }
 
+    pub fn size(& self) -> (usize, usize) {
+        (self.data.len(), self.data[0].len())
+    }
+
     // Convert tile into Array2 
     // TODO: move into From method
     pub fn into_array2(self) -> Array2<u16> {
