@@ -2,6 +2,9 @@ use hashbrown::{HashMap, HashSet};
 use rand::{thread_rng, Rng};
 use std::hash::Hash;
 use std::hash::Hasher;
+use std::fs::File;
+use std::io::Write;
+use std::fmt;
 
 #[derive(Clone, Debug, PartialEq)]
 /// Graph operation error
@@ -22,62 +25,55 @@ pub enum GraphErr {
     /// create a cycle in the graph.
     CycleError,
 
-    #[cfg(feature = "dot")]
-    /// Could not render .dot file
-    CouldNotRender,
+    // #[cfg(feature = "dot")]
+    // /// Could not render .dot file
+    // CouldNotRender,
 
-    #[cfg(feature = "dot")]
-    /// The name of the graph is invalid. Check [this](https://docs.rs/dot/0.1.1/dot/struct.Id.html#method.new)
-    /// out for more information.
-    InvalidGraphName,
+    // #[cfg(feature = "dot")]
+    // /// The name of the graph is invalid. Check [this](https://docs.rs/dot/0.1.1/dot/struct.Id.html#method.new)
+    // /// out for more information.
+    // InvalidGraphName,
 }
 
 #[derive(Clone, Debug)]
+pub struct GraphProperties { pub directed: bool}
+
+#[derive(Clone, Debug)]
 /// Edge internal struct
-pub struct Edge<T> {
+pub struct Edge<T: fmt::Display> {
     start: u64,
     end: u64,
-    pub data: T,
+    pub data: Option<T>,
 }
 
-#[derive(Clone, Debug, Default)]
-pub struct Node<T> {
+#[derive(Clone, Debug)]
+pub struct Node<T: fmt::Display> {
     id: u64,
     incoming: Vec<u64>,
     outgoing: Vec<u64>,
     pub data: T,
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 /// Graph data-structure
-pub struct Graph<N, E> {
+pub struct Graph<N: fmt::Display, E: fmt::Display> {
     /// Mapping of vertex ids and vertex values
     nodes: HashMap<u64, Node<N>>,
     /// Mapping between edges and weights
     edges: HashMap<u64, Edge<E>>,
+    /// Properties of the represented graph
+    properties: GraphProperties,
 }
 
-impl<N, E> Graph<N, E> {
+impl<N: fmt::Display, E: fmt::Display + Clone> Graph<N, E> {
 
-    pub fn new() -> Graph<N, E> {
+    pub fn new(props: GraphProperties) -> Graph<N, E> {
         Graph {
             nodes: HashMap::new(),
             edges: HashMap::new(),
+            properties: props,
         }
     }
-
-    pub fn with_capacity(capacity: usize) -> Graph<N, E> {
-        let edges_capacity = if capacity < 100 {
-            usize::pow(capacity, 2)
-        } else {
-            capacity
-        };
-
-        Graph {
-            nodes: HashMap::with_capacity(capacity),
-            edges: HashMap::with_capacity(edges_capacity),
-        }
-    }   
 
     pub fn add_node(&mut self, data: N) -> u64 {
         let mut rng = thread_rng();
@@ -86,7 +82,7 @@ impl<N, E> Graph<N, E> {
         nid
     }   
 
-    pub fn add_edge(&mut self, a: &u64, b: &u64, data: E) -> Result<(), GraphErr> {
+    pub fn add_edge(&mut self, a: &u64, b: &u64, data: Option<E>) -> Result<(), GraphErr> {
         if self.has_edge(a, b) {
             return Ok(());
         }
@@ -104,11 +100,18 @@ impl<N, E> Graph<N, E> {
         };
 
         let mut rng = thread_rng();
-        let eid = rng.gen_range(0..1000000000);
-        self.edges.insert(eid, Edge{start: id1, end: id2, data: data});
-
+        
+        let mut eid = rng.gen_range(0..1000000000);
+        self.edges.insert(eid, Edge{start: id1, end: id2, data: data.clone()});
         self.nodes.get_mut(&id1).unwrap().outgoing.push(eid);
         self.nodes.get_mut(&id2).unwrap().incoming.push(eid);
+
+        if !self.properties.directed {
+            eid = rng.gen_range(0..1000000000);
+            self.edges.insert(eid, Edge{start: id2, end: id1, data: data.clone()});
+            self.nodes.get_mut(&id2).unwrap().outgoing.push(eid);
+            self.nodes.get_mut(&id1).unwrap().incoming.push(eid);
+        }
 
         Ok(())
     }
@@ -128,8 +131,8 @@ impl<N, E> Graph<N, E> {
         }
     }    
 
-    pub fn edges(&self) -> impl Iterator<Item = (&u64, &u64)> {
-        self.edges.iter().map(|(_, e)| (&e.start, &e.end))
+    pub fn edges(&self) -> impl Iterator<Item=&u64> {
+        self.edges.keys()
     }
 
     pub fn nodes(&self) -> impl Iterator<Item=&u64> {
@@ -176,7 +179,29 @@ impl<N, E> Graph<N, E> {
     pub fn node_count(&self) -> usize {
         self.nodes.len()
     }
+    
+    pub fn write_dot(&self, f: &str) {
+        let mut w = File::create(f).unwrap();
+        if self.properties.directed {
+            writeln!(&mut w, "digraph sample {{").unwrap();
+        }
+        else {
+            writeln!(&mut w, "strict graph sample {{").unwrap();
+        }
+        for (id, edge) in &self.edges {
+            match (self.properties.directed, edge.data.as_ref()) {
+                (true, Some(x)) =>  writeln!(&mut w, "  {} -> {} [ label = {} ];", edge.start, edge.end, x).unwrap(),
+                (true, None) => writeln!(&mut w, "  {} -> {};", edge.start, edge.end).unwrap(),
+                (false, Some(x)) => writeln!(&mut w, "  {} -- {} [ label = {} ];", edge.start, edge.end, x).unwrap(),
+                (false, None) => writeln!(&mut w, "  {} -- {};", edge.start, edge.end).unwrap(),
+            };  
+        }
+        for (id, node) in &self.nodes {
+            writeln!(&mut w, "  {} [ label = {} ];", id, node.data).unwrap();
+        }
 
+        writeln!(&mut w, "}}").unwrap();
+    }
 
     // pub fn in_neighbors(&self, id: &u64) -> impl Iterator<Item = &N> {
     //     match self.nodes.get(id) {
@@ -295,14 +320,14 @@ impl<N, E> Graph<N, E> {
 
 // }
 
-pub struct Dfs<'a, N, E> {
+pub struct Dfs<'a, N: fmt::Display, E: fmt::Display + Clone> {
     current: u64,
     stack: Vec<u64>,
     visited: HashSet<u64>,
     graph: &'a Graph<N,E>
 }
 
-impl<'a, N, E> Dfs<'a, N, E> {
+impl<'a, N: fmt::Display, E: fmt::Display + Clone> Dfs<'a, N, E> {
 
     pub fn new(graph: &'a Graph<N, E>) -> Dfs<'a, N, E> {
         let mut stack = Vec::<u64>::new();

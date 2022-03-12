@@ -8,6 +8,7 @@ use statrs::function::factorial::{binomial, factorial};
 use super::Sequence;
 use super::Tile;
 use super::Graph;
+use super::GraphProperties;
 use super::Dfs;
 
 // Count number of chars in Sequence sequence
@@ -378,7 +379,8 @@ pub fn random_substrings(seq: &Sequence, gc_content: &[f64]) -> Vec<f64> {
 pub fn overlap_graph(sequences: &Tile, k: usize) -> Graph::<Sequence, u8> {
 
     // Instantiate empty graph
-    let mut g = Graph::<Sequence, u8>::new();
+    // let gp = ;
+    let mut g = Graph::<Sequence, u8>::new(GraphProperties{directed: true});
     
     // Add all nodes to  graph
     let mut node_ids : Vec<u64> = vec![];
@@ -394,7 +396,7 @@ pub fn overlap_graph(sequences: &Tile, k: usize) -> Graph::<Sequence, u8> {
                 let first = seq2.into_iter().take(k);
                 // Check if suffix of `seq` is equal to prefix of `seq2`
                 if first.zip(last.clone()).filter(|&(a, b)| a != b).count() == 0 {
-                    g.add_edge(&node_ids[i], &node_ids[j], 0).unwrap_or(());
+                    g.add_edge(&node_ids[i], &node_ids[j], None).unwrap_or(());
                 }
             }
         }
@@ -503,7 +505,6 @@ pub fn subsequences(a: &Sequence, b: &Sequence, limit: Option<usize>) -> Vec<Vec
     subsequences_recursive(a, a_idx, b, b_idx, &mut temp, &mut result, limit);
     return result;
 }
-
 
 
 // Greedy search for shortest common superstring
