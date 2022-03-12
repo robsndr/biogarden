@@ -1,5 +1,6 @@
 use hashbrown::{HashMap, HashSet};
 use rand::{thread_rng, Rng};
+use std::ops::{Index, IndexMut};
 use std::hash::Hash;
 use std::hash::Hasher;
 use std::fs::File;
@@ -120,8 +121,8 @@ impl<N: fmt::Display, E: fmt::Display + Clone> Graph<N, E> {
         self.nodes.get(id).unwrap()
     }
 
-    pub fn get_edge(&self, id: &u64) -> &Edge<E> {
-        self.edges.get(id).unwrap()
+    pub fn get_edge(&mut self, id: &u64) -> &mut Edge<E> {
+        self.edges.get_mut(&id).unwrap()
     }    
 
     pub fn has_edge(&self, a: &u64, b: &u64) -> bool {
@@ -190,135 +191,22 @@ impl<N: fmt::Display, E: fmt::Display + Clone> Graph<N, E> {
         }
         for (id, edge) in &self.edges {
             match (self.properties.directed, edge.data.as_ref()) {
-                (true, Some(x)) =>  writeln!(&mut w, "  {} -> {} [ label = {} ];", edge.start, edge.end, x).unwrap(),
+                (true, Some(x)) =>  writeln!(&mut w, "  {} -> {} [ label = \"{}\" ];", edge.start, edge.end, x).unwrap(),
                 (true, None) => writeln!(&mut w, "  {} -> {};", edge.start, edge.end).unwrap(),
-                (false, Some(x)) => writeln!(&mut w, "  {} -- {} [ label = {} ];", edge.start, edge.end, x).unwrap(),
+                (false, Some(x)) => writeln!(&mut w, "  {} -- {} [ label = \"{}\" ];", edge.start, edge.end, x).unwrap(),
                 (false, None) => writeln!(&mut w, "  {} -- {};", edge.start, edge.end).unwrap(),
             };  
         }
         for (id, node) in &self.nodes {
-            writeln!(&mut w, "  {} [ label = {} ];", id, node.data).unwrap();
+            writeln!(&mut w, "  {} [ label = \"{}\" ];", id, node.data).unwrap();
         }
 
         writeln!(&mut w, "}}").unwrap();
     }
-
-    // pub fn in_neighbors(&self, id: &u64) -> impl Iterator<Item = &N> {
-    //     match self.nodes.get(id) {
-    //         Some(neighbors) => VertexIter(Box::new(neighbors.iter().map(AsRef::as_ref))),
-    //         None => VertexIter(Box::new(iter::empty())),
-    //     }
-    // }
-
-
-
-
-    // pub fn remove(&mut self, id: &VertexId) {
-    //     self.vertices.remove(id);
-
-    //     // Remove each inbound edge
-    //     if let Some(inbounds) = self.inbound_table.remove(id) {
-    //         for vertex in inbounds {
-    //             self.remove_edge(&vertex, id);
-
-    //             // Add to tips if inbound vertex doesn't
-    //             // have other outbound vertices.
-    //             if self.out_neighbors_count(&vertex) == 0 {
-    //                 self.tips.insert(vertex);
-    //             }
-    //         }
-    //     }
-
-    //     // Remove each outbound edge
-    //     if let Some(outbounds) = self.outbound_table.remove(id) {
-    //         for vertex in outbounds {
-    //             self.remove_edge(id, &vertex);
-
-    //             // Add to roots if outbound vertex doesn't
-    //             // have other inbound vertices.
-    //             if self.in_neighbors_count(&vertex) == 0 {
-    //                 self.roots.insert(vertex);
-    //             }
-    //         }
-    //     }
-
-    //     self.roots.remove(&id);
-    //     self.tips.remove(&id);
-    // }
-
-    // pub fn remove_edge(&mut self, a: &VertexId, b: &VertexId) {
-    //     if let Some(outbounds) = self.outbound_table.get_mut(a) {
-    //         outbounds.retain(|v| v != b);
-    //         if outbounds.is_empty() {
-    //             self.outbound_table.remove(a);
-    //         }
-    //     }
-
-    //     if let Some(inbounds) = self.inbound_table.get_mut(b) {
-    //         inbounds.retain(|v| v != a);
-    //         if inbounds.is_empty() {
-    //             self.inbound_table.remove(b);
-    //         }
-    //     }
-
-    //     // If outbound vertex doesn't have any more inbounds,
-    //     // mark it as root.
-    //     if self.in_neighbors_count(&b) == 0 {
-    //         self.roots.insert(b.clone());
-    //     }
-
-    //     // Mark vertex as tip if it doesn't have any more outbounds.
-    //     if self.out_neighbors_count(&a) == 0 {
-    //         self.tips.insert(a.clone());
-    //     }
-
-    //     self.edges.remove(&Edge::new(*a, *b));
-    // }
-    
 }
- 
-
-//     pub fn weight(&self, a: &VertexId, b: &VertexId) -> Option<f32> {
-//         if !self.has_edge(a, b) {
-//             return None;
-//         }
-
-//         if let Some(result) = self.edges.get(&Edge::new(*a, *b)) {
-//             Some(*result)
-//         } else {
-//             None
-//         }
-//     }    
 
 
-//     pub fn set_weight(
-//         &mut self,
-//         a: &VertexId,
-//         b: &VertexId,
-//         new_weight: f32,
-//     ) -> Result<(), GraphErr> {
-//         if !self.has_edge(a, b) {
-//             return Err(GraphErr::NoSuchEdge);
-//         }
-
-//         if new_weight > 1.0 || new_weight < -1.0 {
-//             return Err(GraphErr::InvalidWeight);
-//         }
-
-//         self.edges.insert(Edge::new(*a, *b), new_weight);
-
-//         // Sort outbound vertices after setting a new weight
-//         let mut outbounds = self.outbound_table.get(a).unwrap().clone();
-
-//         self.sort_outbounds(a.clone(), &mut outbounds);
-
-//         // Update outbounds
-//         self.outbound_table.insert(a.clone(), outbounds);
-
-//         Ok(())
-//     }    
-
-// }
+/// DFS
 
 pub struct Dfs<'a, N: fmt::Display, E: fmt::Display + Clone> {
     current: u64,
@@ -361,4 +249,135 @@ impl<'a, N: fmt::Display, E: fmt::Display + Clone> Dfs<'a, N, E> {
         self.visited.insert(self.current);
         Ok(self.current)
     }
+}
+
+
+/// Ukonen Node
+pub struct UkonenNode {
+    link: u64,
+    suffix_edge_ids: HashMap<u8, u64>
+}
+
+impl UkonenNode {
+    pub fn new() -> UkonenNode {
+        UkonenNode {
+            link: 0,
+            suffix_edge_ids: HashMap::new(),
+        }
+    }
+}
+
+impl fmt::Display for UkonenNode  {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "UN: Link {:?}", self.link)
+    }
+}
+
+// Ukonen Edge
+#[derive(Clone)]
+pub struct UkonenEdge {
+    suffix_start: usize,
+    suffix_stop: i64
+}
+
+impl UkonenEdge {
+    pub fn new() -> UkonenEdge {
+        UkonenEdge {
+            suffix_start: 0,
+            suffix_stop: 0,
+        }
+    }
+}
+
+impl fmt::Display for UkonenEdge  {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "[{},{}]", self.suffix_start, self.suffix_stop)
+    }
+}
+
+// Ukonen Algorithm
+pub struct Ukonen<T:fmt::Display + Index<usize, Output=u8>> {
+    // Sequence to be processed
+    seq: T, 
+    idx: usize,
+    // State indicators
+    remaining : usize,
+    active_node_id : u64, 
+    active_edge_id : i64,
+    active_length : usize,
+    end: u8,
+    // Graph 
+    root_id : u64,
+    graph: Graph<UkonenNode, UkonenEdge>,
+
+}
+
+impl<T: fmt::Display + Clone + Index<usize, Output=u8>> Ukonen<T> {
+
+    pub fn new(sequence: T) -> Ukonen<T> {
+
+        let mut gr = Graph::<UkonenNode, UkonenEdge>::new(GraphProperties{directed: true});
+        let root_id = gr.add_node(UkonenNode::new());
+
+        Ukonen {
+            seq : sequence, 
+            idx : 0,
+            remaining : 0,
+            active_node_id : root_id, 
+            active_edge_id : -1,
+            active_length : 0,
+            end : 0,
+            root_id : root_id,
+            graph :  gr
+        }
+    }    
+
+
+    pub fn process(&mut self) -> &Graph<UkonenNode, UkonenEdge>{
+        
+        let value = self.seq[self.idx];
+        let current_node  = self.graph.get_node(&self.active_node_id);
+
+        // Increment remaining suffixes to be processed
+        self.remaining += 1;
+        // Set the current `end` character to new value
+        self.end = value;
+
+        if self.active_edge_id == -1 {
+            if !current_node.data.suffix_edge_ids.contains_key(&value) {
+                let nid = self.graph.add_node(UkonenNode::new());
+                let suffix = UkonenEdge{suffix_start: self.idx, suffix_stop: -1};
+                let eid = self.graph.add_edge(&self.active_node_id, &nid, Some(suffix));
+                self.remaining -= 1;
+            }
+            else {
+                self.active_edge_id = current_node.data.suffix_edge_ids[&value] as i64;
+                self.active_length += 1;
+            }
+        }
+        else {
+            let active_edge = self.graph.get_edge(&(self.active_edge_id as u64));
+            let lookup_idx = self.active_length + active_edge.data.as_ref().unwrap().suffix_start;
+            
+            if self.seq[lookup_idx] == value {
+                self.active_length += 1;
+            }
+            else {
+                
+            }
+
+            // if 
+        }
+
+        self.idx += 1;
+
+        &self.graph
+
+        // self.active_edge_id = current_node.data.suffix_edge_ids[&value];
+        // let mut edge = self.graph.get_edge(&self.active_edge_id);
+        // edge.data.as_mut().unwrap().start_idx = self.idx;
+        // edge.data.as_mut().unwrap().stop_idx = -1;
+
+    }
+
 }

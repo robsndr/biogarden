@@ -235,4 +235,15 @@ fn main() {
 
 
     // Shared Motif
+    let seq  = Sequence::from("ABCDEFG");
+    let mut ukkokens = Ukonen::<Sequence>::new(seq);
+    let g =  ukkokens.process();
+    let g =  ukkokens.process();
+    let g =  ukkokens.process();
+    let g =  ukkokens.process();
+    let g =  ukkokens.process();
+    let g =  ukkokens.process();
+    let g =  ukkokens.process();
+
+    g.write_dot("abc.dot");
 }
