@@ -188,7 +188,7 @@ fn main() {
     // let file = File::open(r"C:\Users\Robert\Desktop\biotech\src\in.fasta").unwrap();
     // let reader = BufReader::new(file);
 
-    // let mut g = Graph::<u64, u8>::new(GraphProperties{directed: false});
+    // let mut g = Graph::<u64, u8>::new(GraphProperties{directed: true});
     // let mut node_ids : Vec<u64> = vec![];
 
     // // Add all nodes to  graph
@@ -196,18 +196,25 @@ fn main() {
     // for seq in 0..vertices {
     //     node_ids.push(g.add_node(seq));
     // }
+    // let mut edge : u64 = 0;
+    // let mut edge1 : u64 = 0;
+
     // for result in reader.lines() {
     //     let line = result.unwrap();
     //     let vec: Vec<&str> = line
     //        .split(" ")
     //        .collect();
         
-    //     g.add_edge(&node_ids[(vec[0].parse::<u64>().unwrap()-1) as usize], &(node_ids[(vec[1].parse::<u64>().unwrap()-1) as usize]), None).unwrap();
+    //     edge1 = g.add_edge(&node_ids[(vec[0].parse::<u64>().unwrap()-1) as usize], &(node_ids[(vec[1].parse::<u64>().unwrap()-1) as usize]), None).unwrap();
+    //     edge = g.add_edge(&node_ids[(vec[1].parse::<u64>().unwrap()-1) as usize], &(node_ids[(vec[0].parse::<u64>().unwrap()-1) as usize]), None).unwrap();
     // }
 
     // let (cc, a) = algo::connected_components(&g);
     // print!("{} ", cc-1);
+    // // g.remove_edge(&edge);
+    // // g.remove_edge(&edge1);
     // g.write_dot("./abc.dot");
+
 
     // Distance matrix
     // let mut reader = Reader::from_file(std::path::Path::new(r"C:\Users\Robert\Desktop\biotech\src\in.fasta")).unwrap();
@@ -235,15 +242,14 @@ fn main() {
 
 
     // Shared Motif
-    let seq  = Sequence::from("ABCDEFG");
+    let seq  = Sequence::from("ABCABXAWBZ");
     let mut ukkokens = Ukonen::<Sequence>::new(seq);
     let g =  ukkokens.process();
-    let g =  ukkokens.process();
-    let g =  ukkokens.process();
-    let g =  ukkokens.process();
-    let g =  ukkokens.process();
-    let g =  ukkokens.process();
-    let g =  ukkokens.process();
+    // let g =  ukkokens.process();
+    // let g =  ukkokens.process();
+    // let g =  ukkokens.process();
+    // let g =  ukkokens.process();
+    // let g =  ukkokens.process();
 
     g.write_dot("abc.dot");
 }

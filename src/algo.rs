@@ -396,7 +396,7 @@ pub fn overlap_graph(sequences: &Tile, k: usize) -> Graph::<Sequence, u8> {
                 let first = seq2.into_iter().take(k);
                 // Check if suffix of `seq` is equal to prefix of `seq2`
                 if first.zip(last.clone()).filter(|&(a, b)| a != b).count() == 0 {
-                    g.add_edge(&node_ids[i], &node_ids[j], None).unwrap_or(());
+                    g.add_edge(&node_ids[i], &node_ids[j], None).unwrap();
                 }
             }
         }
