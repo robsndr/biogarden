@@ -364,40 +364,40 @@ impl<T: fmt::Display + Clone + Index<usize, Output=u8> + IntoIterator> Ukonen<T>
 
     pub fn process(&mut self) -> &Graph<UkonenNode, UkonenEdge>{
 
-        // for s in (self.seq).into_iter() {
-        //     self.process();
-        // }
+        for s in (self.seq.clone()).into_iter() {
+            self.step();
+        }
 
         // ABCABXAWBZ
-        self.step();
-        self.idx += 1;
+        // self.step();
+        // self.idx += 1;
         
-        self.step();
-        self.idx += 1;
+        // self.step();
+        // self.idx += 1;
 
-        self.step();
-        self.idx += 1;
+        // self.step();
+        // self.idx += 1;
 
-        self.step();
-        self.idx += 1;
+        // self.step();
+        // self.idx += 1;
 
-        self.step();
-        self.idx += 1;
+        // self.step();
+        // self.idx += 1;
         
-        self.step();
-        self.idx += 1;
+        // self.step();
+        // self.idx += 1;
         
-        self.step();
-        self.idx += 1;
+        // self.step();
+        // self.idx += 1;
 
-        self.step();
-        self.idx += 1;
+        // self.step();
+        // self.idx += 1;
 
-        self.step();
-        self.idx += 1;
+        // self.step();
+        // self.idx += 1;
 
-        self.step();
-        self.idx += 1;        
+        // self.step();
+        // self.idx += 1;        
 
         &self.graph
     }
