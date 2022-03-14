@@ -102,6 +102,18 @@ impl<'a> IntoIterator for &'a Sequence {
 }
 
 
+/*** Utility Traits ***/ 
+// Iterator Trait
+impl<'a> IntoIterator for &'a mut Sequence {
+
+    type Item = <std::slice::Iter<'a, u8> as Iterator>::Item;
+    type IntoIter = std::slice::Iter<'a, u8>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        (&mut self.chain).iter()
+    }
+}
+
 impl IntoIterator for Sequence {
     type Item = u8;
     type IntoIter = std::vec::IntoIter<Self::Item>;
