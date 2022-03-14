@@ -366,56 +366,10 @@ impl<T: fmt::Display + Clone + Index<usize, Output=u8> + IntoIterator> Ukonen<T>
 
         for s in (self.seq.clone()).into_iter() {
             self.step();
+            self.idx += 1;
         }
-
-        // ABCABXAWBZ
-        // self.step();
-        // self.idx += 1;
-        
-        // self.step();
-        // self.idx += 1;
-
-        // self.step();
-        // self.idx += 1;
-
-        // self.step();
-        // self.idx += 1;
-
-        // self.step();
-        // self.idx += 1;
-        
-        // self.step();
-        // self.idx += 1;
-        
-        // self.step();
-        // self.idx += 1;
-
-        // self.step();
-        // self.idx += 1;
-
-        // self.step();
-        // self.idx += 1;
-
-        // self.step();
-        // self.idx += 1;        
-
         &self.graph
     }
-
-    // self.active_node_id = active_edge.end;
-    // let nd  = self.graph.get_node(&self.active_node_id);
-    
-    // if nd.data.suffix_edge_ids.contains_key(&cur_value) {
-    //     self.active_edge_id = cur_node.data.suffix_edge_ids[&cur_value] as i64;
-    // self.active_length += 1;
-
-    // }
-    // else {
-    //     self.active_edge_id = -1;
-    // }
-    // // self.active_length = 1;
-    // // self.active_edge_id = -1;
-    // continue;
 
     fn split_suffix_edge(graph: &mut Graph<UkonenNode, UkonenEdge>, edge_index: &u64, split_index: usize, value_index: usize, seq: &T) -> u64 {
         
