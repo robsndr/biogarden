@@ -242,7 +242,7 @@ fn main() {
 
 
     // Shared Motif
-    let seq  = Sequence::from("XYZXYAXYZ$");
+    let seq  = Sequence::from("BANANA$");
     let mut ukkokens = Ukonen::<Sequence>::new(seq);
     let g =  ukkokens.process();
     // let g =  ukkokens.process();

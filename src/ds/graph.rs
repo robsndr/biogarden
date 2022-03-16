@@ -330,7 +330,7 @@ pub struct Ukonen<T:fmt::Display + Index<usize, Output=u8> + IntoIterator> {
     // State indicators
     remaining : usize,
     active_node_id : u64, 
-    active_edge_id : i64,
+    active_edge_seq_pos : usize,
     active_length : usize,
     end: u8,
     // Graph 
@@ -353,7 +353,7 @@ impl<T: fmt::Display + Clone + Index<usize, Output=u8> + IntoIterator> Ukonen<T>
             idx : 0,
             remaining : 0,
             active_node_id : root_id, 
-            active_edge_id : -1,
+            active_edge_seq_pos : 0,
             active_length : 0,
             end : 0,
             root_id : root_id,
@@ -367,31 +367,44 @@ impl<T: fmt::Display + Clone + Index<usize, Output=u8> + IntoIterator> Ukonen<T>
         for s in (self.seq.clone()).into_iter() {
             self.step();
             self.idx += 1;
+            self.graph.write_dot("abc.dot");
         }
         &self.graph
     }
 
-    fn split_suffix_edge(graph: &mut Graph<UkonenNode, UkonenEdge>, edge_index: &u64, split_index: usize, value_index: usize, seq: &T) -> u64 {
+    fn split_suffix_edge(graph: &mut Graph<UkonenNode, UkonenEdge>, edge_id: u64, split_index: usize, value_index: usize, seq: &T) -> u64 {
         
         // Get indizes of nodes in graph that are connected to edge
-        let edge_start = graph.get_edge(edge_index).start;
-        let edge_end = graph.get_edge(edge_index).end;
+        let edge_start = graph.get_edge(&edge_id).start;
+        let edge_end = graph.get_edge(&edge_id).end;
 
         // Get indizes of suffix that is encoded by the given edge
-        let suffix_start = graph.get_edge(edge_index).data.as_ref().unwrap().suffix_start;
-        let suffix_stop = graph.get_edge(edge_index).data.as_ref().unwrap().suffix_stop;
+        let suffix_start = graph.get_edge(&edge_id).data.as_ref().unwrap().suffix_start;
+        let suffix_stop = graph.get_edge(&edge_id).data.as_ref().unwrap().suffix_stop;
 
         // Split edge
         let split_node_id = graph.add_node(UkonenNode::new());
-        let split_edge_pre = graph.add_edge(&edge_start, &split_node_id, Some(UkonenEdge{suffix_start: suffix_start, suffix_stop: (suffix_start + split_index -1) as i64})).unwrap();
-        let split_edge_succ = graph.add_edge(&split_node_id, &edge_end, Some(UkonenEdge{suffix_start: suffix_start + split_index, suffix_stop: suffix_stop as i64})).unwrap();
+        let split_edge_pre = graph.add_edge(
+            &edge_start, 
+            &split_node_id, 
+            Some(UkonenEdge{suffix_start: suffix_start, suffix_stop: (suffix_start + split_index -1) as i64})
+        ).unwrap();
+        let split_edge_succ = graph.add_edge(
+            &split_node_id, 
+            &edge_end, 
+            Some(UkonenEdge{suffix_start: suffix_start + split_index, suffix_stop: suffix_stop as i64})
+        ).unwrap();
 
         // Add value into node created at split
         let leaf_node = graph.add_node(UkonenNode::new());
-        let value_edge = graph.add_edge(&split_node_id, &leaf_node, Some(UkonenEdge{suffix_start: value_index, suffix_stop: -1})).unwrap();
+        let value_edge = graph.add_edge(
+            &split_node_id, 
+            &leaf_node, 
+            Some(UkonenEdge{suffix_start: value_index, suffix_stop: -1})
+        ).unwrap();
 
         // Remove old edge that was split
-        graph.remove_edge(edge_index);
+        graph.remove_edge(&edge_id);
         graph.get_node_mut(&edge_start).data.suffix_edge_ids.remove(&seq[suffix_start]);
 
         // Update mapping for outgoing suffix edges for the involved nodes
@@ -405,88 +418,114 @@ impl<T: fmt::Display + Clone + Index<usize, Output=u8> + IntoIterator> Ukonen<T>
     pub fn step(&mut self) {
 
         let cur_value = self.seq[self.idx];
-        // Increment remaining suffixes to be processed
+        // Keeps track of the number of `suffixes` to be resolved after a new character is added 
         self.remaining += 1;
         // Set the current `end` character to new value
         self.end = cur_value;
 
-        while self.remaining > 0 {
-            let cur_node  = self.graph.get_node(&self.active_node_id);
-
-            if self.active_edge_id == -1 {
+        // For given position `self.idx` in input sequence `self.seq`
+        // Iterate as long as suffix after adding given letter is resolved
+        while self.remaining > 0 { 
+            
+            // No edge is active, so we are either at the root node or an internal node
+            if self.active_length == 0 {
+                
+                let cur_node  = self.graph.get_node(&self.active_node_id);
+                
+                // Check if there is a suffix corresponding to `cur_value` adjacent to current node, 
+                // Add a new None/Edge to the graph, if there is no suffix corresponding
+                // Activate the edge that corresponds to the suffix otherwise
                 if !cur_node.data.suffix_edge_ids.contains_key(&cur_value) {
-                    // There is no suffix corresponding to `cur_value` in the graph, and has to be added
-                    // Add a new None and Edge to the graph
+
+                    // Create a new node and edge
                     let nid = self.graph.add_node(UkonenNode::new());
                     let sfx = UkonenEdge{suffix_start: self.idx, suffix_stop: -1};
                     let eid = self.graph.add_edge(&self.active_node_id, &nid, Some(sfx)).unwrap();
 
-                    // Borrow current node as mutable, and insert suffix-edge mapping into dict
+                    // Keep track of newly added edge (suffix) inside current node
                     let cur_node_mut  = self.graph.get_node_mut(&self.active_node_id);
                     cur_node_mut.data.suffix_edge_ids.insert(cur_value, eid);                    
 
-                    // Set the suffix links
+                    // We arrived at root back from an internal node
+                    // Update that node's link to root, and reset the previous node pointer
                     if self.previous_new_node != self.root_id {
                         self.graph.get_node_mut(&self.previous_new_node).data.link = self.root_id;
                         self.previous_new_node = self.root_id;
                     }
 
-                    // self.active_length
                     self.remaining -= 1;
                     break;
                 }
                 else {
                     // There is an edge corresponding to the current suffix in the graph
-                    // Update algorithm state and proceed 
-                    self.active_edge_id = cur_node.data.suffix_edge_ids[&cur_value] as i64;
+                    // Go to that edge, update state and break out of loop to proceed with next character
+                    self.active_edge_seq_pos = self.idx;
                     self.active_length += 1;
                     break;
                 }
             }
             else {
                 
-                let active_edge = self.graph.get_edge(&(self.active_edge_id as u64)).clone();
+                // Characters might match the suffix on the path from root downwards
+                // This might introduce an update to the active node, if the current edge gets exhausted
+                let cur_node  = self.graph.get_node(&self.active_node_id);
+                let active_edge_identifier = cur_node.data.suffix_edge_ids[&self.seq[self.active_edge_seq_pos]];
+
+                let active_edge = self.graph.get_edge(&(active_edge_identifier as u64)).clone();
                 let lookup_idx = self.active_length + active_edge.data.as_ref().unwrap().suffix_start;
 
-                let suffix_stop = active_edge.data.as_ref().unwrap().suffix_stop;
-                if suffix_stop != -1 && lookup_idx > suffix_stop as usize {
-                    self.active_node_id = active_edge.end;
-                    self.active_length = 0;
-                    self.active_edge_id = -1;
-                    continue;
-                }
+                // Check if an internal node has been reach, and update state accordingly
+                // let suffix_stop = active_edge.data.as_ref().unwrap().suffix_stop;
+                // if suffix_stop != -1 && lookup_idx > suffix_stop as usize {
+                //     self.active_node_id = active_edge.end;
+                //     self.active_length = 0;
+                //     self.active_edge_id = -1;
+                //     continue;
+                // }
 
-
+                // Check if next character on active edge matches the current value
                 if self.seq[lookup_idx] == cur_value {
-                    // Next character on active edge matches the current value
-                    // Increase active length an proceed
+                    // Character matches so we proceed along the edge and go to next character
                     self.active_length += 1;
                     break;
                 }
                 else {
-                    // Next character on active edge does not match the current value
-                    // Break the matching on the active node and resolve the implied suffixes
-                    let split_node_id = Ukonen::split_suffix_edge(&mut self.graph, &(self.active_edge_id as u64), self.active_length, self.idx, &self.seq);
-
-                    // Set the suffix links
+                    // Resolve all partial suffixes have been accumulated during transition along edge
+                    // Break the matching on the active edge and introduce new leaf node for new suffix
+                    let split_node_id = Ukonen::split_suffix_edge(
+                        &mut self.graph, 
+                        active_edge_identifier, 
+                        self.active_length, 
+                        self.idx, 
+                        &self.seq
+                    );
+                    // Update suffix links on previous node, if subsequent internal node created
                     if self.previous_new_node != self.root_id {
                         self.graph.get_node_mut(&self.previous_new_node).data.link = split_node_id;
                     }
-
-                    if self.active_node_id != self.root_id {
-                        self.active_node_id = self.graph.get_node(&self.active_node_id).data.link;
-                        let x = active_edge.data.as_ref().unwrap().suffix_start;
-                        self.active_edge_id = self.graph.get_node(&self.active_node_id).data.suffix_edge_ids[&(self.seq[x] as u8)] as i64;
+                    // Current character was processed, reduce length
+                    self.active_length -= 1;
+                    // Jump to next edge if are on an edge from root and length > 0
+                    if  self.active_length > 0  && self.active_node_id == self.root_id {
+                        self.active_edge_seq_pos += 1;
                     }
+                    // We are at some internal node, jump to next internal node as per suffix link resolution rules
                     else {
-                        self.active_length -= 1;
-                        if self.active_length == 0 {
-                            self.active_edge_id = -1;
-                        }
-                        else {
-                            let a = self.active_length + active_edge.data.as_ref().unwrap().suffix_start;
-                            self.active_edge_id = self.graph.get_node(&self.active_node_id).data.suffix_edge_ids[&self.seq[a]] as i64;;
-                        }
+                        
+                        // // Jump to next node according to suffix link
+                        // self.active_node_id = self.graph.get_node(&self.active_node_id).data.link;
+                        // let active_node = self.graph.get_node(&self.active_node_id);
+                        // let x = active_edge.data.as_ref().unwrap().suffix_start;
+
+                        // // On new node, determine if there is an edge corresponding to `x`
+                        // // Update `active_edge_id` if there exist an edge corresponding to given suffix
+                        // // Otherwise, go to #1 and insert
+                        // if active_node.data.suffix_edge_ids.contains_key(&self.seq[x]) {
+                        //     self.active_edge_id = active_node.data.suffix_edge_ids[&(self.seq[x] as u8)] as i64;
+                        // }
+                        // else {
+                        //     self.active_edge_id = -1;
+                        // }
                     }
 
                     self.previous_new_node = split_node_id;
