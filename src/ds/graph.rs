@@ -6,6 +6,8 @@ use std::hash::Hasher;
 use std::fs::File;
 use std::io::Write;
 use std::fmt;
+use std::io;
+// use std::io::*;
 
 #[derive(Clone, Debug, PartialEq)]
 /// Graph operation error
@@ -330,7 +332,7 @@ pub struct Ukonen<T:fmt::Display + Index<usize, Output=u8> + IntoIterator> {
     // State indicators
     remaining : usize,
     active_node_id : u64, 
-    active_edge_seq_pos : usize,
+    active_edge_seq_idx : usize,
     active_length : usize,
     end: u8,
     // Graph 
@@ -353,7 +355,7 @@ impl<T: fmt::Display + Clone + Index<usize, Output=u8> + IntoIterator> Ukonen<T>
             idx : 0,
             remaining : 0,
             active_node_id : root_id, 
-            active_edge_seq_pos : 0,
+            active_edge_seq_idx : 0,
             active_length : 0,
             end : 0,
             root_id : root_id,
@@ -363,11 +365,9 @@ impl<T: fmt::Display + Clone + Index<usize, Output=u8> + IntoIterator> Ukonen<T>
     }    
 
     pub fn process(&mut self) -> &Graph<UkonenNode, UkonenEdge>{
-
         for s in (self.seq.clone()).into_iter() {
             self.step();
             self.idx += 1;
-            self.graph.write_dot("abc.dot");
         }
         &self.graph
     }
@@ -431,7 +431,8 @@ impl<T: fmt::Display + Clone + Index<usize, Output=u8> + IntoIterator> Ukonen<T>
             if self.active_length == 0 {
                 
                 let cur_node  = self.graph.get_node(&self.active_node_id);
-                
+                self.previous_new_node = self.root_id;
+
                 // Check if there is a suffix corresponding to `cur_value` adjacent to current node, 
                 // Add a new None/Edge to the graph, if there is no suffix corresponding
                 // Activate the edge that corresponds to the suffix otherwise
@@ -445,21 +446,14 @@ impl<T: fmt::Display + Clone + Index<usize, Output=u8> + IntoIterator> Ukonen<T>
                     // Keep track of newly added edge (suffix) inside current node
                     let cur_node_mut  = self.graph.get_node_mut(&self.active_node_id);
                     cur_node_mut.data.suffix_edge_ids.insert(cur_value, eid);                    
-
-                    // We arrived at root back from an internal node
-                    // Update that node's link to root, and reset the previous node pointer
-                    if self.previous_new_node != self.root_id {
-                        self.graph.get_node_mut(&self.previous_new_node).data.link = self.root_id;
-                        self.previous_new_node = self.root_id;
-                    }
-
+                    
                     self.remaining -= 1;
                     break;
                 }
                 else {
                     // There is an edge corresponding to the current suffix in the graph
                     // Go to that edge, update state and break out of loop to proceed with next character
-                    self.active_edge_seq_pos = self.idx;
+                    self.active_edge_seq_idx = self.idx;
                     self.active_length += 1;
                     break;
                 }
@@ -469,23 +463,25 @@ impl<T: fmt::Display + Clone + Index<usize, Output=u8> + IntoIterator> Ukonen<T>
                 // Characters might match the suffix on the path from root downwards
                 // This might introduce an update to the active node, if the current edge gets exhausted
                 let cur_node  = self.graph.get_node(&self.active_node_id);
-                let active_edge_identifier = cur_node.data.suffix_edge_ids[&self.seq[self.active_edge_seq_pos]];
+                let active_edge_identifier = cur_node.data.suffix_edge_ids[&self.seq[self.active_edge_seq_idx]];
 
                 let active_edge = self.graph.get_edge(&(active_edge_identifier as u64)).clone();
                 let lookup_idx = self.active_length + active_edge.data.as_ref().unwrap().suffix_start;
 
                 // Check if an internal node has been reach, and update state accordingly
-                // let suffix_stop = active_edge.data.as_ref().unwrap().suffix_stop;
-                // if suffix_stop != -1 && lookup_idx > suffix_stop as usize {
-                //     self.active_node_id = active_edge.end;
-                //     self.active_length = 0;
-                //     self.active_edge_id = -1;
-                //     continue;
-                // }
+                let suffix_stop = active_edge.data.as_ref().unwrap().suffix_stop;
+                let suffix_start = active_edge.data.as_ref().unwrap().suffix_start;
+
+                if suffix_stop != -1 && lookup_idx > suffix_stop as usize {
+                    self.active_node_id = active_edge.end;
+                    self.active_length = lookup_idx - suffix_stop as usize - 1;
+                    self.active_edge_seq_idx += 1;
+                    continue;
+                }
 
                 // Check if next character on active edge matches the current value
+                // If matches, we proceed along the edge and go to next character
                 if self.seq[lookup_idx] == cur_value {
-                    // Character matches so we proceed along the edge and go to next character
                     self.active_length += 1;
                     break;
                 }
@@ -499,38 +495,32 @@ impl<T: fmt::Display + Clone + Index<usize, Output=u8> + IntoIterator> Ukonen<T>
                         self.idx, 
                         &self.seq
                     );
+                    self.graph.get_node_mut(&split_node_id).data.link = self.root_id;
+
                     // Update suffix links on previous node, if subsequent internal node created
                     if self.previous_new_node != self.root_id {
                         self.graph.get_node_mut(&self.previous_new_node).data.link = split_node_id;
                     }
-                    // Current character was processed, reduce length
-                    self.active_length -= 1;
-                    // Jump to next edge if are on an edge from root and length > 0
-                    if  self.active_length > 0  && self.active_node_id == self.root_id {
-                        self.active_edge_seq_pos += 1;
-                    }
-                    // We are at some internal node, jump to next internal node as per suffix link resolution rules
-                    else {
-                        
-                        // // Jump to next node according to suffix link
-                        // self.active_node_id = self.graph.get_node(&self.active_node_id).data.link;
-                        // let active_node = self.graph.get_node(&self.active_node_id);
-                        // let x = active_edge.data.as_ref().unwrap().suffix_start;
 
-                        // // On new node, determine if there is an edge corresponding to `x`
-                        // // Update `active_edge_id` if there exist an edge corresponding to given suffix
-                        // // Otherwise, go to #1 and insert
-                        // if active_node.data.suffix_edge_ids.contains_key(&self.seq[x]) {
-                        //     self.active_edge_id = active_node.data.suffix_edge_ids[&(self.seq[x] as u8)] as i64;
-                        // }
-                        // else {
-                        //     self.active_edge_id = -1;
-                        // }
+                    // Jump to next edge if are on an edge from root and length > 0, 
+                    // Otherwise we are at some internal node, jump to next internal node as per suffix link resolution rules
+                    if self.active_node_id == self.root_id {
+                        // Current character was processed, reduce length
+                        self.active_length -= 1;
+                        self.active_edge_seq_idx += 1;
                     }
+                    else {        
+                        self.active_node_id = self.graph.get_node(&self.active_node_id).data.link;
+                    }
+
+                    // self.graph.write_dot("abc.dot");
+                    // let mut input = String::new();
+                    // io::stdin().read_line(&mut input).expect("error: unable to read user input");
 
                     self.previous_new_node = split_node_id;
                     self.remaining -= 1;
                 }
+
             }
         }
     }
