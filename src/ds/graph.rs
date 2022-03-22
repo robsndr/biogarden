@@ -446,15 +446,20 @@ impl<T: fmt::Display + Clone + Index<usize, Output=u8> + IntoIterator> Ukonen<T>
                     // Keep track of newly added edge (suffix) inside current node
                     let cur_node_mut  = self.graph.get_node_mut(&self.active_node_id);
                     cur_node_mut.data.suffix_edge_ids.insert(cur_value, eid);                    
-                    
+                                        
+                    if self.active_node_id != self.root_id {
+                        self.active_node_id = self.graph.get_node(&self.active_node_id).data.link;
+                    }
+
                     self.remaining -= 1;
-                    break;
+
                 }
                 else {
                     // There is an edge corresponding to the current suffix in the graph
                     // Go to that edge, update state and break out of loop to proceed with next character
                     self.active_edge_seq_idx = self.idx;
                     self.active_length += 1;
+                    println!("NODE {}", self.remaining);
                     break;
                 }
             }
@@ -475,7 +480,8 @@ impl<T: fmt::Display + Clone + Index<usize, Output=u8> + IntoIterator> Ukonen<T>
                 if suffix_stop != -1 && lookup_idx > suffix_stop as usize {
                     self.active_node_id = active_edge.end;
                     self.active_length = lookup_idx - suffix_stop as usize - 1;
-                    self.active_edge_seq_idx += 1;
+                    self.active_edge_seq_idx += (suffix_stop as usize - suffix_start) + 1; // Bug?
+                    // println!("HURRA {} {}", suffix_start, suffix_stop);
                     continue;
                 }
 
@@ -485,43 +491,44 @@ impl<T: fmt::Display + Clone + Index<usize, Output=u8> + IntoIterator> Ukonen<T>
                     self.active_length += 1;
                     break;
                 }
-                else {
-                    // Resolve all partial suffixes have been accumulated during transition along edge
-                    // Break the matching on the active edge and introduce new leaf node for new suffix
-                    let split_node_id = Ukonen::split_suffix_edge(
-                        &mut self.graph, 
-                        active_edge_identifier, 
-                        self.active_length, 
-                        self.idx, 
-                        &self.seq
-                    );
-                    self.graph.get_node_mut(&split_node_id).data.link = self.root_id;
 
-                    // Update suffix links on previous node, if subsequent internal node created
-                    if self.previous_new_node != self.root_id {
-                        self.graph.get_node_mut(&self.previous_new_node).data.link = split_node_id;
-                    }
+                // Resolve all partial suffixes have been accumulated during transition along edge
+                // Break the matching on the active edge and introduce new leaf node for new suffix
 
-                    // Jump to next edge if are on an edge from root and length > 0, 
-                    // Otherwise we are at some internal node, jump to next internal node as per suffix link resolution rules
-                    if self.active_node_id == self.root_id {
-                        // Current character was processed, reduce length
-                        self.active_length -= 1;
-                        self.active_edge_seq_idx += 1;
-                    }
-                    else {        
-                        self.active_node_id = self.graph.get_node(&self.active_node_id).data.link;
-                    }
+                let split_node_id = Ukonen::split_suffix_edge(
+                    &mut self.graph, 
+                    active_edge_identifier, 
+                    self.active_length, 
+                    self.idx, 
+                    &self.seq
+                );
+                self.graph.get_node_mut(&split_node_id).data.link = self.root_id;
 
-                    // self.graph.write_dot("abc.dot");
-                    // let mut input = String::new();
-                    // io::stdin().read_line(&mut input).expect("error: unable to read user input");
-
-                    self.previous_new_node = split_node_id;
-                    self.remaining -= 1;
+                // Update suffix links on previous node, if subsequent internal node created
+                if self.previous_new_node != self.root_id {
+                    self.graph.get_node_mut(&self.previous_new_node).data.link = split_node_id;
                 }
 
+                // Jump to next edge if are on an edge from root and length > 0, 
+                // Otherwise we are at some internal node, jump to next internal node as per suffix link resolution rules
+                if self.active_node_id == self.root_id {
+                    // Current character was processed, reduce length
+                    self.active_length -= 1;
+                    self.active_edge_seq_idx += 1;
+                }
+                else {        
+                    self.active_node_id = self.graph.get_node(&self.active_node_id).data.link;
+                }
+
+                self.previous_new_node = split_node_id;
+                self.remaining -= 1;
+
+                
             }
-        }
+            // self.graph.write_dot("abc.dot");
+            // let mut input = String::new();
+            // io::stdin().read_line(&mut input).expect("error: unable to read user input");
+
+        }  
     }
 }
