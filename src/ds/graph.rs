@@ -44,8 +44,8 @@ pub struct GraphProperties { pub directed: bool}
 #[derive(Clone, Debug)]
 /// Edge internal struct
 pub struct Edge<T: fmt::Display> {
-    start: u64,
-    end: u64,
+    pub start: u64,
+    pub end: u64,
     pub data: Option<T>,
 }
 
@@ -66,6 +66,8 @@ pub struct Graph<N: fmt::Display, E: fmt::Display> {
     edges: HashMap<u64, Edge<E>>,
     /// Properties of the represented graph
     properties: GraphProperties,
+    /// Id of root node
+    root: Option<u64>,
 }
 
 impl<N: fmt::Display, E: fmt::Display + Clone> Graph<N, E> {
@@ -75,6 +77,7 @@ impl<N: fmt::Display, E: fmt::Display + Clone> Graph<N, E> {
             nodes: HashMap::new(),
             edges: HashMap::new(),
             properties: props,
+            root: None,
         }
     }
 
@@ -120,6 +123,14 @@ impl<N: fmt::Display, E: fmt::Display + Clone> Graph<N, E> {
 
     pub fn get_node_mut(&mut self, id: &u64) -> &mut Node<N> {
         self.nodes.get_mut(id).unwrap()
+    }
+
+    pub fn get_root(&self) -> Option<u64> {
+        self.root
+    }
+
+    pub fn set_root(&mut self, id: u64) {
+        self.root = Some(id);
     }
 
     pub fn get_edge(&self, id: &u64) -> & Edge<E> {
@@ -227,7 +238,7 @@ impl<N: fmt::Display, E: fmt::Display + Clone> Graph<N, E> {
             };  
         }
         for (id, node) in &self.nodes {
-            writeln!(&mut w, "  {} [ label = \"{}\" ];", id, node.data).unwrap();
+            writeln!(&mut w, "  {} [ label = \"{}\" ];", id, node.id).unwrap();
         }
 
         writeln!(&mut w, "}}").unwrap();
@@ -305,8 +316,8 @@ impl fmt::Display for UkonenNode  {
 // Ukonen Edge
 #[derive(Clone)]
 pub struct UkonenEdge {
-    suffix_start: usize,
-    suffix_stop: i64
+    pub suffix_start: usize,
+    pub suffix_stop: i64
 }
 
 impl UkonenEdge {
@@ -349,6 +360,7 @@ impl<T: fmt::Display + Clone + Index<usize, Output=u8> + IntoIterator> Ukonen<T>
 
         let mut graph = Graph::<UkonenNode, UkonenEdge>::new(GraphProperties{directed: true});
         let root_id = graph.add_node(UkonenNode::new());
+        graph.set_root(root_id);
 
         Ukonen {
             seq : sequence, 
@@ -364,12 +376,12 @@ impl<T: fmt::Display + Clone + Index<usize, Output=u8> + IntoIterator> Ukonen<T>
         }
     }    
 
-    pub fn process(&mut self) -> &Graph<UkonenNode, UkonenEdge>{
+    pub fn process(&mut self) -> &mut Graph<UkonenNode, UkonenEdge>{
         for s in (self.seq.clone()).into_iter() {
             self.step();
             self.idx += 1;
         }
-        &self.graph
+        &mut self.graph
     }
 
     fn split_suffix_edge(graph: &mut Graph<UkonenNode, UkonenEdge>, edge_id: u64, split_index: usize, value_index: usize, seq: &T) -> u64 {

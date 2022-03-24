@@ -8,6 +8,9 @@ use statrs::function::factorial::{binomial, factorial};
 use super::Sequence;
 use super::Tile;
 use super::Graph;
+use super::Ukonen;
+use super::UkonenNode;
+use super::UkonenEdge;
 use super::GraphProperties;
 use super::Dfs;
 
@@ -506,6 +509,110 @@ pub fn subsequences(a: &Sequence, b: &Sequence, limit: Option<usize>) -> Vec<Vec
     return result;
 }
 
+
+pub fn longest_common_substring(matrix: &Tile) {
+
+
+    // TODO: include information about alphabet inside sequence itself
+    let mut alphabet = HashSet::<u8>::from(['A' as u8 , 'C' as u8, 
+                                            'T' as u8, 'G' as u8]);
+    let mut separator : u8 = '!' as u8; 
+    let mut temp : Vec<u8> = vec![];
+    let mut wordmap : Vec<(usize, usize)> = vec![];
+    // let wordlen : Vec<usize
+
+    for (idx, a) in matrix.into_iter().enumerate() {
+        temp.extend(a);
+        temp.push(separator);
+        wordmap.extend(vec![(idx, temp.len() - 1); a.len() + 1]);
+        separator += 1;
+        while alphabet.contains(&separator) {
+            separator += 1;
+        }
+    }
+
+    let seq = Sequence::from(temp.as_slice());
+    println!("{:?}", wordmap);
+    let mut ukkokens = Ukonen::<Sequence>::new(seq);
+    let g = ukkokens.process();
+    g.write_dot("abc.dot");
+
+
+    // // Function to perform DFS traversal on the graph
+    fn dfs_recursive(graph: &mut Graph<UkonenNode, UkonenEdge>, node_id: u64, discovered: &mut HashSet<u64>, wordmap: &Vec<(usize, usize)>, reachable_suffixes: &mut HashMap<u64, Vec<bool>>)
+    {
+        // mark the current node as discovered
+        discovered.insert(node_id);
+    
+        // do for every edge (v, u)
+
+        let out_neighbors : Vec<u64> = graph.out_neighbors(node_id).cloned().collect();
+        
+        for t in out_neighbors{
+            if !discovered.contains(&t) {
+                dfs_recursive(graph, t, discovered, wordmap, reachable_suffixes);
+            }
+        }
+
+        let mut reach = vec![false; wordmap.last().unwrap().0 + 1];
+
+        let out_edges : Vec<u64> = graph.out_edges(node_id).cloned().collect();
+
+        for eid in out_edges{
+            
+            let successor_node_id = graph.get_edge(&eid).end;
+            let suffix_start = graph.get_edge(&eid).data.as_ref().unwrap().suffix_start;
+            let suffix_stop = graph.get_edge(&eid).data.as_ref().unwrap().suffix_stop;
+
+            if suffix_stop == -1 {
+                reach[wordmap[suffix_start].0] = true;
+                graph.get_edge_mut(&eid).data.as_mut().unwrap().suffix_stop = wordmap[suffix_start].1 as i64;
+            }
+            else {
+
+                for (i, elem) in reachable_suffixes[&successor_node_id].iter().enumerate() {
+                    if *elem == true {
+                        reach[i] = true;
+                    }
+                };
+            }
+        }
+
+        reachable_suffixes.insert(node_id, reach);
+    }
+
+    let mut visited = HashSet::<u64>::new();
+    let mut reachable_suffixes = HashMap::<u64, Vec<bool>>::new();
+
+    dfs_recursive(g, g.get_root().unwrap(), &mut visited, &wordmap, &mut reachable_suffixes);
+
+    g.write_dot("abc.dot");
+
+
+    // fn dfs_recursive_substrings(graph: &Graph<UkonenNode, UkonenEdge>, node_id: u64, discovered: &mut HashSet<u64>, cur_suffix: &Vec<(usize, i64)>, cur_length: usize)
+    // {
+    //     // mark the current node as discovered
+    //     discovered.insert(node_id);
+    
+    //     // do for every edge (v, u)
+    //     for e in graph.out_edges(node_id){
+    //         if !discovered.contains(&graph.get_edge(e).end) {
+    //             let start = graph.get_edge(e).data.as_ref().unwrap().suffix_start;
+    //             let stop = graph.get_edge(e).data.as_ref().unwrap().suffix_stop;
+    //             cur_suffix.push((start, stop))
+    //             dfs_recursive_substrings(graph, graph.get_edge(e).end, discovered, cur_suffix, cur_length + stop as usize - start);
+    //             cur_suffix.pop();
+    //         }
+    //     }
+
+
+    // }
+
+
+
+    println!("{:#?}", reachable_suffixes);
+
+}
 
 // Greedy search for shortest common superstring
 // pub fn shortest_common_superstring(sequences: &Tile) -> Sequence {

@@ -242,14 +242,32 @@ fn main() {
 
 
     // Shared Motif
-    let seq  = Sequence::from("xabxa#babxba$");
-    let mut ukkokens = Ukonen::<Sequence>::new(seq);
-    let g =  ukkokens.process();
+    let mut reader = Reader::from_file(std::path::Path::new(r"C:\Users\Robert\Desktop\biotech\src\in.fasta")).unwrap();
+    let mut record = Record::new();
+    let mut matrix = Tile::new();
+    loop {
+        reader
+        .read(&mut record)
+        .expect("fasta reader: got an io::Error or could not read_line()");
+        if record.is_empty() {
+            break;
+        }
+        matrix.push(Sequence::from(record.clone()));
+    } 
+
+
+
+    algo::longest_common_substring(&matrix);
+
+
+    // let seq  = Sequence::from("ATAAATG$");
+    // let mut ukkokens = Ukonen::<Sequence>::new(seq);
+    // let g =  ukkokens.process();
     // let g =  ukkokens.process();
     // let g =  ukkokens.process();
     // let g =  ukkokens.process();
     // let g =  ukkokens.process();
     // let g =  ukkokens.process();
 
-    g.write_dot("abc.dot");
+    // g.write_dot("abc.dot");
 }
