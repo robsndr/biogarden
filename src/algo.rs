@@ -519,7 +519,6 @@ pub fn longest_common_substring(matrix: &Tile) {
     let mut separator : u8 = '!' as u8; 
     let mut temp : Vec<u8> = vec![];
     let mut wordmap : Vec<(usize, usize)> = vec![];
-    // let wordlen : Vec<usize
 
     for (idx, a) in matrix.into_iter().enumerate() {
         temp.extend(a);
@@ -530,49 +529,45 @@ pub fn longest_common_substring(matrix: &Tile) {
             separator += 1;
         }
     }
+    
 
     let seq = Sequence::from(temp.as_slice());
-    println!("{:?}", wordmap);
+    // println!("{:?}", wordmap);
     let mut ukkokens = Ukonen::<Sequence>::new(seq);
     let g = ukkokens.process();
     g.write_dot("abc.dot");
 
 
-    // // Function to perform DFS traversal on the graph
-    fn dfs_recursive(graph: &mut Graph<UkonenNode, UkonenEdge>, node_id: u64, discovered: &mut HashSet<u64>, wordmap: &Vec<(usize, usize)>, reachable_suffixes: &mut HashMap<u64, Vec<bool>>)
+    fn generate_reachbility_map(graph: &mut Graph<UkonenNode, UkonenEdge>, node_id: u64, 
+                                discovered: &mut HashSet<u64>, wordmap: &Vec<(usize, usize)>, 
+                                    reachable_suffixes: &mut HashMap<u64, Vec<u8>>)
     {
-        // mark the current node as discovered
         discovered.insert(node_id);
-    
-        // do for every edge (v, u)
-
         let out_neighbors : Vec<u64> = graph.out_neighbors(node_id).cloned().collect();
-        
+
         for t in out_neighbors{
             if !discovered.contains(&t) {
-                dfs_recursive(graph, t, discovered, wordmap, reachable_suffixes);
+                generate_reachbility_map(graph, t, discovered, wordmap, reachable_suffixes);
             }
         }
 
-        let mut reach = vec![false; wordmap.last().unwrap().0 + 1];
-
+        let mut reach = vec![0; wordmap.last().unwrap().0 + 1];
         let out_edges : Vec<u64> = graph.out_edges(node_id).cloned().collect();
 
         for eid in out_edges{
-            
+
             let successor_node_id = graph.get_edge(&eid).end;
             let suffix_start = graph.get_edge(&eid).data.as_ref().unwrap().suffix_start;
             let suffix_stop = graph.get_edge(&eid).data.as_ref().unwrap().suffix_stop;
 
             if suffix_stop == -1 {
-                reach[wordmap[suffix_start].0] = true;
-                graph.get_edge_mut(&eid).data.as_mut().unwrap().suffix_stop = wordmap[suffix_start].1 as i64;
+                reach[wordmap[suffix_start].0] = 1;
             }
             else {
 
                 for (i, elem) in reachable_suffixes[&successor_node_id].iter().enumerate() {
-                    if *elem == true {
-                        reach[i] = true;
+                    if *elem == 1 {
+                        reach[i] = 1;
                     }
                 };
             }
@@ -582,35 +577,101 @@ pub fn longest_common_substring(matrix: &Tile) {
     }
 
     let mut visited = HashSet::<u64>::new();
-    let mut reachable_suffixes = HashMap::<u64, Vec<bool>>::new();
-
-    dfs_recursive(g, g.get_root().unwrap(), &mut visited, &wordmap, &mut reachable_suffixes);
-
-    g.write_dot("abc.dot");
-
-
-    // fn dfs_recursive_substrings(graph: &Graph<UkonenNode, UkonenEdge>, node_id: u64, discovered: &mut HashSet<u64>, cur_suffix: &Vec<(usize, i64)>, cur_length: usize)
-    // {
-    //     // mark the current node as discovered
-    //     discovered.insert(node_id);
-    
-    //     // do for every edge (v, u)
-    //     for e in graph.out_edges(node_id){
-    //         if !discovered.contains(&graph.get_edge(e).end) {
-    //             let start = graph.get_edge(e).data.as_ref().unwrap().suffix_start;
-    //             let stop = graph.get_edge(e).data.as_ref().unwrap().suffix_stop;
-    //             cur_suffix.push((start, stop))
-    //             dfs_recursive_substrings(graph, graph.get_edge(e).end, discovered, cur_suffix, cur_length + stop as usize - start);
-    //             cur_suffix.pop();
-    //         }
+    let mut reachable_suffixes = HashMap::<u64, Vec<u8>>::new();
+    generate_reachbility_map(g, g.get_root().unwrap(), &mut visited, &wordmap, &mut reachable_suffixes);
+    // let mut reachability = HashMap::<u64, bool>::new();
+    // for (key, value) in reachable_suffixes {
+    //     if value.iter().sum::<u8>() == 3 as u8 {
+    //         reachability[&key] = true;
     //     }
-
-
     // }
 
 
 
-    println!("{:#?}", reachable_suffixes);
+    // // Function to perform DFS traversal on the graph
+    fn resolve_suffix_endings(graph: &mut Graph<UkonenNode, UkonenEdge>, node_id: u64, 
+                                discovered: &mut HashSet<u64>, wordmap: &Vec<(usize, usize)>)
+    {
+        discovered.insert(node_id);
+
+        let out_neighbors : Vec<u64> = graph.out_neighbors(node_id).cloned().collect();
+        for t in out_neighbors{
+            if !discovered.contains(&t) {
+                resolve_suffix_endings(graph, t, discovered, wordmap);
+            }
+        }
+
+        let out_edges : Vec<u64> = graph.out_edges(node_id).cloned().collect();
+        for eid in out_edges {            
+            let suffix_start = graph.get_edge(&eid).data.as_ref().unwrap().suffix_start;
+            let suffix_stop = graph.get_edge(&eid).data.as_ref().unwrap().suffix_stop;
+            if suffix_stop == -1 {
+                graph.get_edge_mut(&eid).data.as_mut().unwrap().suffix_stop = wordmap[suffix_start].1 as i64;
+            }
+        }
+    }
+
+    visited.clear();
+    resolve_suffix_endings(g, g.get_root().unwrap(), &mut visited, &wordmap);
+    g.write_dot("abc.dot");
+
+
+    let mut lcs : Vec<(usize, i64)> = vec![];
+    let mut cur : Vec<(usize, i64)> = vec![];
+
+    let mut longest = 0;
+    let mut cur_len = 0;
+
+    fn dfs_recursive_substrings(graph: &Graph<UkonenNode, UkonenEdge>, node_id: u64, 
+                                    discovered: &mut HashSet<u64>,  reachable_suffixes: & HashMap<u64, Vec<u8>>,
+                                        cur_suffix: &mut Vec<(usize, i64)>, cur_length: usize, 
+                                            lcs: &mut Vec<(usize, i64)>, longest: &mut usize, len: u8)
+    {
+        // mark the current node as discovered
+        discovered.insert(node_id);
+
+        if cur_length > *longest {
+            *longest = cur_length;
+            *lcs = cur_suffix.clone();
+        } 
+        
+        // println!("Current length: {:#?}", reachable_suffixes);
+
+        // do for every edge (v, u)
+        for e in graph.out_edges(node_id){
+            if !discovered.contains(&graph.get_edge(e).end) && (reachable_suffixes[&graph.get_edge(e).end].iter().sum::<u8>() == len  ){
+                let start = graph.get_edge(e).data.as_ref().unwrap().suffix_start;
+                let stop = graph.get_edge(e).data.as_ref().unwrap().suffix_stop;
+                cur_suffix.push((start, stop));
+                // println!("AS");
+                dfs_recursive_substrings(graph, graph.get_edge(e).end, discovered, reachable_suffixes, cur_suffix, cur_length + stop as usize - start + 1, lcs, longest, len);
+                cur_suffix.pop();
+            }
+        }
+
+
+    }
+
+    visited.clear();
+    dfs_recursive_substrings(g, g.get_root().unwrap(), &mut visited, &reachable_suffixes, &mut cur, cur_len, &mut lcs, &mut longest, matrix.size().0 as u8);
+
+
+
+    let mut result = vec![];
+
+    println!("{:?}", lcs);
+
+
+    for part in lcs {
+
+        for i in part.0..(part.1 as usize + 1) {
+            result.push(temp[i] as u8);
+        }
+    }
+
+    let x =  Sequence::from(result.as_slice());
+
+    print!("{}", x);
 
 }
 
