@@ -1,18 +1,13 @@
-use std::io;
-use ndarray::prelude::*;
 use std::collections::HashMap;
 use std::collections::HashSet;
-use std::fmt; // Import `fmt`
-use statrs::function::factorial::{binomial, factorial};
 
-use super::Sequence;
-use super::Tile;
-use super::Graph;
-use super::Ukonen;
-use super::UkonenNode;
-use super::UkonenEdge;
-use super::GraphProperties;
-use super::Dfs;
+use super::graph::ukonen::Ukonen;
+use super::graph::ukonen::UkonenEdge;
+use super::graph::ukonen::UkonenNode;
+
+use crate::ds::sequence::Sequence;
+use crate::ds::graph::Graph;
+use crate::ds::tile::Tile;
 
 // Count number of chars in Sequence sequence
 // Return array with numbers representing #occur of given char
@@ -129,176 +124,10 @@ pub fn translate_rna(rna: Sequence) -> Vec<Sequence> {
     proteins
 }
 
-pub fn mendel_first_law(k: u16, m: u16, n: u16 ) -> f32 {
-    
-    let k_f32 = k as f32;
-    let m_f32 = m as f32;
-    let n_f32 = n as f32;
-    let total : f32 = k_f32 + m_f32 + n_f32;
-
-    // calculate the probability for a homozygous recessive trait
-    // heterozygous organisms mating with each other
-    let m_p : f32 = m_f32/total * (m_f32 - 1.0 )/(total - 1.0) * 0.25;
-    // homozygous organisms mating with each other
-    let n_p : f32 = n_f32/total * (n_f32 - 1.0 )/(total - 1.0);
-    // heterozygous with homozygous mating
-    let mut mn_p : f32 = m_f32/total * n_f32/(total - 1.0) * 0.5;
-    mn_p += m_f32/(total - 1.0) * n_f32/total * 0.5;
-    
-    // probability of a dominant allele is 1 - prob_homozygous
-    1.0 - (m_p + n_p + mn_p)
-}
-
-pub fn expected_offspring(x: u16, y: u16, z: u16, q: u16, p: u16, r: u16 ) -> f32 {
-    // The probability of AA-AA, AA-Aa, AA-aa couples
-    // having dominant phenotype offspring is 1
-    let xyz_e : f32 = 2.0 * (x as f32 + y as f32 + z as f32);
-    // P[dominant offspring] = 0.75
-    let q_e : f32 = 2.0 * q as f32 * 0.75;
-    // P[dominant offspring] = 0.5
-    let p_e : f32 = 2.0 * p as f32 *  0.5;
-    xyz_e + q_e + p_e
-}
-
-pub fn fibo(n: usize, k: u64) -> u64 {
-    // F1 == F2 == 1
-    // Initialize the vector with 1's 
-    let mut memory: Vec<u64> = vec![1; n];
-    // Members of (i-1) generation are too young too breed
-    // Members of (i-2) generation can breed k new members
-    for i in 2..n {
-        memory[i] = memory[i-1] + memory[i-2]*k;
-    }
-    memory[n -1]
-}
-
 pub fn hamming_distance(s1: &Sequence, s2: &Sequence) -> u32 {
     let s1 = s1.to_string();
     let s2 = s2.to_string();
     s1.chars().zip(s2.chars()).filter(|&(a, b)| a != b).count() as u32
-}
-
-pub fn knuth_morris_pratt(seq: &Sequence, pat: &Sequence) -> Vec<usize> {
-   
-    let seq = seq.to_string().into_bytes();
-    let pat = pat.to_string().into_bytes();
-
-    // Build the partial match table
-    let mut partial = vec![0];
-    for i in 1..pat.len() {
-        let mut j = partial[i - 1];
-        while j > 0 && pat[j] != pat[i] {
-            j = partial[j - 1];
-        }
-        partial.push(if pat[j] == pat[i] { j + 1 } else { j });
-    }
-
-    // Read 'string' to find 'pattern'
-    let mut ret = vec![];
-    let mut j = 0;
-
-    for (i, &c) in seq.iter().enumerate() {
-        while j > 0 && c != pat[j] {
-            j = partial[j - 1];
-        }
-        if c == pat[j] {
-            j += 1;
-        }
-        if j == pat.len() {
-            ret.push(i + 1 - j);
-            j = partial[j - 1];
-        }
-    }
-    ret
-}
-
-pub fn calc_profile(arr: &Array3<u16>) -> Array2::<u16>  {
-    // Squash tensor into 2d array 
-    // Sum the occurs of letters different letters
-    // Transpose at the end to get expected shape
-    arr.sum_axis(Axis(0)).reversed_axes()
-}
-
-pub fn calc_consensus(arr: &Array2<u16>) -> Array1<u8> {
-    // Allocate container for result
-    let mut consensus = Array1::<u8>::zeros((arr.len_of(Axis(1))));
-    // Calculate maximum index for every dimension in array
-    for (i, ax) in arr.axis_iter(Axis(1)).enumerate() {
-        let mut max : u16 = 0;
-        let mut index : usize = 0;
-        for (j, it) in ax.indexed_iter() {
-            if *it > max {
-                max = *it;
-                index = j;
-            }
-        }
-        consensus[i] = index as u8;
-    }
-    consensus
-}
-
-pub fn permutations<T: Clone>(n : usize, a : &mut Vec<T>, result : &mut Vec<Vec<T>>) {
-    if n == 1 {
-        result.push(a.clone());
-    }
-    else {
-        for i in  0 .. n - 1 {
-            permutations(n - 1, a, result);
-
-            if n % 2 == 0 {
-                a.swap(i, n - 1);
-            }
-            else {
-                a.swap(0, n - 1);
-            }
-        }
-        permutations(n - 1, a, result);
-    }
-}
-
-// Find all reverse-palindromes within seq of n <= length <= m
-// Return tuples containing position and length of each palindrome O(n^3)?
-pub fn reverse_palindromes(seq: &Sequence, n: usize, m: usize) -> Vec<(usize, usize)>{
-
-    let mut palindromes : Vec<(usize, usize)> = vec![];
-    let complements = HashMap::from([(b'A', b'T'), (b'T', b'A'),
-                                     (b'G', b'C'), (b'C', b'G')]);
-
-    // iterate over every offset within the initial string
-    for i in 0..seq.len() {
-        // iterate over possible lengths of palindromic substrings
-        for j in n..(m+1) {
-            // break if potential substring cannot fit 
-            if i + j > seq.len() {
-                break;
-            } 
-            // check if substring with length `j` at offset `i` 
-            // is a reverse palindrome
-            let mut is_palindrome = true;
-            for k in 0..j {
-                if seq.chain[i+k] != complements[&seq.chain[i+j-1-k]] {
-                    is_palindrome = false;
-                    break;
-                }
-            }
-            // append (offset, length) into result set
-            if is_palindrome {
-                palindromes.push((i+1,j));
-            }
-        }    
-    }
-    palindromes
-}
-
-pub fn rna_splice(mut pre_rna: Sequence, introns: &Tile) -> Sequence {
-
-    for intr in introns {
-        let res = knuth_morris_pratt(&pre_rna, intr);
-        for index in res {
-            pre_rna.chain.drain(index..(index + intr.len()));
-        }
-    }
-    pre_rna
 }
 
 pub fn open_reading_frames(dna: &Sequence) -> Vec<Sequence> {
@@ -358,59 +187,72 @@ pub fn weighted_mass(protein: &Sequence) -> f64 {
     mass
 }
 
-pub fn random_substrings(seq: &Sequence, gc_content: &[f64]) -> Vec<f64> {
+pub fn knuth_morris_pratt(seq: &Sequence, pat: &Sequence) -> Vec<usize> {
+   
+    let seq = seq.to_string().into_bytes();
+    let pat = pat.to_string().into_bytes();
 
-    let mut probabilities : Vec<f64> = vec![];
-    let mut prob_map : HashMap<u8, f64> = HashMap::from([ ('A' as u8, 1.0), ('C' as u8, 1.0), ('T' as u8, 1.0), ('G' as u8, 1.0)]);
-
-    for x in gc_content {
-        *prob_map.get_mut(&('G' as u8)).unwrap() = x / 2.0;
-        *prob_map.get_mut(&('C' as u8)).unwrap() = x / 2.0;
-        *prob_map.get_mut(&('T' as u8)).unwrap() = (1.0-x) / 2.0;
-        *prob_map.get_mut(&('A' as u8)).unwrap() = (1.0-x) / 2.0;
-        // calculate probability of given string
-        // for provided GC content
-        let mut prop = 1.0;
-        for c in seq {
-            prop *= prob_map[c]
+    // Build the partial match table
+    let mut partial = vec![0];
+    for i in 1..pat.len() {
+        let mut j = partial[i - 1];
+        while j > 0 && pat[j] != pat[i] {
+            j = partial[j - 1];
         }
-        probabilities.push(prop.log10());
+        partial.push(if pat[j] == pat[i] { j + 1 } else { j });
     }
-    return probabilities;
+
+    // Read 'string' to find 'pattern'
+    let mut ret = vec![];
+    let mut j = 0;
+
+    for (i, &c) in seq.iter().enumerate() {
+        while j > 0 && c != pat[j] {
+            j = partial[j - 1];
+        }
+        if c == pat[j] {
+            j += 1;
+        }
+        if j == pat.len() {
+            ret.push(i + 1 - j);
+            j = partial[j - 1];
+        }
+    }
+    ret
 }
 
-pub fn overlap_graph(sequences: &Tile, k: usize) -> Graph::<Sequence, u8> {
+// Find all reverse-palindromes within seq of n <= length <= m
+// Return tuples containing position and length of each palindrome O(n^3)?
+pub fn reverse_palindromes(seq: &Sequence, n: usize, m: usize) -> Vec<(usize, usize)>{
 
-    // Instantiate empty graph
-    // let gp = ;
-    let mut g = Graph::<Sequence, u8>::new(GraphProperties{directed: true});
-    
-    // Add all nodes to  graph
-    let mut node_ids : Vec<u64> = vec![];
-    for seq in sequences {
-        node_ids.push(g.add_node(seq.clone()));
-    }
+    let mut palindromes : Vec<(usize, usize)> = vec![];
+    let complements = HashMap::from([(b'A', b'T'), (b'T', b'A'),
+                                     (b'G', b'C'), (b'C', b'G')]);
 
-    // Connect overlap graph
-    for (i, seq) in sequences.into_iter().enumerate() {
-        let last = seq.into_iter().rev().take(k).rev();
-        for (j, seq2) in sequences.into_iter().enumerate() {
-            if j != i {
-                let first = seq2.into_iter().take(k);
-                // Check if suffix of `seq` is equal to prefix of `seq2`
-                if first.zip(last.clone()).filter(|&(a, b)| a != b).count() == 0 {
-                    g.add_edge(&node_ids[i], &node_ids[j], None).unwrap();
+    // iterate over every offset within the initial string
+    for i in 0..seq.len() {
+        // iterate over possible lengths of palindromic substrings
+        for j in n..(m+1) {
+            // break if potential substring cannot fit 
+            if i + j > seq.len() {
+                break;
+            } 
+            // check if substring with length `j` at offset `i` 
+            // is a reverse palindrome
+            let mut is_palindrome = true;
+            for k in 0..j {
+                if seq.chain[i+k] != complements[&seq.chain[i+j-1-k]] {
+                    is_palindrome = false;
+                    break;
                 }
             }
-        }
+            // append (offset, length) into result set
+            if is_palindrome {
+                palindromes.push((i+1,j));
+            }
+        }    
     }
-    g
-}
-
-pub fn partial_permutations(n: u64, k: u64) -> u64 {
-    let combinations = binomial(n, k);
-    let permutations = factorial(k);
-    (combinations * permutations) as u64 % 1000000
+    palindromes
 }
 
 pub fn transition_transversion_ratio(s1: &Sequence, s2: &Sequence) -> f32 {
@@ -433,51 +275,17 @@ pub fn transition_transversion_ratio(s1: &Sequence, s2: &Sequence) -> f32 {
     transitions / transversions
 }
 
-pub fn connected_components(g: &Graph<u64, u8>) -> (u32, Vec<Vec<u64>>) {
+pub fn rna_splice(mut pre_rna: Sequence, introns: &Tile) -> Sequence {
 
-    let mut dfs = Dfs::new(g);
-
-    let mut processed = HashSet::<u64>::new();
-    let mut ctr : u32 = 0;
-    let mut cc : Vec<u64> = vec![];
-    let mut components : Vec<Vec<u64>> = vec![];
-    
-    for n in g.nodes() {
-        if !processed.contains(n) {
-            dfs.init(n);
-            cc.clear();
-            while let Ok(id) = dfs.process_node() {
-                processed.insert(id);
-                cc.push(id);
-            }
-            components.push(cc.clone());
-            ctr += 1;
+    for intr in introns {
+        let res = knuth_morris_pratt(&pre_rna, intr);
+        for index in res {
+            pre_rna.chain.drain(index..(index + intr.len()));
         }
     }
-    (ctr, components)
+    pre_rna
 }
 
-
-pub fn p_distance_matrix(matrix: &Tile) -> Array2<f32> {
-
-    let (rows, columns) = matrix.size();
-    let mut distances =  Array2::<f32>::zeros((rows, rows));
-    let mut p_dist : f32 = 0.0;
-    
-    for (i, a_row) in matrix.into_iter().enumerate() {
-        for (j, b_row) in matrix.into_iter().enumerate() {
-            p_dist = 0.0;
-            if i != j {
-                p_dist = a_row.into_iter().zip(b_row).filter(|(a,b)| a != b).count() as f32;
-            }
-            distances[(i,j)] = p_dist / (columns as f32);
-            distances[(j,i)] = p_dist / (columns as f32);
-        }
-    }
-    distances
-}
-
-// Greedy search for shortest common superstring
 pub fn subsequences(a: &Sequence, b: &Sequence, limit: Option<usize>) -> Vec<Vec<usize>> {
 
     let mut result = vec![];
@@ -485,7 +293,7 @@ pub fn subsequences(a: &Sequence, b: &Sequence, limit: Option<usize>) -> Vec<Vec
     let a_idx: usize = 0;
     let b_idx: usize = 0; 
 
-    pub fn subsequences_recursive(a: &Sequence, a_idx: usize,b: &Sequence, b_idx: usize, 
+    pub fn subsequences_recursive( a: &Sequence, a_idx: usize, b: &Sequence, b_idx: usize, 
                                      temp: &mut Vec<usize>, result: &mut Vec<Vec<usize>>,
                                      limit: Option<usize>) 
     {
@@ -509,13 +317,59 @@ pub fn subsequences(a: &Sequence, b: &Sequence, limit: Option<usize>) -> Vec<Vec
     return result;
 }
 
+pub fn longest_increasing_subsequence(seq: &[u64]) -> Vec<u64> {
+
+    let mut lis = vec![0; seq.len()];
+    let mut pointers = vec![0; seq.len()];
+
+    let mut max_idx : usize = 0;
+    let mut max_len : usize = 0;
+
+    lis[0] = 1;
+    max_idx = 0;
+
+    for i in 1..lis.len() {
+
+        lis[i] = 1;
+        pointers[i] = i;
+
+        for j in 0..i {
+
+            // TODO: pass comparator as parameter
+            if seq[i] > seq[j] && lis[i] < lis[j] + 1 {
+            
+                lis[i] = lis[j] + 1;
+                pointers[i] = j;
+            
+                if lis[i] > max_len {
+                    max_idx = i;
+                    max_len = lis[i];
+                }
+            }
+        }
+    }
+
+    let mut result : Vec<u64> = vec![];
+
+    while max_len > 0 {
+        result.push(seq[max_idx]);
+        max_idx = pointers[max_idx];
+        max_len -= 1;
+    }
+
+    result.reverse();
+    result
+
+}
 
 pub fn longest_common_substring(matrix: &Tile) {
 
-
     // TODO: include information about alphabet inside sequence itself
-    let mut alphabet = HashSet::<u8>::from(['A' as u8 , 'C' as u8, 
-                                            'T' as u8, 'G' as u8]);
+    let mut alphabet = HashSet::<u8>::from([
+        'A' as u8 , 'C' as u8, 
+        'T' as u8, 'G' as u8
+    ]);
+
     let mut separator : u8 = '!' as u8; 
     let mut temp : Vec<u8> = vec![];
     let mut wordmap : Vec<(usize, usize)> = vec![];
@@ -529,10 +383,9 @@ pub fn longest_common_substring(matrix: &Tile) {
             separator += 1;
         }
     }
-    
+
 
     let seq = Sequence::from(temp.as_slice());
-    // println!("{:?}", wordmap);
     let mut ukkokens = Ukonen::<Sequence>::new(seq);
     let g = ukkokens.process();
     g.write_dot("abc.dot");
@@ -579,14 +432,6 @@ pub fn longest_common_substring(matrix: &Tile) {
     let mut visited = HashSet::<u64>::new();
     let mut reachable_suffixes = HashMap::<u64, Vec<u8>>::new();
     generate_reachbility_map(g, g.get_root().unwrap(), &mut visited, &wordmap, &mut reachable_suffixes);
-    // let mut reachability = HashMap::<u64, bool>::new();
-    // for (key, value) in reachable_suffixes {
-    //     if value.iter().sum::<u8>() == 3 as u8 {
-    //         reachability[&key] = true;
-    //     }
-    // }
-
-
 
     // // Function to perform DFS traversal on the graph
     fn resolve_suffix_endings(graph: &mut Graph<UkonenNode, UkonenEdge>, node_id: u64, 
@@ -613,8 +458,6 @@ pub fn longest_common_substring(matrix: &Tile) {
 
     visited.clear();
     resolve_suffix_endings(g, g.get_root().unwrap(), &mut visited, &wordmap);
-    g.write_dot("abc.dot");
-
 
     let mut lcs : Vec<(usize, i64)> = vec![];
     let mut cur : Vec<(usize, i64)> = vec![];
@@ -643,7 +486,6 @@ pub fn longest_common_substring(matrix: &Tile) {
                 let start = graph.get_edge(e).data.as_ref().unwrap().suffix_start;
                 let stop = graph.get_edge(e).data.as_ref().unwrap().suffix_stop;
                 cur_suffix.push((start, stop));
-                // println!("AS");
                 dfs_recursive_substrings(graph, graph.get_edge(e).end, discovered, reachable_suffixes, cur_suffix, cur_length + stop as usize - start + 1, lcs, longest, len);
                 cur_suffix.pop();
             }
@@ -661,7 +503,6 @@ pub fn longest_common_substring(matrix: &Tile) {
 
     println!("{:?}", lcs);
 
-
     for part in lcs {
 
         for i in part.0..(part.1 as usize + 1) {
@@ -669,97 +510,11 @@ pub fn longest_common_substring(matrix: &Tile) {
         }
     }
 
-    let x =  Sequence::from(result.as_slice());
+    // let x =  Sequence::from(result.as_slice());
 
-    print!("{}", x);
+    // print!("{}", x);
 
 }
-
-// Greedy search for shortest common superstring
-// pub fn shortest_common_superstring(sequences: &Tile) -> Sequence {
-
-//     let mut subsequence_set = HashSet::<Sequence>::new();
-//     let mut k : usize = 0;
-//     for seq in sequences {
-//         subsequence_set.insert(seq.clone());
-//         // find max length of subsequence used
-//         if seq.len() > k {
-//             k = seq.len();
-//         }
-//     }
-
-//     k = 150;
-
-//     while k > 1 {
-//         let grph = overlap_graph(sequences,  k);
-//         if grph.edge_count() > 0 {
-//             let e = grph.edges().next().unwrap();
-//             // print!("{:#?}", e);
-//         }
-//         // print!("ALOHA");
-//         k = k-1;
-//     }
-
-//     Sequence::new()
-// }
-
-
-// N{P}[ST]{P}
-// pub fn generate_motifs(target: &Vec<u8>, result: &mut Vec<String>, i: usize, temp: &mut Vec<u8>) {
-//
-//     if i == target.len() {
-//         result.push(std::str::from_utf8(temp).unwrap().to_string());
-//         return;
-//     }
-//
-//     let alphabet = String::from("FLSYCWPHQRITMNKVADEG").into_bytes();
-//     let mut alternatives = Vec::<u8>::new();
-//     let mut j = i;
-//     if target[j] == b'[' {
-//         j += 1;
-//         while j < target.len() && target[j] != b']' {
-//             alternatives.push(target[j]);
-//             j += 1;
-//         }
-//         for elem in alternatives {
-//             temp.push(elem);
-//             generate_motifs(target, result, j + 1, temp);
-//             temp.pop();
-//         }
-//     }
-//     else if target[j] == b'{' {
-//         j += 1;
-//         for elem in alphabet {
-//             if elem != target[j] {
-//                 temp.push(elem);
-//                 generate_motifs(target, result, j + 2, temp);
-//                 temp.pop();
-//             }
-//         }
-//         j += 2;
-//     }
-//     else{
-//         temp.push(target[i]);
-//         generate_motifs(target, result, i + 1, temp);
-//         temp.pop();
-//     }
-// }
-
-// fn search_motifs(st: String, pat: String) -> Vec<usize> {
-//
-//     let st = st.into_bytes();
-//     let pat = pat.into_bytes();
-//     let mut res = Vec::<String>::new();
-//     let mut temp = Vec::<u8>::new();
-//
-//     generate_motifs(&pat, &mut res, 0, &mut temp);
-//
-//     let mut pos = Vec::<usize>::new();
-//     for elem in &res {
-//         pos.append(&mut knuth_morris_pratt(&st, elem.as_bytes()));    
-//     }
-//     pos
-// }
 
 
 #[cfg(test)]
@@ -813,52 +568,10 @@ mod tests {
     }
 
     #[test]
-    fn test_mendel_first_law() {
-        let k: u16 = 2;
-        let m: u16 = 2;
-        let n: u16 = 2;
-        assert_eq!(0.7833333, 
-                    mendel_first_law(k, m, n));
-    }
-
-    #[test]
-    fn test_expected_offspring() {
-        let x: u16 = 18137;
-        let y: u16 = 16426;
-        let z: u16 = 18904;
-        let q: u16 = 18674;
-        let p: u16 = 18160;
-        let r: u16 = 18728;
-        assert_eq!(153105.0, expected_offspring(x, y, z, q, p, r));
-    }
-
-    #[test]
-    fn test_fibo() {
-        let n: usize = 5;
-        let k: u64 = 3;
-        assert_eq!(19, fibo(n, k));
-    }
-
-    #[test]
     fn test_substring_positions() {
         let seq = Sequence::from("GATATATGCATATACTT");
         let pat = Sequence::from("ATAT");
         assert_eq!(vec![1, 3, 9], knuth_morris_pratt(&seq, &pat));
-    }
-
-    #[test]
-    fn test_random_substring() {
-        let seq = Sequence::from("GACGGACAAGGGCCCCCGTGTATTGTACTTGGGCCCATGTGCC\
-                                    CGACCTCGGTAAGTCCATCAGGAGTGCACGAGGACCACCATTTCAAGAAA");
-        let arr =  [0.110, 0.127, 0.183, 0.256];
-        assert_eq!(vec![ -80.82637701756781, -77.85362263786175, 
-                            -70.59699957974087, -64.49615401338707], random_substrings(&seq, &arr));
-    }
-
-    #[test]
-    fn test_partial_permutations() {
-        let part = partial_permutations(21, 7);
-        assert_eq!(51200, part);
     }
 
     #[test]

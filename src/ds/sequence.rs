@@ -1,9 +1,9 @@
 #![warn(missing_debug_implementations)]
 use ndarray::prelude::*;
-use super::io::fasta;
 use std::hash::{Hash, Hasher};
 use std::ops::{Index, IndexMut};
-use std::fmt; // Import `fmt`
+use std::fmt; 
+use crate::io::fasta;
 
 #[derive(Debug, Clone)]
 pub struct Sequence {
@@ -24,6 +24,7 @@ impl Sequence {
     pub fn len(&self) -> usize {
         self.chain.len()
     }
+
 }
 
 impl Hash for Sequence {
@@ -59,11 +60,11 @@ impl From<&str> for Sequence {
 }
 
 // &[u8] -> Sequence
-impl From<&[u8]> for Sequence {
-    fn from(s: &[u8]) -> Self {
-        Sequence { chain: s.to_vec(), id: None }
-    }
-}
+// impl From<&[u8]> for Sequence {
+//     fn from(s: &[u8]) -> Self {
+//         Sequence { chain: s.to_vec(), id: None }
+//     }
+// }
 // Array1 -> Sequence
 impl From<Array1<u8>> for Sequence {
     fn from(a: Array1<u8>) -> Self {

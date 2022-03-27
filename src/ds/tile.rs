@@ -2,7 +2,7 @@ use std::fmt; // Import `fmt`
 use ndarray::prelude::*;
 use std::ops::{Index, IndexMut};
 
-use crate::sequence::Sequence;
+use super::sequence::Sequence;
 
 #[derive(Debug)]
 pub struct Tile {
