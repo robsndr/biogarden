@@ -18,7 +18,7 @@ mod io;
 // use ds::graph::*;
 // use std::fs::File;
 // use std::io::prelude::*;
-// use sequence::Sequence;
+use ds::sequence::Sequence;
 // use ndarray::prelude::*;
 // use std::io::{BufReader};
 
@@ -313,4 +313,17 @@ fn main() {
     // } 
 
     // println!("{}", algo::shortest_common_superstring(&matrix));
+
+    let a = Sequence::from("abcd");
+    let b = Sequence::from("bde");
+    let c = Sequence::from("abfg");
+
+    let words : Vec<&[u8]> = vec![a.chain.as_slice(), b.chain.as_slice(), c.chain.as_slice()];
+
+    let alphabet = ['a' as u8, 'b' as u8, 'c' as u8, 'd' as u8, 'e' as u8, 'f' as u8, 'g' as u8];
+    let mut trie = algo::graph::trie::Trie::new(&alphabet);
+    // let graph = trie.insert_word(words[0].chain.as_slice()).unwrap();
+    // let graph = trie.insert_word(words[1].chain.as_slice()).unwrap();
+    let graph =trie.build(words).unwrap();
+    graph.write_dot("abc.dot");
 }
