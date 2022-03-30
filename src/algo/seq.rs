@@ -9,6 +9,8 @@ use crate::ds::sequence::Sequence;
 use crate::ds::graph::Graph;
 use crate::ds::tile::Tile;
 
+use super::graph::trie::{Trie, TrieNode};
+
 // Count number of chars in Sequence sequence
 // Return array with numbers representing #occur of given char
 // count[0] == count ['A'] and count[23] == count['Z']
@@ -335,7 +337,8 @@ pub fn longest_increasing_subsequence(seq: &[u64]) -> Vec<u64> {
 
         for j in 0..i {
 
-            // TODO: pass comparator as parameter
+            // TODO: Make more generic
+            // Pass comparator as parameter
             if seq[i] > seq[j] && lis[i] < lis[j] + 1 {
             
                 lis[i] = lis[j] + 1;
@@ -359,6 +362,38 @@ pub fn longest_increasing_subsequence(seq: &[u64]) -> Vec<u64> {
 
     result.reverse();
     result
+
+}
+
+pub fn sort_lexicographically(sequences: &Tile) {
+
+    let alphabet = ['A' as u8, 'C' as u8, 'T' as u8, 'G' as u8];
+    let mut trie_builder = Trie::new(&alphabet);
+    let trie = trie_builder.build(sequences).unwrap();
+    trie.write_dot("abc.dot");
+
+
+    fn walk_trie_rec(trie: &Graph<TrieNode, u8>, node_id: u64) {
+        
+        if trie.out_neighbors(node_id).count() == 0 {
+            return;
+        }
+
+        let node = trie.get_node(&node_id);
+ 
+        for c in node.data.children.iter() {
+            if *c != -1 {
+                if trie.get_node(&(*c as u64)).data.ending == true {
+                    println!("{}", trie.get_node(&(*c as u64)).data.substring);
+                }
+    
+                walk_trie_rec(trie, *c as u64);
+            }
+        }
+    }
+
+    let root = trie.get_root().unwrap();
+    walk_trie_rec(trie, root);
 
 }
 
@@ -515,6 +550,10 @@ pub fn longest_increasing_subsequence(seq: &[u64]) -> Vec<u64> {
 //     // print!("{}", x);
 
 // }
+
+
+
+
 
 
 #[cfg(test)]

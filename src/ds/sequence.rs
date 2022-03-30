@@ -60,11 +60,12 @@ impl From<&str> for Sequence {
 }
 
 // &[u8] -> Sequence
-// impl From<&[u8]> for Sequence {
-//     fn from(s: &[u8]) -> Self {
-//         Sequence { chain: s.to_vec(), id: None }
-//     }
-// }
+impl From<&[u8]> for Sequence {
+    fn from(s: &[u8]) -> Self {
+        Sequence { chain: s.to_vec(), id: None }
+    }
+}
+
 // Array1 -> Sequence
 impl From<Array1<u8>> for Sequence {
     fn from(a: Array1<u8>) -> Self {
@@ -150,6 +151,13 @@ impl Index<usize> for Sequence {
         &self.chain[i]
     }
 }
+
+// impl<'a> Index<usize> for &'a Sequence {
+//     type Output = u8;
+//     fn index<'b>(&'b self, i: usize) -> &'b u8 {
+//         &self.chain[i]
+//     }
+// }
 
 // impl IndexMut<usize> for Sequence {
 //     fn index_mut<'a>(&'a mut self, i: usize) -> &'a mut Sequence {

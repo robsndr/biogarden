@@ -6,7 +6,7 @@ use super::sequence::Sequence;
 
 #[derive(Debug)]
 pub struct Tile {
-    data: Vec<Sequence>,
+    pub data: Vec<Sequence>,
 }
 
 impl Tile
