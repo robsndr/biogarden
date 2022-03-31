@@ -66,6 +66,13 @@ impl From<&[u8]> for Sequence {
     }
 }
 
+// &[u8] -> Sequence
+impl From<&Vec<u8>> for Sequence {
+    fn from(s: &Vec<u8>) -> Self {
+        Sequence { chain: s.clone(), id: None }
+    }
+}
+
 // Array1 -> Sequence
 impl From<Array1<u8>> for Sequence {
     fn from(a: Array1<u8>) -> Self {

@@ -365,15 +365,14 @@ pub fn longest_increasing_subsequence(seq: &[u64]) -> Vec<u64> {
 
 }
 
-pub fn sort_lexicographically(sequences: &Tile) {
+pub fn sort_lexicographically(sequences: &Tile, alphabet: &[u8]) -> Tile {
 
-    let alphabet = ['A' as u8, 'C' as u8, 'T' as u8, 'G' as u8];
-    let mut trie_builder = Trie::new(&alphabet);
+    let mut trie_builder = Trie::new(alphabet);
     let trie = trie_builder.build(sequences).unwrap();
     trie.write_dot("abc.dot");
 
 
-    fn walk_trie_rec(trie: &Graph<TrieNode, u8>, node_id: u64) {
+    fn walk_trie_rec(trie: &Graph<TrieNode, u8>, node_id: u64, sorted: &mut Tile) {
         
         if trie.out_neighbors(node_id).count() == 0 {
             return;
@@ -384,17 +383,20 @@ pub fn sort_lexicographically(sequences: &Tile) {
         for c in node.data.children.iter() {
             if *c != -1 {
                 if trie.get_node(&(*c as u64)).data.ending == true {
-                    println!("{}", trie.get_node(&(*c as u64)).data.substring);
+                    let substrings = &trie.get_node(&(*c as u64)).data.substring;
+                    substrings.iter().for_each(|s| sorted.push(Sequence::from(s)));
                 }
     
-                walk_trie_rec(trie, *c as u64);
+                walk_trie_rec(trie, *c as u64, sorted);
             }
         }
     }
 
+    let mut sorted = Tile::new();
     let root = trie.get_root().unwrap();
-    walk_trie_rec(trie, root);
+    walk_trie_rec(trie, root, &mut sorted);
 
+    sorted
 }
 
 // pub fn longest_common_substring(matrix: &Tile) {

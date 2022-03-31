@@ -9,7 +9,7 @@ use crate::ds::graph::GraphProperties;
 
 /// Ukonen Node
 pub struct TrieNode {
-    pub substring: String, 
+    pub substring: Vec<Vec<u8>>,
     pub children: Vec<i64>,
     pub ending: bool
 }
@@ -17,7 +17,7 @@ pub struct TrieNode {
 impl TrieNode {
     pub fn new(alphabet_len: usize) -> TrieNode {
         TrieNode {
-            substring: String::from("-"), 
+            substring: vec![], 
             children: vec![-1; alphabet_len],
             ending: false
         }
@@ -26,9 +26,12 @@ impl TrieNode {
 
 impl fmt::Display for TrieNode  {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        // let mut temp : String = String::from("");
-        // temp += std::str::from_utf8(&self.substring).unwrap();
-        write!(f, "S: {} | E: {}", self.substring, self.ending)
+        let mut temp = String::from("");
+        for s in &self.substring {
+            temp += std::str::from_utf8(s).expect("Found invalid UTF-8");
+            temp += "  ";
+        }
+        write!(f, "S: {} | E: {}", temp, self.ending)
     }
 }
 
@@ -64,16 +67,20 @@ impl Trie {
         
         let mut cur_node_id = match self.graph.get_root() {
             Some(root) => root, 
+            // TODO: This fails mostly due to misaligned alphabet specification
+            // Make more roboust by checking if all letters within alphabet?
+            // Or fail mor gracefully 
             None => return Err(GraphErr::NoSuchVertex)
         };
 
-        let mut substring = String::from("");
+        let mut substring : Vec<u8> = vec![];
 
         for c in word.into_iter() { 
             
             // TODO: refine error handline
             let idx = match self.alphabet.get(c) {
                 Some(x) => x.to_owned(),
+                // TODO: This fails mostly due to misaligned alphabet specification
                 None => return Err(GraphErr::NoSuchVertex) 
             };
             
@@ -87,13 +94,13 @@ impl Trie {
             let next_node_id = cur_node.data.children[idx] as u64;
 
             let next_node = self.graph.get_node_mut(&next_node_id);
-            substring.push(*c as char);
+            substring.push(*c);
 
             cur_node_id = next_node_id;
         }
      
         self.graph.get_node_mut(&cur_node_id).data.ending = true;
-        self.graph.get_node_mut(&cur_node_id).data.substring = substring;
+        self.graph.get_node_mut(&cur_node_id).data.substring.push(substring);
 
         Ok(&self.graph)
     }
