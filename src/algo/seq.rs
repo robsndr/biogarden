@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::cmp;
 
 use super::graph::ukonen::Ukonen;
 use super::graph::ukonen::UkonenEdge;
@@ -369,8 +370,6 @@ pub fn sort_lexicographically(sequences: &Tile, alphabet: &[u8]) -> Tile {
 
     let mut trie_builder = Trie::new(alphabet);
     let trie = trie_builder.build(sequences).unwrap();
-    trie.write_dot("abc.dot");
-
 
     fn walk_trie_rec(trie: &Graph<TrieNode, u8>, node_id: u64, sorted: &mut Tile) {
         
@@ -397,6 +396,49 @@ pub fn sort_lexicographically(sequences: &Tile, alphabet: &[u8]) -> Tile {
     walk_trie_rec(trie, root, &mut sorted);
 
     sorted
+}
+
+pub fn longest_common_subsequence(seq1: &Sequence, seq2: &Sequence) -> Sequence {
+
+    let mut match_table = vec![vec![0 as usize; seq2.len() + 1 ]; seq1.len() + 1];
+    let mut prev_table = vec![vec![(0 as usize, 0 as usize); seq2.len() + 1 ]; seq1.len() + 1];
+
+    for i in 1..(seq1.len()+1) {
+        for j in 1..(seq2.len()+1) {
+            if seq1[i-1] == seq2[j-1] {
+                match_table[i][j] = match_table[i-1][j-1] + 1;
+                prev_table[i][j] = (i-1, j-1);
+            }
+            else {
+                if match_table[i-1][j] > match_table[i][j-1] {
+                    match_table[i][j] = match_table[i-1][j];
+                    prev_table[i][j] = (i-1, j);
+                }
+                else {
+                    match_table[i][j] = match_table[i][j-1];
+                    prev_table[i][j] = (i, j-1);  
+                }
+            }
+        } 
+    }
+
+    let mut lcs = Sequence::new();
+
+    let mut i = seq1.len();
+    let mut j = seq2.len();
+
+    while match_table[i][j] != 0 {
+        let i_next = prev_table[i][j].0;
+        let j_next = prev_table[i][j].1;
+        if i_next==i-1 && j_next==j-1 {
+            lcs.push(seq1[i_next]);
+        }
+        i = i_next;
+        j = j_next
+    }
+
+    lcs.reverse();
+    lcs
 }
 
 // pub fn longest_common_substring(matrix: &Tile) {

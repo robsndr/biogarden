@@ -25,6 +25,10 @@ impl Sequence {
         self.chain.len()
     }
 
+    pub fn reverse(&mut self) {
+        self.chain.reverse();
+    }
+
 }
 
 impl Hash for Sequence {
