@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::cmp;
+use allwords::{Alphabet};
 
 use super::graph::ukonen::Ukonen;
 use super::graph::ukonen::UkonenEdge;
@@ -439,6 +440,29 @@ pub fn longest_common_subsequence(seq1: &Sequence, seq2: &Sequence) -> Sequence 
 
     lcs.reverse();
     lcs
+}
+
+pub fn k_mer_composition(seq: &Sequence, k: usize, alphabet: &[u8]) -> Vec<usize> {
+
+    // Generate all possible k-mers from alphabet
+    let mut kmers = Tile::new();
+    let a = Alphabet::from_chars_in_str(std::str::from_utf8(alphabet).unwrap()).unwrap();
+    let words = a.all_words(Some(k)).filter(|x| x.len() == k);
+    for a in words {
+        kmers.push(Sequence::from(a));
+    }
+
+    // Sort k-mers according to ordering from alphabet
+    kmers = sort_lexicographically(&kmers, alphabet);
+
+    // Calculate k-mer composition
+    let mut kmer_composition = vec![];
+    for kmer in &kmers {
+        let pos = knuth_morris_pratt(seq, kmer);
+        kmer_composition.push(pos.iter().count());
+    }
+
+    kmer_composition
 }
 
 // pub fn longest_common_substring(matrix: &Tile) {
