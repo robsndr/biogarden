@@ -1,5 +1,9 @@
 use statrs::function::factorial::{binomial, factorial};
 use std::collections::HashMap;
+use num::*;
+use num::ToPrimitive;
+use num::pow::pow;
+use num::traits::Pow;
 use ndarray::prelude::*;
 
 use crate::ds::sequence::Sequence;
@@ -157,6 +161,16 @@ pub fn random_substrings(seq: &Sequence, gc_content: &[f64]) -> Vec<f64> {
         probabilities.push(prop.log10());
     }
     return probabilities;
+}
+
+pub fn number_subsets(n: u64) -> u64 {
+    
+    let base = BigUint::from(2 as u64);
+    let modulus = BigUint::from(1000000 as u64);
+    let subsets = base.pow(n) % modulus;
+
+    let mask = BigUint::from(u64::MAX);    
+    ToPrimitive::to_u64(&(subsets & mask)).unwrap()
 }
 
 #[cfg(test)]
