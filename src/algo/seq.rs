@@ -16,12 +16,17 @@ use super::graph::trie::{Trie, TrieNode};
 // Count number of chars in Sequence sequence
 // Return array with numbers representing #occur of given char
 // count[0] == count ['A'] and count[23] == count['Z']
-pub fn count_nucleotides(seq: &Sequence) -> [u16; 4] {
-    let mut count: [u16; 24] = [0; 24];
+pub fn count_nucleotides(seq: &Sequence) -> HashMap<u8, u16> {
+    let mut count = HashMap::<u8, u16>::new();
     for c in seq.into_iter() {
-        count[(*c as usize) - 65] += 1;
+        if !count.contains_key(c) {
+            count.insert(*c, 1);
+        }
+        else {
+            *count.get_mut(c).unwrap() += 1; 
+        }
     }
-    return [count[0], count[2], count[6], count[19]];
+    count
 }
 
 // Transcribe the DNS sequence into RNA
@@ -463,6 +468,31 @@ pub fn k_mer_composition(seq: &Sequence, k: usize, alphabet: &[u8]) -> Vec<usize
     }
 
     kmer_composition
+}
+
+pub fn count_basepair_matchings(rna: &Sequence) -> u128 {
+
+    let cnt = count_nucleotides(rna);
+
+    if cnt[&b'G'] != cnt[&b'C'] || cnt[&b'A'] != cnt[&b'U'] {
+        // TODO: handle by propagating Result(Err)
+        println!("G != C or A != U");
+        return 0;
+    }
+
+    let gc_cnt = cnt[&b'G'];
+    let au_cnt = cnt[&b'A'];
+
+    // Number of possible GC/AU matchings is equivalent to:
+    // (gc_cnt)(gc_cnt-1)(gc_cnt-2)...(2)(1) = gc_cnt!
+    fn factorial(num: u128) -> u128 {
+        match num {
+            0  => 1,
+            1.. => (1..num+1).product(),
+        }
+    }
+
+    factorial(gc_cnt as u128) * factorial(au_cnt as u128)
 }
 
 // pub fn longest_common_substring(matrix: &Tile) {

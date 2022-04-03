@@ -164,14 +164,13 @@ pub fn random_substrings(seq: &Sequence, gc_content: &[f64]) -> Vec<f64> {
 }
 
 pub fn number_subsets(n: u64) -> u64 {
-    
+
     let base = BigUint::from(2 as u64);
     let modulus = BigUint::from(1000000 as u64);
     let subsets = base.pow(n) % modulus;
-
-    let mask = BigUint::from(u64::MAX);    
-    ToPrimitive::to_u64(&(subsets & mask)).unwrap()
+    ToPrimitive::to_u64(&subsets).unwrap()
 }
+
 
 #[cfg(test)]
 mod tests {
