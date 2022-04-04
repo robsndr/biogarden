@@ -14,36 +14,7 @@
 // use crate::ds::graph::Dfs;
 
 
-// Greedy search for shortest common superstring
-// pub fn shortest_common_superstring(sequences: &Tile) -> Sequence {
 
-//     let mut subsequence_set = HashSet::<Sequence>::new();
-//     let mut k : usize = 0;
-//     for seq in sequences {
-//         subsequence_set.insert(seq.clone());
-//         // find max length of subsequence used
-//         if seq.len() > k {
-//             k = seq.len();
-//         }
-//     }
-
-//     let mut x = k / 2;
-
-//     while x < k {
-//         let graph = overlap_graph(sequences,  k);
-//         if graph.edge_count() > 0 {
-//             let e = graph.edges().next().unwrap();
-//             graph.write_dot("abc.dot");
-//             let mut input = String::new();
-//             io::stdin().read_line(&mut input).expect("error: unable to read user input");
-//         }
-//         // print!("ALOHA");
-//         // k = k-1;
-//         x += 1;
-//     }
-
-//     Sequence::new()
-// }
 
 
 // N{P}[ST]{P}

@@ -171,6 +171,35 @@ pub fn number_subsets(n: u64) -> u64 {
     ToPrimitive::to_u64(&subsets).unwrap()
 }
 
+pub fn signed_permutations(l : usize, a : &mut Vec<i32>, result : &mut Vec<Vec<i32>>) {
+
+    if a.len() == l {
+        result.push(a.clone());
+    }
+    else
+    {
+        for i in  l..a.len() {
+        {
+ 
+            // Swapping done
+            a.swap(i, l);
+            // swap(a[l], a[i]);
+ 
+            // Recursion called
+            a[l] = 0 - a[l];
+
+            signed_permutations(l+1, a, result);
+            
+            a[l] = 0 - a[l];
+            signed_permutations(l+1, a, result);
+            
+
+            //backtrack
+            a.swap(i, l);
+        }
+    }
+}
+}
 
 #[cfg(test)]
 mod tests {

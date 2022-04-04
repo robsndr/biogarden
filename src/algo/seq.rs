@@ -495,6 +495,37 @@ pub fn count_basepair_matchings(rna: &Sequence) -> u128 {
     factorial(gc_cnt as u128) * factorial(au_cnt as u128)
 }
 
+
+// Greedy search for shortest common superstring
+// pub fn shortest_common_superstring(sequences: &Tile) -> Sequence {
+
+//     let num_seq = sequences.len();
+
+//     for i in 0..num_seq {
+//         let prefix = &sequences[i];
+//         for j in 0..num_seq {
+            
+//             if i == j {
+//                 continue;
+//             }
+            
+//             let suffix = &sequences[j];
+//             let num_chars = std::cmp::min(prefix.len(), suffix.len());
+            
+//             for k in 0..num_chars {
+//                 if prefix[k] == suffix[num_chars-k]
+//             }
+
+
+
+//         }
+//     }
+    
+
+//     Sequence::new()
+// }
+
+
 // pub fn longest_common_substring(matrix: &Tile) {
 
 //     // TODO: include information about alphabet inside sequence itself
@@ -648,6 +679,10 @@ pub fn count_basepair_matchings(rna: &Sequence) -> u128 {
 //     // print!("{}", x);
 
 // }
+
+
+// Independent Alleles
+// sum (p choose i)*0.25^i*0.75^(p-i), i from n to p for p=2^6, n=17
 
 
 
