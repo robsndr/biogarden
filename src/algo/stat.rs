@@ -144,8 +144,8 @@ pub fn random_substrings(seq: &Sequence, gc_content: &[f64]) -> Vec<f64> {
     let mut probabilities : Vec<f64> = vec![];
     let mut prob_map : HashMap<u8, f64> = HashMap::from([ 
         ('A' as u8, 1.0), ('C' as u8, 1.0), 
-        ('T' as u8, 1.0), ('G' as u8, 1.0)]
-    );
+        ('T' as u8, 1.0), ('G' as u8, 1.0)
+    ]);
 
     for x in gc_content {
         *prob_map.get_mut(&('G' as u8)).unwrap() = x / 2.0;
@@ -180,20 +180,16 @@ pub fn signed_permutations(l : usize, a : &mut Vec<i32>, result : &mut Vec<Vec<i
     {
         for i in  l..a.len() {
         {
- 
             // Swapping done
             a.swap(i, l);
-            // swap(a[l], a[i]);
  
             // Recursion called
-            a[l] = 0 - a[l];
+            a[l] = -a[l];
+            signed_permutations(l+1, a, result);
 
+            a[l] = -a[l];
             signed_permutations(l+1, a, result);
             
-            a[l] = 0 - a[l];
-            signed_permutations(l+1, a, result);
-            
-
             //backtrack
             a.swap(i, l);
         }
