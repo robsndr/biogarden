@@ -161,12 +161,12 @@ pub fn open_reading_frames(dna: &Sequence) -> Vec<Sequence> {
 pub fn infer_number_rna(protein: &Sequence) -> u128 {
 
     let codon_combs: HashMap<u8, u128> = HashMap::from([   
-        ('F' as u8, 2),   ('I' as u8, 3),   ('V' as u8, 4),   ('L' as u8, 6),   
-        ('S' as u8, 6),   ('P' as u8, 4),   ('M' as u8, 1),   ('T' as u8, 4),   
-        ('A' as u8, 4),   ('Y' as u8, 2),   ('-' as u8, 3),   ('H' as u8, 2),   
-        ('N' as u8, 2),   ('D' as u8, 2),   ('Q' as u8, 2),   ('K' as u8, 2),   
-        ('E' as u8, 2),   ('C' as u8, 2),   ('G' as u8, 4),   ('R' as u8, 6),      
-        ('W' as u8, 1)
+        (b'F', 2),   (b'I', 3),   (b'V', 4),   (b'L', 6),   
+        (b'S', 6),   (b'P', 4),   (b'M', 1),   (b'T', 4),   
+        (b'A', 4),   (b'Y', 2),   (b'-', 3),   (b'H', 2),   
+        (b'N', 2),   (b'D', 2),   (b'Q', 2),   (b'K', 2),   
+        (b'E', 2),   (b'C', 2),   (b'G', 4),   (b'R', 6),      
+        (b'W', 1)
     ]);
 
     // Initialize with 3 as for number of STOP codons
@@ -181,12 +181,12 @@ pub fn infer_number_rna(protein: &Sequence) -> u128 {
 pub fn weighted_mass(protein: &Sequence) -> f64 {
 
     let monoisotopic_mass_table : HashMap<u8, f64> = HashMap::from([   
-        ('F' as u8, 147.06841),   ('I' as u8, 113.08406),   ('V' as u8, 99.06841),   ('L' as u8, 113.08406),   
-        ('S' as u8, 87.03203),    ('P' as u8, 97.05276),    ('M' as u8, 131.04049),  ('T' as u8, 101.04768),   
-        ('A' as u8, 71.03711),    ('Y' as u8, 163.06333 ),  ('-' as u8, 0.0),        ('H' as u8, 137.05891),   
-        ('N' as u8, 114.04293),   ('D' as u8, 115.02694),   ('Q' as u8, 128.05858),  ('K' as u8, 128.09496),   
-        ('E' as u8, 129.04259),   ('C' as u8, 103.00919),   ('G' as u8, 57.02146),   ('R' as u8, 156.10111),      
-        ('W' as u8, 186.07931)
+        (b'F', 147.06841),   (b'I', 113.08406),   (b'V', 99.06841),   (b'L', 113.08406),   
+        (b'S', 87.03203),    (b'P', 97.05276),    (b'M', 131.04049),  (b'T', 101.04768),   
+        (b'A', 71.03711),    (b'Y', 163.06333 ),  (b'-', 0.0),        (b'H', 137.05891),   
+        (b'N', 114.04293),   (b'D', 115.02694),   (b'Q', 128.05858),  (b'K', 128.09496),   
+        (b'E', 129.04259),   (b'C', 103.00919),   (b'G', 57.02146),   (b'R', 156.10111),      
+        (b'W', 186.07931)
     ]);
 
     let mut mass : f64 = 0.0;
@@ -406,8 +406,8 @@ pub fn sort_lexicographically(sequences: &Tile, alphabet: &[u8]) -> Tile {
 
 pub fn longest_common_subsequence(seq1: &Sequence, seq2: &Sequence) -> Sequence {
 
-    let mut match_table = vec![vec![0 as usize; seq2.len() + 1 ]; seq1.len() + 1];
-    let mut prev_table = vec![vec![(0 as usize, 0 as usize); seq2.len() + 1 ]; seq1.len() + 1];
+    let mut match_table = vec![vec![0_usize; seq2.len() + 1 ]; seq1.len() + 1];
+    let mut prev_table = vec![vec![(0_usize, 0_usize); seq2.len() + 1 ]; seq1.len() + 1];
 
     for i in 1..(seq1.len()+1) {
         for j in 1..(seq2.len()+1) {

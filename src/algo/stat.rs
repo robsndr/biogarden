@@ -143,15 +143,14 @@ pub fn random_substrings(seq: &Sequence, gc_content: &[f64]) -> Vec<f64> {
 
     let mut probabilities : Vec<f64> = vec![];
     let mut prob_map : HashMap<u8, f64> = HashMap::from([ 
-        ('A' as u8, 1.0), ('C' as u8, 1.0), 
-        ('T' as u8, 1.0), ('G' as u8, 1.0)
+        (b'A', 1.0), (b'C', 1.0), (b'T', 1.0), (b'G', 1.0)
     ]);
 
     for x in gc_content {
-        *prob_map.get_mut(&('G' as u8)).unwrap() = x / 2.0;
-        *prob_map.get_mut(&('C' as u8)).unwrap() = x / 2.0;
-        *prob_map.get_mut(&('T' as u8)).unwrap() = (1.0-x) / 2.0;
-        *prob_map.get_mut(&('A' as u8)).unwrap() = (1.0-x) / 2.0;
+        *prob_map.get_mut(&(b'G')).unwrap() = x / 2.0;
+        *prob_map.get_mut(&(b'C')).unwrap() = x / 2.0;
+        *prob_map.get_mut(&(b'T')).unwrap() = (1.0-x) / 2.0;
+        *prob_map.get_mut(&(b'A')).unwrap() = (1.0-x) / 2.0;
         // calculate probability of given string
         // for provided GC content
         let mut prop = 1.0;
@@ -161,7 +160,7 @@ pub fn random_substrings(seq: &Sequence, gc_content: &[f64]) -> Vec<f64> {
         // probabilities.push(prop.log10());
         probabilities.push(prop);
     }
-    return probabilities;
+    probabilities
 }
 
 pub fn random_motifs(n: usize, gc_content: f64, seq: &Sequence) -> f64 {
