@@ -476,7 +476,7 @@ pub fn count_basepair_matchings(rna: &Sequence) -> u128 {
 
     if cnt[&b'G'] != cnt[&b'C'] || cnt[&b'A'] != cnt[&b'U'] {
         // TODO: handle by propagating Result(Err)
-        println!("G != C or A != U");
+        println!("cnt[G[] != cnt[C] or cnt[A] != cnt[U]");
         return 0;
     }
 
@@ -495,6 +495,47 @@ pub fn count_basepair_matchings(rna: &Sequence) -> u128 {
     factorial(gc_cnt as u128) * factorial(au_cnt as u128)
 }
 
+pub fn longest_common_supersequence(seq1: &Sequence, seq2: &Sequence) -> Sequence {
+
+    let lcs = longest_common_subsequence(seq1, seq2);
+    
+    let mut superseq = Vec::<u8>::new();
+
+    let mut s1 = seq1.into_iter();
+    let mut s2 = seq2.into_iter();
+
+    for c in lcs {
+
+        loop {
+            match s1.next() {
+                Some(x) if *x != c => {
+                    superseq.push(*x);
+                }
+                _ => {
+                    break;
+                }
+            }
+        }
+
+        loop {
+            match s2.next() {
+                Some(x) if *x != c => {
+                    superseq.push(*x);
+                }
+                _ => {
+                    break;
+                }
+            }
+        }
+
+        superseq.push(c);
+    }
+
+    superseq.extend(s1);
+    superseq.extend(s2);
+
+    Sequence::from(superseq.as_slice())
+}
 
 // Greedy search for shortest common superstring
 // pub fn shortest_common_superstring(sequences: &Tile) -> Sequence {
@@ -754,5 +795,17 @@ mod tests {
                                 GATCGTGCTGGTTACTGGCGGTACGAGTGTTCCTTTGGGT");
         let ratio = transition_transversion_ratio(&a, &b);
         assert_eq!(1.21428571429, ratio);
+    }
+
+    #[test]
+    fn test_shortest_supersequence() {
+        let s2 = Sequence::from("TTATGTGATATCCCCGCTTCTCACAATGCTCTTAGTTTACCTC\
+                                 GAACTAAGTCTGATCGCAGCGGCCGGTATTCCTTTCTACGCG");
+        let s1 = Sequence::from("GCTCACGGATTCGAAAGTCGAGTGTCCCCCAGCTGGATGCATTCTT\
+                                 TGGGAGTGGCCAAGGAGGGTTATCAGAAGAACAGATTAATTTG");
+        let res = Sequence::from("GCTCTACTGTGATATCCCCGCTTCTCACAATGCTCGTTAGTGT\
+                                  TACCTCCCAGAACTGGATGCAGTTCTTTGGGAGTGGCGCAAGC\
+                                  GAGCCGGTTATTCAGAAGAACAGATTAATCTTACGCG");
+        assert_eq!(res, longest_common_supersequence(&s1, &s2));
     }
 }
