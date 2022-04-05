@@ -86,7 +86,7 @@ impl Trie {
             
             if self.graph.get_node(&cur_node_id).data.children[idx] == -1 {
                 let nid = self.graph.add_node(TrieNode::new(self.alphabet.len()));
-                self.graph.add_edge(&cur_node_id, &nid, None).ok();                
+                self.graph.add_edge(&cur_node_id, &nid, Some(*c)).ok();                
                 self.graph.get_node_mut(&cur_node_id).data.children[idx] = nid as i64;
             }
             
@@ -100,7 +100,7 @@ impl Trie {
         }
      
         self.graph.get_node_mut(&cur_node_id).data.ending = true;
-        self.graph.get_node_mut(&cur_node_id).data.substring.push(substring);
+        self.graph.get_node_mut(&cur_node_id).data.substring.push(substring.clone());
 
         Ok(&self.graph)
     }

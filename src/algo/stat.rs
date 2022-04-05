@@ -158,10 +158,18 @@ pub fn random_substrings(seq: &Sequence, gc_content: &[f64]) -> Vec<f64> {
         for c in seq {
             prop *= prob_map[c]
         }
-        probabilities.push(prop.log10());
+        // probabilities.push(prop.log10());
+        probabilities.push(prop);
     }
     return probabilities;
 }
+
+pub fn random_motifs(n: usize, gc_content: f64, seq: &Sequence) -> f64 {
+
+    let prob = random_substrings(seq, &[gc_content]).first().cloned().unwrap();
+    1.0- pow((1.0 - prob), n)
+}
+
 
 pub fn number_subsets(n: u64) -> u64 {
 
@@ -179,7 +187,6 @@ pub fn signed_permutations(l : usize, a : &mut Vec<i32>, result : &mut Vec<Vec<i
     else
     {
         for i in  l..a.len() {
-        {
             // Swapping done
             a.swap(i, l);
  
@@ -195,7 +202,7 @@ pub fn signed_permutations(l : usize, a : &mut Vec<i32>, result : &mut Vec<Vec<i
         }
     }
 }
-}
+
 
 #[cfg(test)]
 mod tests {
@@ -246,7 +253,12 @@ mod tests {
         let seq = Sequence::from("GACGGACAAGGGCCCCCGTGTATTGTACTTGGGCCCATGTGCC\
                                     CGACCTCGGTAAGTCCATCAGGAGTGCACGAGGACCACCATTTCAAGAAA");
         let arr =  [0.110, 0.127, 0.183, 0.256];
-        assert_eq!(vec![ -80.82637701756781, -77.85362263786175, 
-                            -70.59699957974087, -64.49615401338707], random_substrings(&seq, &arr));
+        assert_eq!(vec![ -80.82637701756781, -77.85362263786175, -70.59699957974087, -64.49615401338707], 
+                        random_substrings(&seq, &arr).iter().map(|x| x.log10()).collect::<Vec<_>>());
+    }
+
+    #[test]
+    fn test_random_motifs() {
+        assert_eq!(0.3131377954665139, random_motifs(97232, 0.506715, &Sequence::from("GCGTAAGAC")))
     }
 }

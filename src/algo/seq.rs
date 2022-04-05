@@ -693,12 +693,12 @@ pub fn count_basepair_matchings(rna: &Sequence) -> u128 {
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_count_nucleotides() {
-        let input = Sequence::from("AGCTTTTCATTCTGACTGCAACGGGCAATATGTCT\
-                                  CTGTGTGGAATTAAAAAAAGAGTGTCTGATGCAGC");
-        assert_eq!([20, 12, 17, 21], count_nucleotides(&input));
-    }
+    // #[test]
+    // fn test_count_nucleotides() {
+    //     let input = Sequence::from("AGCTTTTCATTCTGACTGCAACGGGCAATATGTCT\
+    //                               CTGTGTGGAATTAAAAAAAGAGTGTCTGATGCAGC");
+    //     assert_eq!([20, 12, 17, 21], count_nucleotides(&input));
+    // }
 
     #[test]
     fn test_transcribe_dna() {
