@@ -537,6 +537,58 @@ pub fn longest_common_supersequence(seq1: &Sequence, seq2: &Sequence) -> Sequenc
     Sequence::from(superseq.as_slice())
 }
 
+
+pub fn protein_from_prefix_spectrum(spec: Vec<f32>) -> Sequence {
+
+    let monoisotopic_mass_table : HashMap<u8, f32> = HashMap::from([   
+        (b'F', 147.06841),   (b'I', 113.08406),   (b'V', 99.06841),   (b'L', 113.08406),   
+        (b'S', 87.03203),    (b'P', 97.05276),    (b'M', 131.04049),  (b'T', 101.04768),   
+        (b'A', 71.03711),    (b'Y', 163.06333 ),  (b'-', 0.0),        (b'H', 137.05891),   
+        (b'N', 114.04293),   (b'D', 115.02694),   (b'Q', 128.05858),  (b'K', 128.09496),   
+        (b'E', 129.04259),   (b'C', 103.00919),   (b'G', 57.02146),   (b'R', 156.10111),      
+        (b'W', 186.07931)
+    ]);
+
+    let mut result = Sequence::new();
+
+    for i in 1..spec.len() {
+        let mut diff = spec[i] - spec[i-1];
+        let x = monoisotopic_mass_table.iter()
+                        .find(|(key, value)| (*value - diff).abs() < 0.01).unwrap();
+        result.push(*x.0);
+    }
+
+    result
+}
+
+pub fn edit_distance(seq1: &Sequence, seq2: &Sequence) -> usize {
+
+    let mut memo = vec![vec![0_usize; seq2.len() + 1 ]; seq1.len() + 1];
+
+    // initialize table
+    for i in 0..seq1.len() {
+        memo[i][0] = i;
+    }
+    for j in 0..seq2.len() {
+        memo[0][j] = j;
+    }
+
+    for i in 1..seq1.len()+1 {
+        for j in 1..seq2.len()+1 {
+            if seq1[i-1] == seq2[j-1] {
+                memo[i][j] = memo[i-1][j-1];
+            }
+            else {
+                memo[i][j] = cmp::min(memo[i-1][j-1], cmp::min(memo[i][j-1], memo[i-1][j])) + 1;
+            }
+        }
+    }
+    
+    memo[seq1.len()][seq2.len()]
+}
+
+
+
 // Greedy search for shortest common superstring
 // pub fn shortest_common_superstring(sequences: &Tile) -> Sequence {
 

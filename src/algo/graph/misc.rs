@@ -59,3 +59,4 @@ pub fn connected_components(g: &Graph<u64, u8>) -> (u32, Vec<Vec<u64>>) {
     }
     (ctr, components)
 }
+

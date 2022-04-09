@@ -206,13 +206,15 @@ pub fn signed_permutations(l : usize, a : &mut Vec<i32>, result : &mut Vec<Vec<i
 // within a_i sequence of length n, and gc_content_i
 pub fn expected_restriction_sites(seq: &Sequence, n: usize, gc_content: &[f32]) -> Vec<f32> {
     
-    let mut at_count : usize = 0;
-    let mut gc_count : usize = 0;
-    
     // Count number of times A/T
     // or G/C occur in sequence `seq`
-    at_count = seq.into_iter().filter(|n| **n == b'A' || **n == b'T').count();
-    gc_count = seq.into_iter().filter(|n| **n == b'G' || **n == b'C').count();
+    let mut at_count = seq.into_iter()
+                          .filter(|n| **n == b'A' || **n == b'T')
+                          .count();
+    
+    let mut gc_count = seq.into_iter()
+                          .filter(|n| **n == b'G' || **n == b'C')
+                          .count();
 
     // Calculate probability that `seq` occurs 
     // in sequence with hypothetic `gc_content` and length `n`
