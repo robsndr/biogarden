@@ -14,9 +14,6 @@
 // use crate::ds::graph::Dfs;
 
 
-
-
-
 // N{P}[ST]{P}
 // pub fn generate_motifs(target: &Vec<u8>, result: &mut Vec<String>, i: usize, temp: &mut Vec<u8>) {
 //
@@ -72,4 +69,17 @@
 //         pos.append(&mut knuth_morris_pratt(&st, elem.as_bytes()));    
 //     }
 //     pos
+// }
+
+// pub fn set_ops(n: u64, a: &HashSet<u64>, b: &HashSet<u64>) {
+
+//     let mut fullset: HashSet<u64> = (1..n).collect();
+
+//     let union_ = a.union(b).collect::<Vec<&u64>>();
+//     let intosection_ = a.intersection(b).collect::<Vec<&u64>>();
+//     let diff1_ = a.difference(b).collect::<Vec<&u64>>();
+//     let diff2_ = b.difference(a).collect::<Vec<&u64>>();
+//     let ac = fullset.difference(a).collect::<Vec<&u64>>();
+//     let bc = fullset.difference(b).collect::<Vec<&u64>>();
+
 // }

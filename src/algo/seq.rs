@@ -470,31 +470,6 @@ pub fn k_mer_composition(seq: &Sequence, k: usize, alphabet: &[u8]) -> Vec<usize
     kmer_composition
 }
 
-pub fn count_basepair_matchings(rna: &Sequence) -> u128 {
-
-    let cnt = count_nucleotides(rna);
-
-    if cnt[&b'G'] != cnt[&b'C'] || cnt[&b'A'] != cnt[&b'U'] {
-        // TODO: handle by propagating Result(Err)
-        println!("cnt[G[] != cnt[C] or cnt[A] != cnt[U]");
-        return 0;
-    }
-
-    let gc_cnt = cnt[&b'G'];
-    let au_cnt = cnt[&b'A'];
-
-    // Number of possible GC/AU matchings is equivalent to:
-    // (gc_cnt)(gc_cnt-1)(gc_cnt-2)...(2)(1) = gc_cnt!
-    fn factorial(num: u128) -> u128 {
-        match num {
-            0  => 1,
-            1.. => (1..num+1).product(),
-        }
-    }
-
-    factorial(gc_cnt as u128) * factorial(au_cnt as u128)
-}
-
 pub fn longest_common_supersequence(seq1: &Sequence, seq2: &Sequence) -> Sequence {
 
     let lcs = longest_common_subsequence(seq1, seq2);
@@ -586,6 +561,7 @@ pub fn edit_distance(seq1: &Sequence, seq2: &Sequence) -> usize {
     
     memo[seq1.len()][seq2.len()]
 }
+
 
 
 
