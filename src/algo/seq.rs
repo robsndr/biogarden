@@ -562,62 +562,6 @@ pub fn edit_distance(seq1: &Sequence, seq2: &Sequence) -> usize {
     memo[seq1.len()][seq2.len()]
 }
 
-
-
-
-// Greedy search for shortest common superstring
-// pub fn shortest_common_superstring(sequences: &Tile) -> Sequence {
-
-//     let num_seq = sequences.len();
-
-//     for i in 0..num_seq {
-//         let prefix = &sequences[i];
-//         for j in 0..num_seq {
-            
-//             if i == j {
-//                 continue;
-//             }
-            
-//             let suffix = &sequences[j];
-//             let num_chars = std::cmp::min(prefix.len(), suffix.len());
-            
-//             for k in 0..num_chars {
-//                 if prefix[k] == suffix[num_chars-k]
-//             }
-
-
-
-//         }
-//     }
-    
-
-//     Sequence::new()
-// }
-
-
-// pub fn longest_common_substring(matrix: &Tile) {
-
-//     // TODO: include information about alphabet inside sequence itself
-//     let mut alphabet = HashSet::<u8>::from([
-//         'A' as u8 , 'C' as u8, 
-//         'T' as u8, 'G' as u8
-//     ]);
-
-//     let mut separator : u8 = '!' as u8; 
-//     let mut temp : Vec<u8> = vec![];
-//     let mut wordmap : Vec<(usize, usize)> = vec![];
-
-//     for (idx, a) in matrix.into_iter().enumerate() {
-//         temp.extend(a);
-//         temp.push(separator);
-//         wordmap.extend(vec![(idx, temp.len() - 1); a.len() + 1]);
-//         separator += 1;
-//         while alphabet.contains(&separator) {
-//             separator += 1;
-//         }
-//     }
-
-
 //     let seq = Sequence::from(temp.as_slice());
 //     let mut ukkokens = Ukonen::<Sequence>::new(seq);
 //     let g = ukkokens.process();

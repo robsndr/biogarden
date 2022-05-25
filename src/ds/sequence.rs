@@ -2,8 +2,9 @@
 use ndarray::prelude::*;
 use std::hash::{Hash, Hasher};
 use std::ops::{Index, IndexMut};
-use std::fmt; 
 use crate::io::fasta;
+use std::ops::Add;
+use std::fmt; 
 
 #[derive(Debug, Clone)]
 pub struct Sequence {
@@ -29,6 +30,53 @@ impl Sequence {
         self.chain.reverse();
     }
 
+    pub fn starts_with(&self, prefix: &Sequence) -> bool {
+
+        if prefix.len() > self.chain.len() {
+            return false;
+        }
+
+        let mut flag = true;
+        for (index, x) in prefix.into_iter().enumerate() {
+            if *x != self.chain[index] {
+                flag = false;
+                break;
+            }   
+        }
+        flag
+    }
+
+    pub fn ends_with(&self, suffix: &Sequence) -> bool {
+
+        if suffix.len() > self.chain.len() {
+            return false;
+        }
+
+        let chain_len = self.chain.len();
+        let mut flag = true;
+        for (index, x) in suffix.into_iter().enumerate() {
+            if *x != self.chain[chain_len - index - 1] {
+                flag = false;
+                break;
+            }   
+        }
+        flag
+    }
+}
+
+impl Add for Sequence {
+    
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self {
+
+        let temp = [self.chain, other.chain].concat();
+
+        Self {
+            id: other.id,
+            chain: temp
+        }
+    }
 }
 
 impl Hash for Sequence {
@@ -43,6 +91,17 @@ impl Eq for Sequence {}
 impl PartialEq for Sequence {
     fn eq(&self, other: &Self) -> bool {
         self.chain == other.chain
+    }
+}
+
+impl<Idx> std::ops::Index<Idx> for Sequence
+where
+    Idx: std::slice::SliceIndex<[u8]>,
+{
+    type Output = Idx::Output;
+
+    fn index(&self, index: Idx) -> &Self::Output {
+        &self.chain[index]
     }
 }
 
@@ -70,10 +129,18 @@ impl From<&[u8]> for Sequence {
     }
 }
 
+
 // &[u8] -> Sequence
 impl From<&Vec<u8>> for Sequence {
     fn from(s: &Vec<u8>) -> Self {
         Sequence { chain: s.clone(), id: None }
+    }
+}
+
+// [u8] -> Sequence
+impl From<Vec<u8>> for Sequence {
+    fn from(s: Vec<u8>) -> Self {
+        Sequence { chain: s, id: None }
     }
 }
 
@@ -156,12 +223,12 @@ impl fmt::Display for Sequence {
     }
 }
 
-impl Index<usize> for Sequence {
-    type Output = u8;
-    fn index<'a>(&'a self, i: usize) -> &'a u8 {
-        &self.chain[i]
-    }
-}
+// impl Index<usize> for Sequence {
+//     type Output = u8;
+//     fn index<'a>(&'a self, i: usize) -> &'a u8 {
+//         &self.chain[i]
+//     }
+// }
 
 // impl<'a> Index<usize> for &'a Sequence {
 //     type Output = u8;

@@ -4,7 +4,7 @@ use std::ops::{Index, IndexMut};
 
 use super::sequence::Sequence;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Tile {
     pub data: Vec<Sequence>,
 }
@@ -21,6 +21,10 @@ impl Tile
 
     pub fn pop(&mut self) -> Option<Sequence> {
         self.data.pop()
+    }
+
+    pub fn remove(&mut self, index: usize) ->  Sequence {
+        self.data.remove(index)
     }
 
     pub fn size(& self) -> (usize, usize) {
