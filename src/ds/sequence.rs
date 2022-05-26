@@ -81,7 +81,7 @@ impl Add for Sequence {
 
 impl Hash for Sequence {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.id.hash(state);
+        // self.id.hash(state);
         self.chain.hash(state);
     }
 }

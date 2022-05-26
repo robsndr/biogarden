@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::collections::hash_map::Entry;
 use std::cmp;
 use allwords::{Alphabet};
 
@@ -561,6 +562,70 @@ pub fn edit_distance(seq1: &Sequence, seq2: &Sequence) -> usize {
     
     memo[seq1.len()][seq2.len()]
 }
+
+
+/// Returns tuples denoting error corrections that can be applied to a number of input reads.
+///   
+/// Genome sequencers use a chemical procedure to obtain reads from provided biomaterial.
+/// Due to the error-prone character of this approach, multiple reads of the same region are usually taken.
+/// Errors can be corrected by splitting the obtained set into correct and faulty reads first.
+/// If a read or its complement appears in the set at least `split_margin` times, it is regarded as correct.
+/// Faulty reads are corrected based on their hamming distance to one of the correct reads.
+/// 
+/// # Arguments
+///
+/// * `reads` - tile containing the analyzed reads
+/// * `split_margin` - number of reads/complements required to treat a read as correct
+/// * `hd_margin` - hamming distance to be used for matching faulty reads to correct ones
+/// 
+pub fn correct_read_errors(reads: &Tile, split_margin: usize, hd_margin: usize) -> Vec<(Sequence, Sequence)> {
+    
+    // Count number of repeated reads and complements 
+    let mut read_counter  = HashMap::<Sequence, usize>::new();
+    for read in reads {
+        // Insert read if not present already and increment count
+        *read_counter.entry(read.clone()).or_insert(0) += 1;
+        // Handle complement case
+        let complement = complement_dna(read.clone());
+        if read_counter.contains_key(&complement) {
+            *read_counter.get_mut(&complement).unwrap() += 1;
+            *read_counter.get_mut(read).unwrap() += 1;
+        }
+    }
+
+    // Split according to split margin
+    let mut correct_reads = HashSet::<Sequence>::new();
+    let mut faulty_reads = HashSet::<Sequence>::new();
+    read_counter.iter().for_each(|(fr, cnt)| {
+        if *cnt >= split_margin {  
+            correct_reads.insert(fr.clone()) 
+        } else { 
+            faulty_reads.insert(fr.clone()) 
+        };
+    });
+    
+    // Compute corrections satisfying hamming margin, applicable to faulty reads 
+    let mut corrections = Vec::<(Sequence, Sequence)>::new();
+    for fr in faulty_reads.iter() {
+        // Find correct reads/complements satisfying `H(x) <= hamming_distance_margin`
+        for cr in correct_reads.iter() {
+            // H(x) <= hamming_distance_margin
+            if hamming_distance(fr, cr) <= hd_margin as u32 {
+                corrections.push((fr.clone(), cr.clone()));
+                break;
+            }
+            // H(complement(x)) <= hamming_distance_margin
+            let complement = complement_dna(cr.clone());
+            if hamming_distance(fr, &complement) == hd_margin as u32 {
+                corrections.push((fr.clone(), complement));
+                break;
+            }
+        }
+    }
+
+    corrections
+}
+
 
 //     let seq = Sequence::from(temp.as_slice());
 //     let mut ukkokens = Ukonen::<Sequence>::new(seq);
