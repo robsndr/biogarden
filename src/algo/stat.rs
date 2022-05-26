@@ -6,6 +6,7 @@ use num::pow::pow;
 use num::traits::Pow;
 use ndarray::prelude::*;
 use std::cmp;
+use itertools::iproduct;
 
 use crate::ds::sequence::Sequence;
 use crate::ds::tile::Tile;
@@ -261,6 +262,37 @@ pub fn count_basepair_matchings(rna: &Sequence) -> BigUint {
     
     x1_long * x2_long
 }
+
+/// Return frequency and value of the most frequently occurring shift between peaks of two mass spectrums.
+///   
+/// Mass spectrography is used to infer protein from their weight.
+/// Comparing spectral representations can give useful insight into the similarity of corresponding particles.
+/// A given protein will often occur nested in a more complex structure, which will shift the peaks of the mass spectrum.
+/// In order to still be able to quantify the similarity of the spectra, the shift must be calculated.
+/// 
+/// # Arguments
+///
+/// * `s1` - evaluated mass spectrum
+/// * `s2` - evaluated mass spectrum
+/// 
+pub fn spectral_mass_shift(s1: Vec<f32>, s2: Vec<f32>) -> (usize, f32) {
+
+    // Calculate minkovsky difference for s1 x s2
+    let minkovsky_diff : Vec<i32> = iproduct!(s1.iter(), s2.iter())
+            .map(|(v, x)| ((v - x) * 1000.0) as i32)
+            .collect();
+
+    // Calculate mode of obtained set equvalent to mass shift
+    let mut counts = HashMap::<i32, usize>::new();
+    let max = minkovsky_diff.iter().copied().max_by_key(|&n| {
+        let count = counts.entry(n).or_insert(0);
+        *count += 1;
+        *count
+    }).unwrap_or(0);
+
+    (*counts.get(&max).unwrap(), max as f32 / 1000.0)
+}
+
 
 #[cfg(test)]
 mod tests {

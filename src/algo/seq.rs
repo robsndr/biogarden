@@ -576,7 +576,7 @@ pub fn edit_distance(seq1: &Sequence, seq2: &Sequence) -> usize {
 ///
 /// * `reads` - tile containing the analyzed reads
 /// * `split_margin` - number of reads/complements required to treat a read as correct
-/// * `hd_margin` - hamming distance to be used for matching faulty reads to correct ones
+/// * `hd_margin` - hamming distance used for matching faulty reads to correct ones
 /// 
 pub fn correct_read_errors(reads: &Tile, split_margin: usize, hd_margin: usize) -> Vec<(Sequence, Sequence)> {
     
@@ -625,7 +625,6 @@ pub fn correct_read_errors(reads: &Tile, split_margin: usize, hd_margin: usize) 
 
     corrections
 }
-
 
 //     let seq = Sequence::from(temp.as_slice());
 //     let mut ukkokens = Ukonen::<Sequence>::new(seq);
