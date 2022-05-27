@@ -550,8 +550,6 @@ pub fn protein_from_prefix_spectrum(spec: Vec<f32>) -> Sequence {
 /// * `seq1` - first sequence to calculate edit alignment
 /// * `seq2` - second sequence to calculate edit alignment
 /// 
-/// 
-/// 
 pub fn edit_distance_alignment(seq1: &Sequence, seq2: &Sequence) -> (Sequence, Sequence, usize) {
 
     // Data containers 
