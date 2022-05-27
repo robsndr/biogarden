@@ -22,6 +22,14 @@ impl Sequence {
         self.chain.push(x);
     }
 
+    pub fn pop(&mut self) -> Option<u8> {
+        self.chain.pop()
+    }
+
+    pub fn back(&mut self) -> Option<&u8> {
+        self.chain.get(self.chain.len() -1)
+    }
+
     pub fn len(&self) -> usize {
         self.chain.len()
     }

@@ -272,8 +272,8 @@ pub fn count_basepair_matchings(rna: &Sequence) -> BigUint {
 /// 
 /// # Arguments
 ///
-/// * `s1` - evaluated mass spectrum
-/// * `s2` - evaluated mass spectrum
+/// * `s1` - evaluated mass spectrum 1
+/// * `s2` - evaluated mass spectrum 2 
 /// 
 pub fn spectral_mass_shift(s1: Vec<f32>, s2: Vec<f32>) -> (usize, f32) {
 
