@@ -96,44 +96,175 @@ pub fn edit_distance_alignment(seq1: &Sequence, seq2: &Sequence) -> (Sequence, S
     (s1_aligned, s2_aligned, edit_distance)
 }
 
-pub fn global_alignment(seq1: &Sequence, seq2: &Sequence, score: &dyn Fn(&u8, &u8) -> i32, penalty: &dyn Fn(&usize) -> i32) -> i32  
+pub fn global_alignment(seq1: &Sequence, seq2: &Sequence, score: &dyn Fn(&u8, &u8) -> i32, a: i32, b: i32) -> i32  
 {
     // Data containers 
     let mut alignement_score = 0_i32;
-    let mut memo = vec![vec![0_i32; seq2.len() + 1 ]; seq1.len() + 1];
-    let mut action_matrix = vec![vec![0_u8; seq2.len() + 1 ]; seq1.len() + 1];
+    let mut m = vec![vec![0_i32; seq2.len() + 1 ]; seq1.len() + 1];
+    let mut x = vec![vec![i32::MIN; seq2.len() + 1 ]; seq1.len() + 1];
+    let mut y = vec![vec![i32::MIN; seq2.len() + 1 ]; seq1.len() + 1];
 
-    // initialize table
-    for i in 1..(seq1.len() + 1) {
-        memo[i][0] = memo[i-1][0] + penalty(&0);
+    let mut m_trace = vec![vec![0_u8; seq2.len() + 1 ]; seq1.len() + 1];
+    let mut x_trace = vec![vec![0_u8; seq2.len() + 1 ]; seq1.len() + 1];
+    let mut y_trace = vec![vec![0_u8; seq2.len() + 1 ]; seq1.len() + 1];
+
+
+    m[1][0] = a;
+    m[0][1] = a;
+    m_trace[1][0] = b'X';
+    m_trace[0][1] = b'Y';
+    
+    x_trace[1][0] = b'I';
+    y_trace[0][1] = b'I';
+
+    for i in 2..(seq1.len() + 1) {
+        m[i][0] = m[i-1][0] + b;
+        m_trace[i][0] = b'X';
+        x_trace[i][0] = b'I';
     }
-    for j in 1..(seq2.len() + 1) {
-        memo[0][j] = memo[0][j-1] + penalty(&0);
+    for j in 2..(seq2.len() + 1) {
+        m[0][j] = m[0][j-1] + b;
+        m_trace[0][j] = b'Y';
+        y_trace[0][j] = b'I';
     }
 
-    // Calculate edit-distance dp table
     for i in 1..seq1.len()+1 {
         for j in 1..seq2.len()+1 {
-            if seq1[i-1] == seq2[j-1] {
-                memo[i][j] = memo[i-1][j-1] + score(&seq2[j-1], &seq1[i-1]);
-                // No operation
-                // action_matrix[i][j] = b'N';
-            } else {
-                let maximum = cmp::max(memo[i-1][j-1] + score(&seq1[i-1], &seq2[j-1]), cmp::max(memo[i][j-1] + penalty(&0), memo[i-1][j] + penalty(&0)));
-                // Evaluate whether edit, insert, replace
-                // if maximum == memo[i-1][j] - 5 {
-                //     action_matrix[i][j] = b'D';
-                // } else if  maximum == memo[i][j-1] - 5 {
-                //     action_matrix[i][j] = b'I';
-                // } else {
-                //     action_matrix[i][j] = b'R';
-                // }
-                // Update edit distance in memoization table
-                memo[i][j] = maximum;
+
+            x[i][j] = cmp::max( m[i-1][j] + a, x[i-1][j].saturating_add(b));
+            x_trace[i][j] = if x[i][j] == m[i-1][j] + a { b'M' } else { b'I' };
+
+
+            y[i][j] = cmp::max( m[i][j-1] + a, y[i][j-1].saturating_add(b));
+            y_trace[i][j] = if y[i][j] == m[i][j-1] + a { b'M' } else { b'I' };
+
+
+            let maximum = cmp::max( m[i-1][j-1] + score(&seq1[i-1], &seq2[j-1]), 
+                                    cmp::max( x[i][j], y[i][j] )
+                                );
+
+            if maximum ==  y[i][j] {
+                m_trace[i][j] = b'Y';
+            } 
+            else if maximum == x[i][j] {
+                m_trace[i][j] = b'X';
+            } 
+            else {
+                m_trace[i][j] = b'R';
+            }
+            
+            // Update edit distance in memoization table
+            m[i][j] = maximum;
+        }
+    }
+
+    for i in 0..seq1.len()+1 {
+        for j in 0..seq2.len()+1 {
+            // if  m_trace[i][j] == 0 {
+            print!("{} ", m_trace[i][j] as char);
+            // }
+        }
+        print!("\n");
+    }
+
+    print!("\n\n");
+
+    for i in 0..seq1.len()+1 {
+        for j in 0..seq2.len()+1 {
+            // if  m_trace[i][j] == 0 {
+            print!("{} ", x_trace[i][j] as char);
+            // }
+        }
+        print!("\n");
+    }
+
+    // Backtrace to find edit alignment
+    let mut s1_aligned = Sequence::new();
+    let mut s2_aligned = Sequence::new();
+    let mut k = seq1.len();
+    let mut l = seq2.len();
+
+    let mut curtrace : u8 = b'M';
+    // Backtrack
+    while k != 0 || l != 0 {
+        // print!("TRACE: {}", m_trace[k][l] as char);
+        match curtrace {
+
+            b'M' => {
+
+                match m_trace[k][l] {
+                    b'R' => {
+                        // No-op | Replace
+                        s1_aligned.push(seq1[k-1]);
+                        s2_aligned.push(seq2[l-1]);
+                        k -= 1;
+                        l -= 1;
+                    }   
+
+                    b'X' => {
+                        curtrace = b'X';
+                        s1_aligned.push(seq1[k-1]);
+                        s2_aligned.push(b'-');
+                        k -= 1;
+                    }
+
+                    b'Y' => {
+                        curtrace = b'Y';
+                        s1_aligned.push(b'-');
+                        s2_aligned.push(seq2[l-1]);
+                        l -= 1;
+                    }
+
+                    _ => {
+                        ()
+                    }
+                }
+                             
+            }
+
+
+            b'X' => {
+                // Delete
+                match x_trace[k][l] {
+                    b'M' => {
+                        curtrace = b'M';
+                    }
+                    _ => {
+                        s1_aligned.push(seq1[k-1]);
+                        s2_aligned.push(b'-');
+                        k -= 1;
+                    }
+                }
+            }
+            b'Y' => {
+                // Delete
+                match y_trace[k][l] {
+                    b'M' => {
+                        curtrace = b'M';
+                    }
+                    _ => {
+                        s1_aligned.push(b'-');
+                        s2_aligned.push(seq2[l-1]);
+                        l -= 1;
+                    }
+                }
+            }
+            _ => {
+                ()
             }
         }
     }
 
-    alignement_score = memo[seq1.len()][seq2.len()];
+    s1_aligned.reverse();
+    s2_aligned.reverse();
+
+
+    print!("{}\n", s1_aligned);
+    print!("{}\n", s2_aligned);
+
+
+
+
+    alignement_score = m[seq1.len()][seq2.len()];
     alignement_score
 }
