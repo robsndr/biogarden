@@ -433,6 +433,12 @@ pub fn local_alignment(seq1: &Sequence, seq2: &Sequence, score: &dyn Fn(&u8, &u8
 
 pub fn fitting_alignment(seq1: &Sequence, seq2: &Sequence, score: &dyn Fn(&u8, &u8) -> i32, a: i32, b: i32) -> i32  
 {
+
+    // TODO: Refactor into proper Result<> return value
+    if seq1.len() < seq2.len() {
+        panic!("LEN(SEQ1) !< LEN(SEQ2)");
+    }
+
     // Data containers 
     let mut alignement_score = 0_i32;
     let mut m = vec![vec![0_i32; seq2.len() + 1 ]; seq1.len() + 1];
@@ -497,32 +503,195 @@ pub fn fitting_alignment(seq1: &Sequence, seq2: &Sequence, score: &dyn Fn(&u8, &
         }
     }
 
+    // for i in 1..seq1.len()+1 {
+    //     for j in 1..seq2.len()+1 {
+    //         print!("{} ", m[i][j]);
+    //     }
+    //     print!("\n");
+    // }
+
     let mut mx = i32::MIN;
     let mut max_pos = (0, 0);
-    // for i in 0..seq1.len()+1 {
-    for j in 0..seq2.len()+1 {
-        if mx < m[seq1.len()][j] {
-            mx = m[seq1.len()][j];
-            max_pos = (seq1.len(), j);
-        }
-    }
-
     for i in 0..seq1.len()+1 {
         if mx < m[i][seq2.len()] {
             mx = m[i][seq2.len()];
             max_pos = (i, seq2.len());
         }
     }
-    print!("MAXPOS: ({} {}) SCORE: {}", max_pos.0, max_pos.1, m[max_pos.0][max_pos.1]);
-    // }
 
-    print!("\n\n");
+    // print!("MAXPOS: ({} {}) SCORE: {}", max_pos.0, max_pos.1, m[max_pos.0][max_pos.1]);
+
+    // Backtrace to find edit alignment
+    let mut s1_aligned = Sequence::new();
+    let mut s2_aligned = Sequence::new();
+    let mut k = max_pos.0;
+    let mut l = max_pos.1;
+
+    let mut curtrace : u8 = b'M';
+    
+    // Backtrack
+    while l != 0 {
+        match curtrace {
+            b'M' => {
+
+                match m_trace[k][l] {
+                    b'R' => {
+                        // No-op | Replace
+                        s1_aligned.push(seq1[k-1]);
+                        s2_aligned.push(seq2[l-1]);
+                        k -= 1;
+                        l -= 1;
+                    }   
+
+                    b'X' => {
+                        curtrace = b'X';
+                        s1_aligned.push(seq1[k-1]);
+                        s2_aligned.push(b'-');
+                        k -= 1;
+                    }
+
+                    b'Y' => {
+                        curtrace = b'Y';
+                        s1_aligned.push(b'-');
+                        s2_aligned.push(seq2[l-1]);
+                        l -= 1;
+                    }
+
+                    _ => {
+                        ()
+                    }
+                }
+                             
+            }
+
+            b'X' => {
+                // Delete
+                match x_trace[k][l] {
+                    b'M' => {
+                        curtrace = b'M';
+                    }
+                    _ => {
+                        s1_aligned.push(seq1[k-1]);
+                        s2_aligned.push(b'-');
+                        k -= 1;
+                    }
+                }
+            }
+            b'Y' => {
+                // Delete
+                match y_trace[k][l] {
+                    b'M' => {
+                        curtrace = b'M';
+                    }
+                    _ => {
+                        s1_aligned.push(b'-');
+                        s2_aligned.push(seq2[l-1]);
+                        l -= 1;
+                    }
+                }
+            }
+            _ => {
+                ()
+            }
+        }
+    }
+
+    s1_aligned.reverse();
+    s2_aligned.reverse();
+    alignement_score = m[seq1.len()][seq2.len()];
+
+    print!("{}\n", s1_aligned);
+    print!("{}\n", s2_aligned);
+    alignement_score
+}
+
+
+pub fn overlap_alignment(seq1: &Sequence, seq2: &Sequence, score: &dyn Fn(&u8, &u8) -> i32, a: i32, b: i32) -> i32
+{
+    // Data containers 
+    let mut alignement_score = 0_i32;
+    let mut m = vec![vec![0_i32; seq2.len() + 1 ]; seq1.len() + 1];
+    let mut x = vec![vec![0; seq2.len() + 1 ]; seq1.len() + 1];
+    let mut y = vec![vec![0; seq2.len() + 1 ]; seq1.len() + 1];
+
+    let mut m_trace = vec![vec![0_u8; seq2.len() + 1 ]; seq1.len() + 1];
+    let mut x_trace = vec![vec![0_u8; seq2.len() + 1 ]; seq1.len() + 1];
+    let mut y_trace = vec![vec![0_u8; seq2.len() + 1 ]; seq1.len() + 1];
+
+    m[1][0] = 0;
+    m[0][1] = 0;
+    m_trace[1][0] = b'X';
+    m_trace[0][1] = b'Y';
+    
+    x_trace[1][0] = b'I';
+    y_trace[0][1] = b'I';
+
+    for i in 2..(seq1.len() + 1) {
+        m[i][0] = 0;
+        m_trace[i][0] = b'X';
+        x_trace[i][0] = b'I';
+    }
+    for j in 2..(seq2.len() + 1) {
+        m[0][j] = 0;
+        m_trace[0][j] = b'Y';
+        y_trace[0][j] = b'I';
+    }
+
+    for i in 1..seq1.len()+1 {
+        for j in 1..seq2.len()+1 {
+
+            
+            x[i][j] = cmp::max( m[i-1][j] + a, x[i-1][j].saturating_add(b));
+            x_trace[i][j] = if x[i][j] == m[i-1][j] + a { b'M' } else { b'I' };
+            // x[i][j] = if x[i][j] < 0 { 0 } else { x[i][j] };
+
+            y[i][j] = cmp::max( m[i][j-1] + a, y[i][j-1].saturating_add(b));
+            y_trace[i][j] = if y[i][j] == m[i][j-1] + a { b'M' } else { b'I' };
+            // y[i][j] = if y[i][j] < 0 { 0 } else { y[i][j] };
+
+
+            let maximum = cmp::max( m[i-1][j-1] + score(&seq1[i-1], &seq2[j-1]), 
+                                    cmp::max( x[i][j], y[i][j])
+                                );
+
+            if maximum ==  y[i][j] {
+                m_trace[i][j] = b'Y';
+            } 
+            else if maximum == x[i][j] {
+                m_trace[i][j] = b'X';
+            } 
+            else {
+                m_trace[i][j] = b'R';
+            }
+            
+            // Update edit distance in memoization table
+            m[i][j] = if maximum < 0 { maximum } else { maximum };
+
+            // max_pos = if maximum > m[max_pos.0][max_pos.1] { (i, j) } else { max_pos };
+        }
+    }
+
+    
+    let mut mx = i32::MIN;
+    let mut max_pos = (0, 0);
+    
+    for j in 0..seq2.len()+1 {
+        if mx <= m[seq1.len()][j] {
+            mx = m[seq1.len()][j];
+            max_pos = (seq1.len(), j);
+        }
+    }
 
     // for i in 0..seq1.len()+1 {
-    //     for j in 0..seq2.len()+1 {
-    //         // if  m_trace[i][j] == 0 {
+    //     if mx <= m[i][seq2.len()] {
+    //         mx = m[i][seq2.len()];
+    //         max_pos = (i, seq2.len());
+    //     }
+    // }
+
+    // for i in 1..seq1.len()+1 {
+    //     for j in 1..seq2.len()+1 {
     //         print!("{} ", m[i][j]);
-    //         // }
     //     }
     //     print!("\n");
     // }
@@ -606,10 +775,220 @@ pub fn fitting_alignment(seq1: &Sequence, seq2: &Sequence, score: &dyn Fn(&u8, &
 
     s1_aligned.reverse();
     s2_aligned.reverse();
-
+    alignement_score = m[max_pos.0 as usize][max_pos.1 as usize];
+    
+    print!("SCORE: {} \n", alignement_score);
     print!("{}\n", s1_aligned);
     print!("{}\n", s2_aligned);
 
-    alignement_score = m[seq1.len()][seq2.len()];
+    alignement_score
+}
+
+pub fn semiglobal_alignment(seq1: &Sequence, seq2: &Sequence, score: &dyn Fn(&u8, &u8) -> i32, a: i32, b: i32) -> i32
+{
+    // Data containers 
+    let mut max_pos = (0, 0);
+    let mut alignement_score = 0_i32;
+    let mut m = vec![vec![0_i32; seq2.len() + 1 ]; seq1.len() + 1];
+    let mut x = vec![vec![0; seq2.len() + 1 ]; seq1.len() + 1];
+    let mut y = vec![vec![0; seq2.len() + 1 ]; seq1.len() + 1];
+
+    let mut m_trace = vec![vec![0_u8; seq2.len() + 1 ]; seq1.len() + 1];
+    let mut x_trace = vec![vec![0_u8; seq2.len() + 1 ]; seq1.len() + 1];
+    let mut y_trace = vec![vec![0_u8; seq2.len() + 1 ]; seq1.len() + 1];
+
+    m[1][0] = 0;
+    m[0][1] = 0;
+    m_trace[1][0] = b'X';
+    m_trace[0][1] = b'Y';
+    
+    x_trace[1][0] = b'I';
+    y_trace[0][1] = b'I';
+
+    for i in 2..(seq1.len() + 1) {
+        m[i][0] = 0;
+        m_trace[i][0] = b'X';
+        x_trace[i][0] = b'I';
+    }
+    for j in 2..(seq2.len() + 1) {
+        m[0][j] = 0;
+        m_trace[0][j] = b'Y';
+        y_trace[0][j] = b'I';
+    }
+
+    for i in 1..seq1.len()+1 {
+        for j in 1..seq2.len()+1 {
+
+            
+            x[i][j] = cmp::max( m[i-1][j] + a, x[i-1][j].saturating_add(b));
+            x_trace[i][j] = if x[i][j] == m[i-1][j] + a { b'M' } else { b'I' };
+            // x[i][j] = if x[i][j] < 0 { 0 } else { x[i][j] };
+
+            y[i][j] = cmp::max( m[i][j-1] + a, y[i][j-1].saturating_add(b));
+            y_trace[i][j] = if y[i][j] == m[i][j-1] + a { b'M' } else { b'I' };
+            // y[i][j] = if y[i][j] < 0 { 0 } else { y[i][j] };
+
+
+            let maximum = cmp::max( m[i-1][j-1] + score(&seq1[i-1], &seq2[j-1]), 
+                                    cmp::max( x[i][j], y[i][j])
+                                );
+
+
+            if maximum == m[i-1][j-1] + score(&seq1[i-1], &seq2[j-1]) {
+                m_trace[i][j] = b'R';
+            }
+            else if maximum ==  y[i][j] {
+                m_trace[i][j] = b'Y';
+            } 
+            else {
+                m_trace[i][j] = b'X';
+            } 
+            
+            // Update edit distance in memoization table
+            m[i][j] = if maximum < 0 { maximum } else { maximum };
+
+            max_pos = if maximum > m[max_pos.0][max_pos.1] { (i, j) } else { max_pos };
+        }
+    }
+
+    
+    let mut max_col = i32::MIN;
+    let mut max_row = i32::MIN;
+    let mut max_pos_col = (0, 0);
+    let mut max_pos_row = (0, 0);
+    let mut max_pos = (0, 0);
+    
+    for j in 0..seq2.len()+1 {
+        if max_row <= m[seq1.len()][j] {
+            max_row = m[seq1.len()][j];
+            max_pos_row = (seq1.len(), j);
+        }
+    }
+
+    for i in 0..seq1.len()+1 {
+        if max_col <= m[i][seq2.len()] {
+            max_col = m[i][seq2.len()];
+            max_pos_col = (i, seq2.len());
+        }
+    }
+
+
+    // Backtrace to find edit alignment
+    let mut s1_aligned = Sequence::new();
+    let mut s2_aligned = Sequence::new();
+
+
+    if max_col > max_row {
+        max_pos = max_pos_col;
+        for i in (max_pos_col.0+1..seq1.len()+1).rev() {
+            s1_aligned.push(seq1[i-1]);
+            s2_aligned.push(b'-');
+        }
+    }
+    else {
+        max_pos = max_pos_row;
+        for i in (max_pos_row.1+1..seq2.len()+1).rev() {
+            s1_aligned.push(b'-');
+            s2_aligned.push(seq2[i-1]);
+        }
+    }
+
+    let mut k = max_pos.0;
+    let mut l = max_pos.1;
+
+    let mut curtrace : u8 = b'M';
+    // Backtrack
+    while l*k != 0 {
+        // print!("TRACE: {}", m_trace[k][l] as char);
+        match curtrace {
+
+            b'M' => {
+
+                match m_trace[k][l] {
+                    b'R' => {
+                        // No-op | Replace
+                        s1_aligned.push(seq1[k-1]);
+                        s2_aligned.push(seq2[l-1]);
+                        k -= 1;
+                        l -= 1;
+                    }   
+
+                    b'X' => {
+                        curtrace = b'X';
+                        s1_aligned.push(seq1[k-1]);
+                        s2_aligned.push(b'-');
+                        k -= 1;
+                    }
+
+                    b'Y' => {
+                        curtrace = b'Y';
+                        s1_aligned.push(b'-');
+                        s2_aligned.push(seq2[l-1]);
+                        l -= 1;
+                    }
+
+                    _ => {
+                        ()
+                    }
+                }
+                             
+            }
+
+
+            b'X' => {
+                // Delete
+                match x_trace[k][l] {
+                    b'M' => {
+                        curtrace = b'M';
+                    }
+                    _ => {
+                        s1_aligned.push(seq1[k-1]);
+                        s2_aligned.push(b'-');
+                        k -= 1;
+                    }
+                }
+            }
+            b'Y' => {
+                // Delete
+                match y_trace[k][l] {
+                    b'M' => {
+                        curtrace = b'M';
+                    }
+                    _ => {
+                        s1_aligned.push(b'-');
+                        s2_aligned.push(seq2[l-1]);
+                        l -= 1;
+                    }
+                }
+            }
+            _ => {
+                ()
+            }
+        }
+    }
+
+    if max_col > max_row {
+        max_pos = max_pos_col;
+        for i in (0..k).rev() {
+            s1_aligned.push(seq1[i]);
+            s2_aligned.push(b'-');
+        }
+    }
+    else {
+        max_pos = max_pos_row;
+        for i in (0..l).rev() {
+            s1_aligned.push(b'-');
+            s2_aligned.push(seq2[i]);
+        }
+    }
+
+    s1_aligned.reverse();
+    s2_aligned.reverse();
+    alignement_score = m[max_pos.0 as usize][max_pos.1 as usize];
+    
+    print!("SCORE: {} \n", alignement_score);
+    print!("{}\n", s1_aligned);
+    print!("{}\n", s2_aligned);
+
     alignement_score
 }
