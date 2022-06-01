@@ -19,41 +19,44 @@ use crate::ds::tile::Tile;
 /// * `seq1` - first sequence to calculate edit alignment
 /// * `seq2` - second sequence to calculate edit alignment
 /// 
-pub fn edit_distance_alignment(seq1: &Sequence, seq2: &Sequence) -> (Sequence, Sequence, usize) {
+pub fn edit_distance_alignment(seq1: &Sequence, seq2: &Sequence) -> (Sequence, Sequence, u128) {
 
     // Data containers 
-    let mut edit_distance = 0_usize;
-    let mut memo = vec![vec![0_usize; seq2.len() + 1 ]; seq1.len() + 1];
+    let mut edit_distance = 0_u128;
+    let mut memo = vec![vec![0_u128; seq2.len() + 1 ]; seq1.len() + 1];
+    let mut count = vec![vec![0_u128; seq2.len() + 1 ]; seq1.len() + 1];
     let mut action_matrix = vec![vec![0_u8; seq2.len() + 1 ]; seq1.len() + 1];
 
     // initialize table
     for i in 0..(seq1.len() + 1) {
-        memo[i][0] = i;
+        memo[i][0] = i as u128;
+        count[i][0] = 1;
     }
     for j in 0..(seq2.len() + 1) {
-        memo[0][j] = j;
+        memo[0][j] = j as u128;
+        count[0][j] = 1;
     }
 
     // Calculate edit-distance dp table
     for i in 1..seq1.len()+1 {
         for j in 1..seq2.len()+1 {
-            if seq1[i-1] == seq2[j-1] {
-                memo[i][j] = memo[i-1][j-1];
-                // No operation
-                action_matrix[i][j] = b'N';
-            } else {
-                let minimum = cmp::min(memo[i-1][j-1], cmp::min(memo[i][j-1], memo[i-1][j]));
-                // Evaluate whether edit, insert, replace
-                if minimum == memo[i-1][j] {
-                    action_matrix[i][j] = b'D';
-                } else if  minimum == memo[i][j-1] {
-                    action_matrix[i][j] = b'I';
-                } else {
-                    action_matrix[i][j] = b'R';
-                }
-                // Update edit distance in memoization table
-                memo[i][j] = minimum + 1;
+            let minimum = cmp::min(memo[i-1][j-1] + ((seq1[i-1] != seq2[j-1]) as u128), cmp::min(memo[i][j-1] + 1, memo[i-1][j] + 1));
+            // Evaluate whether edit, insert, replace
+            if minimum == memo[i-1][j-1] + ((seq1[i-1] != seq2[j-1]) as u128) {
+                action_matrix[i][j] = b'R';
+                count[i][j] += count[i-1][j-1] % 134_217_727;
             }
+            if minimum == memo[i-1][j] + 1 {
+                action_matrix[i][j] = b'D';
+                count[i][j] += count[i-1][j] % 134_217_727;
+            } 
+            if  minimum == memo[i][j-1] + 1 {
+                action_matrix[i][j] = b'I';
+                count[i][j] += count[i][j-1] % 134_217_727 ;
+            } 
+            
+            // Update edit distance in memoization table
+            memo[i][j] = minimum % 134_217_727;
         }
     }
 
@@ -92,6 +95,8 @@ pub fn edit_distance_alignment(seq1: &Sequence, seq2: &Sequence) -> (Sequence, S
 
     s1_aligned.reverse();
     s2_aligned.reverse();
+
+    print!("COUNT: {} ", count[seq1.len()][seq2.len()]);
 
     (s1_aligned, s2_aligned, edit_distance)
 }
