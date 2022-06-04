@@ -140,6 +140,63 @@ pub fn hamming_distance(s1: &Sequence, s2: &Sequence) -> u32 {
     s1.chars().zip(s2.chars()).filter(|&(a, b)| a != b).count() as u32
 }
 
+/// Obtain tuple containing edit-distance and edit-alignment of two genetic sequences.
+///   
+/// The Hamming distance provides a way to model point mutations transforming one genetic string into another. 
+/// In practice, point mutations include insertions and deletions in addition to replacements only.
+/// This can produce genetic sequence that vary in length, and cannot be compared using hamming distance.
+/// In such scenarios, a measure of the minimum number of replacements / insertions / deletions between two sequences, is provided by edit distance.
+/// The edit distance provides additional information about the type and location where mutations have occurred.
+/// 
+/// # Arguments
+///
+/// * `seq1` - first sequence to calculate edit alignment
+/// * `seq2` - second sequence to calculate edit alignment
+/// 
+pub fn edit_distance(seq1: &Sequence, seq2: &Sequence) -> usize {
+
+    // Data containers 
+    let mut edit_distance = 0_u128;
+    let mut memo = vec![vec![0_u128; seq2.len() + 1 ]; seq1.len() + 1];
+    let mut action_matrix = vec![vec![0_u8; seq2.len() + 1 ]; seq1.len() + 1];
+    // let mut count = vec![vec![0_u128; seq2.len() + 1 ]; seq1.len() + 1];
+
+    // initialize table
+    for i in 0..(seq1.len() + 1) {
+        memo[i][0] = i as u128;
+        // count[i][0] = 1;
+    }
+    for j in 0..(seq2.len() + 1) {
+        memo[0][j] = j as u128;
+        // count[0][j] = 1;
+    }
+
+    // Calculate edit-distance dp table
+    for i in 1..seq1.len()+1 {
+        for j in 1..seq2.len()+1 {
+            let minimum = cmp::min(memo[i-1][j-1] + ((seq1[i-1] != seq2[j-1]) as u128), cmp::min(memo[i][j-1] + 1, memo[i-1][j] + 1));
+            // Evaluate whether edit, insert, replace
+            if minimum == memo[i-1][j-1] + ((seq1[i-1] != seq2[j-1]) as u128) {
+                action_matrix[i][j] = b'R';
+                // count[i][j] += count[i-1][j-1] % 134_217_727;
+            }
+            if minimum == memo[i-1][j] + 1 {
+                action_matrix[i][j] = b'D';
+                // count[i][j] += count[i-1][j] % 134_217_727;
+            } 
+            if  minimum == memo[i][j-1] + 1 {
+                action_matrix[i][j] = b'I';
+                // count[i][j] += count[i][j-1] % 134_217_727 ;
+            } 
+            
+            // Update edit distance in memoization table
+            memo[i][j] = minimum % 134_217_727;
+        }
+    }
+
+    memo[seq1.len()][seq2.len()] as usize
+}
+
 pub fn open_reading_frames(dna: &Sequence) -> Vec<Sequence> {
 
     let mut reading_frames : Vec<Sequence> = vec![];

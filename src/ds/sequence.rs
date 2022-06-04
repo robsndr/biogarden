@@ -26,6 +26,10 @@ impl Sequence {
         self.chain.pop()
     }
 
+    pub fn extend(&mut self, b: Sequence) {
+        self.chain.extend(b.chain);
+    }
+
     pub fn back(&mut self) -> Option<&u8> {
         self.chain.get(self.chain.len() -1)
     }
