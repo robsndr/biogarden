@@ -20,7 +20,7 @@ pub struct SuffixTreeBuilder {
     end: u8,
     // Graph 
     root_id : u64,
-    graph: Graph<SuffixTreeNode, SuffixTreeEdge>,
+    // graph: Graph<SuffixTreeNode, SuffixTreeEdge>,
     // Resolved
     previous_new_node : u64,
     // Postprocessing metadata
@@ -29,171 +29,60 @@ pub struct SuffixTreeBuilder {
 
 impl SuffixTreeBuilder {
 
-    pub fn new(alphabet: &[u8]) -> SuffixTreeBuilder {
-
-        let mut graph = Graph::<SuffixTreeNode, SuffixTreeEdge>::new(GraphProperties{directed: true});
-        let root_id = graph.add_node(SuffixTreeNode::new());
-        graph.set_root(root_id);
+    pub fn new(alphabet: HashSet<u8>) -> SuffixTreeBuilder {
 
         SuffixTreeBuilder {
-            // seq : sequence, 
             idx : 0,
             remaining : 0,
-            active_node_id : root_id, 
+            active_node_id : 0, 
             active_edge_seq_idx : 0,
             active_length : 0,
             end : 0,
-            root_id : root_id,
-            graph :  graph,
-            previous_new_node : root_id,
-            alphabet: HashSet::from_iter(alphabet.iter().cloned()),
+            root_id : 0,
+            // graph :  graph,
+            previous_new_node : 0,
+            alphabet: alphabet,
         }
     }    
 
-    pub fn build<'a, X, T>(&mut self, wordlist: &'a X) -> &mut Graph<SuffixTreeNode, SuffixTreeEdge>
-                where &'a X: 'a + IntoIterator<Item=&'a T>,
-                        &'a T: 'a + fmt::Display + Clone + Index<usize, Output=u8> + IntoIterator<Item=&'a u8>
-    {    
-        let mut separator : u8 = '!' as u8; 
-        let mut temp : Vec<u8> = vec![];
-        let mut wordmap : Vec<(usize, usize)> = vec![];
-        let mut tile_len = 0_usize;
+    pub fn build<'a, T>(&mut self, seq: &'a T) -> Graph<SuffixTreeNode, SuffixTreeEdge>
+            where &'a T: 'a + fmt::Display + Clone + Index<usize, Output=u8> + IntoIterator<Item=&'a u8>
+    {
+        // Initialize Graph
+        let mut graph = Graph::<SuffixTreeNode, SuffixTreeEdge>::new(GraphProperties{directed: true});
+        let root_id = graph.add_node(SuffixTreeNode::new());
+        graph.set_root(root_id);
+        
+        // Initialize variables
+        self.active_node_id = root_id;
+        self.previous_new_node = root_id;
+        self.root_id = root_id;
+        
+        // Build SuffixTree
+        seq.into_iter().for_each(|_| { self.step(&mut graph, seq); });
 
-
-        for (idx, a) in wordlist.into_iter().enumerate() {
-            println!("{}", idx);
-            let lenold = temp.len();
-            temp.extend(a);
-            temp.push(separator);
-            wordmap.extend(vec![(idx, temp.len() - 1); temp.len()-lenold + 1]);
-            separator += 1;
-            while self.alphabet.contains(&separator) {
-                separator += 1;
-            }
-            tile_len += 1;
-        }
-    
-        let g = self.process(&temp);
-
-        fn generate_reachbility_map(graph: &mut Graph<SuffixTreeNode, SuffixTreeEdge>, node_id: u64, wordmap: &Vec<(usize, usize)>)
-        {
-            let out_neighbors : Vec<u64> = graph.out_neighbors(node_id).cloned().collect();
-            for t in out_neighbors{
-                generate_reachbility_map(graph, t, wordmap);
-            }
-    
-            let mut reach = vec![0; wordmap.last().unwrap().0 + 1];
-            let out_edges : Vec<u64> = graph.out_edges(node_id).cloned().collect();
-    
-            for eid in out_edges{
-    
-                let successor_node_id = graph.get_edge(&eid).end;
-                let suffix_start = graph.get_edge(&eid).data.as_ref().unwrap().suffix_start;
-                let suffix_stop = graph.get_edge(&eid).data.as_ref().unwrap().suffix_stop;
-    
-                if suffix_stop == -1 {
-                    reach[wordmap[suffix_start].0] = 1;
-                }
-                else {
-    
-                    for (i, elem) in graph.get_node(&successor_node_id).data.reachable_suffixes.iter().enumerate() {
-                        if *elem == 1 {
-                            reach[i] = 1;
-                        }
-                    };
-                }
-            }
-    
-            graph.get_node_mut(&node_id).data.reachable_suffixes = reach;
-        }
-    
-        let root = self.graph.get_root().unwrap();
-        generate_reachbility_map(&mut self.graph, root, &wordmap);
-    
-        // // Function to perform DFS traversal on the graph
-        fn resolve_suffix_endings(graph: &mut Graph<SuffixTreeNode, SuffixTreeEdge>, node_id: u64, 
-                                     wordmap: &Vec<(usize, usize)>)
-        {
-            let out_neighbors : Vec<u64> = graph.out_neighbors(node_id).cloned().collect();
-            for t in out_neighbors{
-                resolve_suffix_endings(graph, t, wordmap);
-            }
-    
-            let out_edges : Vec<u64> = graph.out_edges(node_id).cloned().collect();
-            for eid in out_edges {            
-                let suffix_start = graph.get_edge(&eid).data.as_ref().unwrap().suffix_start;
-                let suffix_stop = graph.get_edge(&eid).data.as_ref().unwrap().suffix_stop;
-                if suffix_stop == -1 {
-                    graph.get_edge_mut(&eid).data.as_mut().unwrap().suffix_stop = wordmap[suffix_start].1 as i64;
-                }
+        // Endings are encoded by -1 in ukonnen's algorithm
+        // Wordmap is required to decode suffix ending enumerations 
+        let mut wordmap = Vec::<(usize, usize)>::new();
+        let mut word_len = 0_usize;
+        let mut word_idx = 0_usize;
+        for (id, x) in seq.into_iter().enumerate() {
+            word_len += 1;
+            if !self.alphabet.contains(&x) {
+                wordmap.extend(vec![(word_idx, id); word_len]);
+                word_len = 0;
+                word_idx += 1;
             }
         }
-    
-        // visited.clear();
-        resolve_suffix_endings(&mut self.graph, root, &wordmap);
-    
-        let mut lcs : Vec<(usize, i64)> = vec![];
-        let mut cur : Vec<(usize, i64)> = vec![];
-    
-        let mut longest = 0;
-        let mut cur_len = 0;
-    
-        fn dfs_recursive_substrings(graph: &Graph<SuffixTreeNode, SuffixTreeEdge>, node_id: u64, 
-                                            cur_suffix: &mut Vec<(usize, i64)>, cur_length: usize, 
-                                                lcs: &mut Vec<(usize, i64)>, longest: &mut usize, len: u8)
-        {
-            // mark the current node as discovered
-    
-            if cur_length > *longest {
-                *longest = cur_length;
-                *lcs = cur_suffix.clone();
-            } 
-    
-            // do for every edge (v, u)
-            for e in graph.out_edges(node_id){
-                if graph.get_node(&graph.get_edge(e).end).data.reachable_suffixes.iter().sum::<u64>() == len as u64{
-                    let start = graph.get_edge(e).data.as_ref().unwrap().suffix_start;
-                    let stop = graph.get_edge(e).data.as_ref().unwrap().suffix_stop;
-                    cur_suffix.push((start, stop));
-                    dfs_recursive_substrings(graph, graph.get_edge(e).end, cur_suffix, cur_length + stop as usize - start + 1, lcs, longest, len);
-                    cur_suffix.pop();
-                }
-            }
-    
-    
-        }
-    
-        // visited.clear();
-        dfs_recursive_substrings(&mut self.graph, root, &mut cur, cur_len, &mut lcs, &mut longest, tile_len as u8);
-    
-    
-    
-        let mut result = vec![];
-    
-        println!("{:?}", lcs);
-    
-        for part in lcs {
-    
-            for i in part.0..(part.1 as usize + 1) {
-                result.push(temp[i] as u8);
-            }
-        }
-    
-        let x =  Sequence::from(result.as_slice());
-    
-        print!("{}", x);
-        &mut self.graph
-
+        
+        // Decode each -1 at leaf into a valid index pointing into 'seq'
+        SuffixTreeBuilder::postprocess(&mut graph, root_id, &wordmap);
+        graph
     }
 
-    fn process(&mut self, seq: &Vec<u8>) -> () {
-        for s in seq {
-            self.step(seq);
-            self.idx += 1;
-        }
-    }
-
-    fn split_suffix_edge(graph: &mut Graph<SuffixTreeNode, SuffixTreeEdge>, edge_id: u64, split_index: usize, value_index: usize, seq: &Vec<u8>) -> u64 {
+    fn split_suffix_edge<'a, T>(graph: &mut Graph<SuffixTreeNode, SuffixTreeEdge>, edge_id: u64, split_index: usize, value_index: usize, seq: &'a T) -> u64 
+            where &'a T: 'a + fmt::Display + Clone + Index<usize, Output=u8> + IntoIterator<Item=&'a u8>    
+    {
         
         // Get indizes of nodes in graph that are connected to edge
         let edge_start = graph.get_edge(&edge_id).start;
@@ -236,7 +125,9 @@ impl SuffixTreeBuilder {
         split_node_id
     }
 
-    pub fn step(&mut self, seq: &Vec<u8>) {
+    pub fn step<'a, T>(&mut self, graph: &mut Graph<SuffixTreeNode, SuffixTreeEdge>, seq: &'a T) 
+        where &'a T: 'a + fmt::Display + Clone + Index<usize, Output=u8> + IntoIterator<Item=&'a u8>
+    {
 
         let mut cur_value = seq[self.idx];
         // Keeps track of the number of `suffixes` to be resolved after a new character is added 
@@ -254,7 +145,7 @@ impl SuffixTreeBuilder {
                 self.active_edge_seq_idx = self.idx;
             }
 
-            let cur_node  = self.graph.get_node(&self.active_node_id);
+            let cur_node  = graph.get_node(&self.active_node_id);
             cur_value = seq[self.active_edge_seq_idx];
 
             // Check if there is a suffix corresponding to `cur_value` adjacent to current node, 
@@ -263,16 +154,16 @@ impl SuffixTreeBuilder {
             if !cur_node.data.suffix_edge_ids.contains_key(&cur_value) {
 
                 // Create a new node and edge
-                let nid = self.graph.add_node(SuffixTreeNode::new());
+                let nid = graph.add_node(SuffixTreeNode::new());
                 let sfx = SuffixTreeEdge{suffix_start: self.idx, suffix_stop: -1};
-                let eid = self.graph.add_edge(&self.active_node_id, &nid, Some(sfx)).unwrap();
+                let eid = graph.add_edge(&self.active_node_id, &nid, Some(sfx)).unwrap();
 
                 // Keep track of newly added edge (suffix) inside current node
-                let cur_node_mut  = self.graph.get_node_mut(&self.active_node_id);
+                let cur_node_mut  = graph.get_node_mut(&self.active_node_id);
                 cur_node_mut.data.suffix_edge_ids.insert(cur_value, eid);          
                 
                 if self.previous_new_node != self.root_id {
-                    self.graph.get_node_mut(&self.previous_new_node).data.link = self.active_node_id;
+                    graph.get_node_mut(&self.previous_new_node).data.link = self.active_node_id;
                     self.previous_new_node = self.active_node_id;
                 }
 
@@ -282,9 +173,9 @@ impl SuffixTreeBuilder {
 
                 // Characters might match the suffix on the path from root downwards
                 // This might introduce an update to the active node, if the current edge gets exhausted
-                let cur_node  = self.graph.get_node(&self.active_node_id);
+                let cur_node  = graph.get_node(&self.active_node_id);
                 let active_edge_identifier = cur_node.data.suffix_edge_ids[&seq[self.active_edge_seq_idx]];
-                let active_edge = self.graph.get_edge(&active_edge_identifier).clone();
+                let active_edge = graph.get_edge(&active_edge_identifier).clone();
                 let lookup_idx = self.active_length + active_edge.data.as_ref().unwrap().suffix_start;
 
                 // Check if an internal node has been reach, and update state accordingly
@@ -303,7 +194,7 @@ impl SuffixTreeBuilder {
                 if seq[lookup_idx] == seq[self.idx] {
                     self.active_length += 1;
                     if self.previous_new_node != self.root_id {
-                        self.graph.get_node_mut(&self.previous_new_node).data.link = self.active_node_id;
+                        graph.get_node_mut(&self.previous_new_node).data.link = self.active_node_id;
                         self.previous_new_node = self.active_node_id;
                     }
                     break;
@@ -312,17 +203,17 @@ impl SuffixTreeBuilder {
                 // Resolve all partial suffixes have been accumulated during transition along edge
                 // Break the matching on the active edge and introduce new leaf node for new suffix
                 let split_node_id = SuffixTreeBuilder::split_suffix_edge(
-                    &mut self.graph, 
+                    graph, 
                     active_edge_identifier, 
                     self.active_length, 
                     self.idx, 
                     seq
                 );
-                self.graph.get_node_mut(&split_node_id).data.link = self.root_id;
+                graph.get_node_mut(&split_node_id).data.link = self.root_id;
 
                 // Update suffix links on previous node, if subsequent internal node created
                 if self.previous_new_node != self.root_id {
-                    self.graph.get_node_mut(&self.previous_new_node).data.link = split_node_id;
+                    graph.get_node_mut(&self.previous_new_node).data.link = split_node_id;
                 }
                 
                 self.previous_new_node = split_node_id;
@@ -338,10 +229,44 @@ impl SuffixTreeBuilder {
                 self.active_edge_seq_idx = self.idx - self.remaining + 1;
             }
             else if self.active_node_id != self.root_id {      
-                self.active_node_id = self.graph.get_node(&self.active_node_id).data.link;
+                self.active_node_id = graph.get_node(&self.active_node_id).data.link;
             }
         }  
+        self.idx += 1;
     }
+
+    fn postprocess(graph: &mut Graph<SuffixTreeNode, SuffixTreeEdge>, node_id: u64, wordmap: &Vec<(usize, usize)>)
+    {
+        let out_neighbors : Vec<u64> = graph.out_neighbors(node_id).cloned().collect();
+        for t in out_neighbors{
+            SuffixTreeBuilder::postprocess(graph, t, wordmap);
+        }
+
+        let mut reach = vec![0; wordmap.last().unwrap().0 + 1];
+        let out_edges : Vec<u64> = graph.out_edges(node_id).cloned().collect();
+
+        for eid in out_edges {
+
+            let successor_node_id = graph.get_edge(&eid).end;
+            let suffix_start = graph.get_edge(&eid).data.as_ref().unwrap().suffix_start;
+            let suffix_stop = graph.get_edge(&eid).data.as_ref().unwrap().suffix_stop;
+
+            if suffix_stop == -1 {
+                reach[wordmap[suffix_start].0] = 1;
+                graph.get_edge_mut(&eid).data.as_mut().unwrap().suffix_stop = wordmap[suffix_start].1 as i64;
+            }
+            else {
+
+                for (i, elem) in graph.get_node(&successor_node_id).data.reachable_suffixes.iter().enumerate() {
+                    if *elem == 1 {
+                        reach[i] = 1;
+                    }
+                };
+            }
+        }
+
+        graph.get_node_mut(&node_id).data.reachable_suffixes = reach;
+    } 
 }
 
 /// SuffixTreeBuilder Node
@@ -349,7 +274,7 @@ impl SuffixTreeBuilder {
 pub struct SuffixTreeNode {
     link: u64,
     suffix_edge_ids: HashMap<u8, u64>, 
-    reachable_suffixes: Vec<u64>,
+    pub reachable_suffixes: Vec<u64>,
 }
 
 impl SuffixTreeNode {
