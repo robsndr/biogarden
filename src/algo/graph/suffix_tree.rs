@@ -46,7 +46,7 @@ impl SuffixTreeBuilder {
     }    
 
     pub fn build<'a, T>(&mut self, seq: &'a T) -> Graph<SuffixTreeNode, SuffixTreeEdge>
-            where &'a T: 'a + fmt::Display + Clone + Index<usize, Output=u8> + IntoIterator<Item=&'a u8>
+            where &'a T: 'a + Index<usize, Output=u8> + IntoIterator<Item=&'a u8>
     {
         // Initialize Graph
         let mut graph = Graph::<SuffixTreeNode, SuffixTreeEdge>::new(GraphProperties{directed: true});
@@ -81,7 +81,7 @@ impl SuffixTreeBuilder {
     }
 
     fn split_suffix_edge<'a, T>(graph: &mut Graph<SuffixTreeNode, SuffixTreeEdge>, edge_id: u64, split_index: usize, value_index: usize, seq: &'a T) -> u64 
-            where &'a T: 'a + fmt::Display + Clone + Index<usize, Output=u8> + IntoIterator<Item=&'a u8>    
+            where &'a T: 'a + Index<usize, Output=u8>   
     {
         
         // Get indizes of nodes in graph that are connected to edge
@@ -126,7 +126,7 @@ impl SuffixTreeBuilder {
     }
 
     pub fn step<'a, T>(&mut self, graph: &mut Graph<SuffixTreeNode, SuffixTreeEdge>, seq: &'a T) 
-        where &'a T: 'a + fmt::Display + Clone + Index<usize, Output=u8> + IntoIterator<Item=&'a u8>
+        where &'a T: 'a + Index<usize, Output=u8>
     {
 
         let mut cur_value = seq[self.idx];
