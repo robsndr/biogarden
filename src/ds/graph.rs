@@ -66,6 +66,8 @@ pub struct Graph<N: fmt::Display, E: fmt::Display> {
     properties: GraphProperties,
     /// Id of root node
     root: Option<u64>,
+    // idx
+    idx: u64,
 }
 
 impl<N: fmt::Display, E: fmt::Display + Clone> Graph<N, E> {
@@ -76,13 +78,17 @@ impl<N: fmt::Display, E: fmt::Display + Clone> Graph<N, E> {
             edges: HashMap::new(),
             properties: props,
             root: None,
+            idx: 0
         }
     }
 
     pub fn add_node(&mut self, data: N) -> u64 {
         let mut rng = thread_rng();
         // TODO: Make sure that indizes are unique
-        let nid = rng.gen_range(0..10000000000); 
+        // TODO: Improve idx generation by random sequence qenerator
+        // let nid = rng.gen_range(0..10000000000); 
+        let mut nid = self.idx;
+        self.idx = self.idx.wrapping_add(1);
         self.nodes.insert(nid, Node{ id: nid, data: data, incoming: vec![], outgoing: vec![],});
         nid
     }   
@@ -107,8 +113,11 @@ impl<N: fmt::Display, E: fmt::Display + Clone> Graph<N, E> {
         };
         
         // TODO: Make sure that indizes are unique
-        let mut rng = thread_rng();
-        let mut eid = rng.gen_range(0..10000000000);
+        // TODO: Improve idx generation by random sequence qenerator
+        // let mut rng = thread_rng();
+        let mut eid = self.idx % 1000000000000;
+        self.idx = self.idx.wrapping_add(1);
+
         self.edges.insert(eid, Edge{start: id1, end: id2, data: data.clone()});
         self.nodes.get_mut(&id1).unwrap().outgoing.push(eid);
         self.nodes.get_mut(&id2).unwrap().incoming.push(eid);
@@ -133,7 +142,6 @@ impl<N: fmt::Display, E: fmt::Display + Clone> Graph<N, E> {
     }
 
     pub fn get_edge(&self, id: &u64) -> & Edge<E> {
-        // println!("ID: id");
         self.edges.get(id).unwrap()
     }    
 

@@ -675,8 +675,8 @@ pub fn longest_common_substring(matrix: &Tile) -> Sequence {
     let mut graph = ukonnen_builder.build(&suffix_sequence);
 
     fn dfs_recursive_substrings(graph: &Graph<SuffixTreeNode, SuffixTreeEdge>, node_id: u64, 
-                                    cur_suffix: &mut Vec<(usize, usize)>, cur_length: usize, 
-                                        lcs: &mut Vec<(usize, usize)>, longest: &mut usize, len: usize)
+                                    cur_suffix: &mut Vec<(i64, i64)>, cur_length: usize, 
+                                        lcs: &mut Vec<(i64, i64)>, longest: &mut usize, len: usize)
     {
         if cur_length > *longest {
             *longest = cur_length;
@@ -686,27 +686,28 @@ pub fn longest_common_substring(matrix: &Tile) -> Sequence {
         for e in graph.out_edges(node_id){
             if graph.get_node(&graph.get_edge(e).end).data.reachable_suffixes.iter().sum::<u64>() == len as u64{
                 let start = graph.get_edge(e).data.as_ref().unwrap().suffix_start;
-                let stop = graph.get_edge(e).data.as_ref().unwrap().suffix_stop as usize;
-                cur_suffix.push((start, stop+1));
-                dfs_recursive_substrings(graph, graph.get_edge(e).end, cur_suffix, cur_length + stop - start + 1, lcs, longest, len);
+                let stop = graph.get_edge(e).data.as_ref().unwrap().suffix_stop;
+                let word_len = (stop - start + 1) as usize;
+                cur_suffix.push((start, stop + 1));
+                dfs_recursive_substrings(graph, graph.get_edge(e).end, cur_suffix, cur_length + word_len, lcs, longest, len);
                 cur_suffix.pop();
             }
         }
     }
 
-    
+
     let root = graph.get_root().unwrap();
     let mut longest = 0;
     let mut cur_len = 0;
-    let mut lcs : Vec<(usize, usize)> = vec![];
-    let mut cur : Vec<(usize, usize)> = vec![];
+    let mut lcs : Vec<(i64, i64)> = vec![];
+    let mut cur : Vec<(i64, i64)> = vec![];
     dfs_recursive_substrings(&mut graph, root, &mut cur, cur_len, &mut lcs, &mut longest, matrix.len());
 
     // Retrieve LCS based on (start_ids, end_idx) edges from suffix tree
     let mut result = Sequence::new();
     for substring_idx in lcs {
         for i in substring_idx.0..substring_idx.1 {
-            result.push(suffix_sequence[i]);
+            result.push(suffix_sequence[i as usize]);
         }
     }
 

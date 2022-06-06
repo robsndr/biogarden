@@ -16,7 +16,7 @@ pub struct SuffixTreeBuilder {
     remaining : usize,
     active_node_id : u64, 
     active_edge_seq_idx : usize,
-    active_length : usize,
+    active_length : i64,
     end: u8,
     // Graph 
     root_id : u64,
@@ -80,7 +80,7 @@ impl SuffixTreeBuilder {
         graph
     }
 
-    fn split_suffix_edge<'a, T>(graph: &mut Graph<SuffixTreeNode, SuffixTreeEdge>, edge_id: u64, split_index: usize, value_index: usize, seq: &'a T) -> u64 
+    fn split_suffix_edge<'a, T>(graph: &mut Graph<SuffixTreeNode, SuffixTreeEdge>, edge_id: u64, split_index: i64, value_index: i64, seq: &'a T) -> u64 
             where &'a T: 'a + Index<usize, Output=u8>   
     {
         
@@ -115,12 +115,12 @@ impl SuffixTreeBuilder {
 
         // Remove old edge that was split
         graph.remove_edge(&edge_id);
-        graph.get_node_mut(&edge_start).data.suffix_edge_ids.remove(&seq[suffix_start]);
+        graph.get_node_mut(&edge_start).data.suffix_edge_ids.remove(&seq[suffix_start as usize]);
 
         // Update mapping for outgoing suffix edges for the involved nodes
-        graph.get_node_mut(&edge_start).data.suffix_edge_ids.insert(seq[suffix_start], split_edge_pre);
-        graph.get_node_mut(&split_node_id).data.suffix_edge_ids.insert(seq[suffix_start + split_index], split_edge_succ);
-        graph.get_node_mut(&split_node_id).data.suffix_edge_ids.insert(seq[value_index], value_edge);
+        graph.get_node_mut(&edge_start).data.suffix_edge_ids.insert(seq[suffix_start as usize], split_edge_pre);
+        graph.get_node_mut(&split_node_id).data.suffix_edge_ids.insert(seq[(suffix_start + split_index) as usize], split_edge_succ);
+        graph.get_node_mut(&split_node_id).data.suffix_edge_ids.insert(seq[value_index as usize], value_edge);
 
         split_node_id
     }
@@ -155,7 +155,7 @@ impl SuffixTreeBuilder {
 
                 // Create a new node and edge
                 let nid = graph.add_node(SuffixTreeNode::new());
-                let sfx = SuffixTreeEdge{suffix_start: self.idx, suffix_stop: -1};
+                let sfx = SuffixTreeEdge{suffix_start: self.idx as i64, suffix_stop: -1};
                 let eid = graph.add_edge(&self.active_node_id, &nid, Some(sfx)).unwrap();
 
                 // Keep track of newly added edge (suffix) inside current node
@@ -182,16 +182,16 @@ impl SuffixTreeBuilder {
                 let suffix_stop = active_edge.data.as_ref().unwrap().suffix_stop;
                 let suffix_start = active_edge.data.as_ref().unwrap().suffix_start;
 
-                if suffix_stop != -1 && lookup_idx > suffix_stop as usize {
+                if suffix_stop != -1 && lookup_idx > suffix_stop {
                     self.active_node_id = active_edge.end;
-                    self.active_length = lookup_idx - suffix_stop as usize - 1;
-                    self.active_edge_seq_idx += (suffix_stop as usize - suffix_start) + 1; // +1?
+                    self.active_length = lookup_idx - suffix_stop - 1;
+                    self.active_edge_seq_idx += (suffix_stop - suffix_start) as usize + 1; // +1?
                     continue;
                 }
 
                 // Check if next character on active edge matches the current value
                 // If matches, we proceed along the edge and go to next character
-                if seq[lookup_idx] == seq[self.idx] {
+                if seq[lookup_idx as usize] == seq[self.idx] {
                     self.active_length += 1;
                     if self.previous_new_node != self.root_id {
                         graph.get_node_mut(&self.previous_new_node).data.link = self.active_node_id;
@@ -206,7 +206,7 @@ impl SuffixTreeBuilder {
                     graph, 
                     active_edge_identifier, 
                     self.active_length, 
-                    self.idx, 
+                    self.idx as i64, 
                     seq
                 );
                 graph.get_node_mut(&split_node_id).data.link = self.root_id;
@@ -252,8 +252,8 @@ impl SuffixTreeBuilder {
             let suffix_stop = graph.get_edge(&eid).data.as_ref().unwrap().suffix_stop;
 
             if suffix_stop == -1 {
-                reach[wordmap[suffix_start].0] = 1;
-                graph.get_edge_mut(&eid).data.as_mut().unwrap().suffix_stop = wordmap[suffix_start].1 as i64;
+                reach[wordmap[suffix_start as usize].0] = 1;
+                graph.get_edge_mut(&eid).data.as_mut().unwrap().suffix_stop = wordmap[suffix_start as usize].1 as i64;
             }
             else {
 
@@ -296,7 +296,7 @@ impl fmt::Display for SuffixTreeNode  {
 // SuffixTreeBuilder Edge
 #[derive(Clone)]
 pub struct SuffixTreeEdge {
-    pub suffix_start: usize,
+    pub suffix_start: i64,
     pub suffix_stop: i64
 }
 
