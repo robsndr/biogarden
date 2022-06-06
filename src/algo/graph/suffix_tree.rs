@@ -52,14 +52,8 @@ impl SuffixTreeBuilder {
 
     pub fn build<'a, X, T>(&mut self, wordlist: &'a X) -> &mut Graph<SuffixTreeNode, SuffixTreeEdge>
                 where &'a X: 'a + IntoIterator<Item=&'a T>,
-           &                'a T: 'a + fmt::Display + Clone + Index<usize, Output=u8> + IntoIterator<Item=&'a u8>
-    {
-    
-        let mut alphabet = HashSet::<u8>::from([
-            'A' as u8 , 'C' as u8, 
-            'T' as u8, 'G' as u8
-        ]);
-    
+                        &'a T: 'a + fmt::Display + Clone + Index<usize, Output=u8> + IntoIterator<Item=&'a u8>
+    {    
         let mut separator : u8 = '!' as u8; 
         let mut temp : Vec<u8> = vec![];
         let mut wordmap : Vec<(usize, usize)> = vec![];
@@ -73,30 +67,19 @@ impl SuffixTreeBuilder {
             temp.push(separator);
             wordmap.extend(vec![(idx, temp.len() - 1); temp.len()-lenold + 1]);
             separator += 1;
-            while alphabet.contains(&separator) {
+            while self.alphabet.contains(&separator) {
                 separator += 1;
             }
             tile_len += 1;
         }
     
-    
-        // let seq = Sequence::from(temp.as_slice());
-        // let mut ukkokens = SuffixTreeBuilder::::new(seq);
         let g = self.process(&temp);
-        // g.write_dot("abc.dot");
-    
-    
-        fn generate_reachbility_map(graph: &mut Graph<SuffixTreeNode, SuffixTreeEdge>, node_id: u64, 
-                                    discovered: &mut HashSet<u64>, wordmap: &Vec<(usize, usize)>, 
-                                        reachable_suffixes: &mut HashMap<u64, Vec<u8>>)
+
+        fn generate_reachbility_map(graph: &mut Graph<SuffixTreeNode, SuffixTreeEdge>, node_id: u64, wordmap: &Vec<(usize, usize)>)
         {
-            discovered.insert(node_id);
             let out_neighbors : Vec<u64> = graph.out_neighbors(node_id).cloned().collect();
-    
             for t in out_neighbors{
-                if !discovered.contains(&t) {
-                    generate_reachbility_map(graph, t, discovered, wordmap, reachable_suffixes);
-                }
+                generate_reachbility_map(graph, t, wordmap);
             }
     
             let mut reach = vec![0; wordmap.last().unwrap().0 + 1];
@@ -113,7 +96,7 @@ impl SuffixTreeBuilder {
                 }
                 else {
     
-                    for (i, elem) in reachable_suffixes[&successor_node_id].iter().enumerate() {
+                    for (i, elem) in graph.get_node(&successor_node_id).data.reachable_suffixes.iter().enumerate() {
                         if *elem == 1 {
                             reach[i] = 1;
                         }
@@ -121,25 +104,19 @@ impl SuffixTreeBuilder {
                 }
             }
     
-            reachable_suffixes.insert(node_id, reach);
+            graph.get_node_mut(&node_id).data.reachable_suffixes = reach;
         }
     
-        let mut visited = HashSet::<u64>::new();
-        let mut reachable_suffixes = HashMap::<u64, Vec<u8>>::new();
         let root = self.graph.get_root().unwrap();
-        generate_reachbility_map(&mut self.graph, root, &mut visited, &wordmap, &mut reachable_suffixes);
+        generate_reachbility_map(&mut self.graph, root, &wordmap);
     
         // // Function to perform DFS traversal on the graph
         fn resolve_suffix_endings(graph: &mut Graph<SuffixTreeNode, SuffixTreeEdge>, node_id: u64, 
-                                    discovered: &mut HashSet<u64>, wordmap: &Vec<(usize, usize)>)
+                                     wordmap: &Vec<(usize, usize)>)
         {
-            discovered.insert(node_id);
-    
             let out_neighbors : Vec<u64> = graph.out_neighbors(node_id).cloned().collect();
             for t in out_neighbors{
-                if !discovered.contains(&t) {
-                    resolve_suffix_endings(graph, t, discovered, wordmap);
-                }
+                resolve_suffix_endings(graph, t, wordmap);
             }
     
             let out_edges : Vec<u64> = graph.out_edges(node_id).cloned().collect();
@@ -152,8 +129,8 @@ impl SuffixTreeBuilder {
             }
         }
     
-        visited.clear();
-        resolve_suffix_endings(&mut self.graph, root, &mut visited, &wordmap);
+        // visited.clear();
+        resolve_suffix_endings(&mut self.graph, root, &wordmap);
     
         let mut lcs : Vec<(usize, i64)> = vec![];
         let mut cur : Vec<(usize, i64)> = vec![];
@@ -162,27 +139,23 @@ impl SuffixTreeBuilder {
         let mut cur_len = 0;
     
         fn dfs_recursive_substrings(graph: &Graph<SuffixTreeNode, SuffixTreeEdge>, node_id: u64, 
-                                        discovered: &mut HashSet<u64>,  reachable_suffixes: & HashMap<u64, Vec<u8>>,
                                             cur_suffix: &mut Vec<(usize, i64)>, cur_length: usize, 
                                                 lcs: &mut Vec<(usize, i64)>, longest: &mut usize, len: u8)
         {
             // mark the current node as discovered
-            discovered.insert(node_id);
     
             if cur_length > *longest {
                 *longest = cur_length;
                 *lcs = cur_suffix.clone();
             } 
-            
-            // println!("Current length: {:#?}", reachable_suffixes);
     
             // do for every edge (v, u)
             for e in graph.out_edges(node_id){
-                if !discovered.contains(&graph.get_edge(e).end) && (reachable_suffixes[&graph.get_edge(e).end].iter().sum::<u8>() == len  ){
+                if graph.get_node(&graph.get_edge(e).end).data.reachable_suffixes.iter().sum::<u64>() == len as u64{
                     let start = graph.get_edge(e).data.as_ref().unwrap().suffix_start;
                     let stop = graph.get_edge(e).data.as_ref().unwrap().suffix_stop;
                     cur_suffix.push((start, stop));
-                    dfs_recursive_substrings(graph, graph.get_edge(e).end, discovered, reachable_suffixes, cur_suffix, cur_length + stop as usize - start + 1, lcs, longest, len);
+                    dfs_recursive_substrings(graph, graph.get_edge(e).end, cur_suffix, cur_length + stop as usize - start + 1, lcs, longest, len);
                     cur_suffix.pop();
                 }
             }
@@ -190,8 +163,8 @@ impl SuffixTreeBuilder {
     
         }
     
-        visited.clear();
-        dfs_recursive_substrings(&mut self.graph, root, &mut visited, &reachable_suffixes, &mut cur, cur_len, &mut lcs, &mut longest, tile_len as u8);
+        // visited.clear();
+        dfs_recursive_substrings(&mut self.graph, root, &mut cur, cur_len, &mut lcs, &mut longest, tile_len as u8);
     
     
     
@@ -375,7 +348,8 @@ impl SuffixTreeBuilder {
 #[derive(Clone)]
 pub struct SuffixTreeNode {
     link: u64,
-    suffix_edge_ids: HashMap<u8, u64>
+    suffix_edge_ids: HashMap<u8, u64>, 
+    reachable_suffixes: Vec<u64>,
 }
 
 impl SuffixTreeNode {
@@ -383,6 +357,7 @@ impl SuffixTreeNode {
         SuffixTreeNode {
             link: 0,
             suffix_edge_ids: HashMap::new(),
+            reachable_suffixes: Vec::<u64>::new()
         }
     }
 }
