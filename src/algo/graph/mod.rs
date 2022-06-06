@@ -1,4 +1,4 @@
 pub mod dfs;
-pub mod ukonen;
+pub mod suffix_tree;
 pub mod misc;
 pub mod trie;
