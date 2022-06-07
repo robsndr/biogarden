@@ -660,13 +660,12 @@ pub fn correct_read_errors(reads: &Tile, split_margin: usize, hd_margin: usize) 
 
 pub fn longest_common_substring(matrix: &Tile, bound: usize) -> Sequence {
 
-    let alphabet = HashSet::<u8>::from([b'A', b'C', b'T', b'G', b'$']);
-    
+    let alphabet = HashSet::<u8>::from([b'A', b'C', b'T', b'G']);
     let mut suffix_sequence = Sequence::new();
-    let mut separator = 0; 
 
     // Transform set of sequences into one global search string
     // Separate words using any characters that are not members of the alphabet
+    let mut separator = 0; 
     for a in matrix {
         suffix_sequence.extend(a.clone());
         suffix_sequence.push(separator);
@@ -676,15 +675,14 @@ pub fn longest_common_substring(matrix: &Tile, bound: usize) -> Sequence {
 
     // Build suffix tre using ukonnen's algorithm in O(n)
     let mut ukonnen_builder = SuffixTreeBuilder::new(alphabet);
-    let mut graph = ukonnen_builder.build(&suffix_sequence);
-
+    let graph = ukonnen_builder.build(&suffix_sequence);
 
     // DFS
     // Finds the longest common substring
+    let mut lcs = Sequence::new();
+    let mut max_len = 0;
     let mut stack = Vec::<(u64, Sequence)>::new();
     stack.push((graph.get_root().unwrap(), Sequence::new()));
-    let mut max_len = 0;
-    let mut lcs = Sequence::new();
 
     while !stack.is_empty() {
         
