@@ -235,32 +235,51 @@ impl SuffixTreeBuilder {
         self.idx += 1;
     }
 
+    // Postprocessing of suffix tree obtained from Ukonnen's algorithm
+    //    1. update reachability information in every node
+    //    2. fix suffix end index from '1' to end position of given suffix
+    //
     fn postprocess(graph: &mut Graph<SuffixTreeNode, SuffixTreeEdge>, node_id: u64, wordmap: &Vec<(usize, usize)>)
     {
+        // Items need to be cloned, because 'graph' is borrowed later
+        // TODO: restructure to omit cloning 
         let out_neighbors : Vec<u64> = graph.out_neighbors(node_id).cloned().collect();
-        for t in out_neighbors{
+        for t in out_neighbors {
             SuffixTreeBuilder::postprocess(graph, t, wordmap);
         }
 
+        // The wordmap contains tuples denoting the mapping of each letters in the search string
+        // to the word they correspond to, together with the position the given word end:
+        // ie. (word_index, end_position_in_search_string)
+        let num_words = wordmap.last().unwrap().0;
+
+        // To each node associate a vector denoting the words reachable from it
         let mut reach = vec![0; wordmap.last().unwrap().0 + 1];
+
+        // Items need to be cloned, because 'graph' is borrowed later
+        // TODO: restructure to omit cloning 
         let out_edges : Vec<u64> = graph.out_edges(node_id).cloned().collect();
 
+        // Iterate over edges outgoing from current node with 'node_id'
         for eid in out_edges {
 
             let successor_node_id = graph.get_edge(&eid).end;
             let suffix_start = graph.get_edge(&eid).data.as_ref().unwrap().suffix_start;
             let suffix_stop = graph.get_edge(&eid).data.as_ref().unwrap().suffix_stop;
 
+            // Check if end of given suffix has been reached (leaf node)
+            // If so, update reachability and fix suffix end index from '-1' (used by ukonnen's algo)
+            // to match ending of current suffix, based on 'wordmap'
             if suffix_stop == -1 {
-                reach[wordmap[suffix_start as usize].0] = 1;
+                reach[wordmap[suffix_start as usize].0] += 1;
                 graph.get_edge_mut(&eid).data.as_mut().unwrap().suffix_stop = wordmap[suffix_start as usize].1 as i64;
             }
             else {
 
+                // Update reachability of current node, based on reachability in successors.
+                // Because of the recursion, we establish reachability beginning from bottom to top.
                 for (i, elem) in graph.get_node(&successor_node_id).data.reachable_suffixes.iter().enumerate() {
-                    if *elem == 1 {
-                        reach[i] = 1;
-                    }
+                    reach[i] += elem;
                 };
             }
         }

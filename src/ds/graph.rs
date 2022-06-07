@@ -50,8 +50,8 @@ pub struct Edge<T: fmt::Display> {
 #[derive(Clone, Debug)]
 pub struct Node<T: fmt::Display> {
     id: u64,
-    incoming: Vec<u64>,
-    outgoing: Vec<u64>,
+    pub incoming: Vec<u64>,
+    pub outgoing: Vec<u64>,
     pub data: T,
 }
 

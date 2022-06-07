@@ -11,7 +11,8 @@ use super::graph::suffix_tree::SuffixTreeNode;
 use crate::ds::sequence::Sequence;
 use crate::ds::graph::Graph;
 use crate::ds::tile::Tile;
-
+use std::fs::File;
+use std::io::{Write, BufReader, BufRead, Error, BufWriter};
 use super::graph::trie::{Trie, TrieNode};
 
 // Count number of chars in Sequence sequence
@@ -657,13 +658,15 @@ pub fn correct_read_errors(reads: &Tile, split_margin: usize, hd_margin: usize) 
     corrections
 }
 
-pub fn longest_common_substring(matrix: &Tile) -> Sequence {
+pub fn longest_common_substring(matrix: &Tile, bound: usize) -> Sequence {
 
-    let alphabet = HashSet::<u8>::from([b'A', b'C', b'T', b'G']);
+    let alphabet = HashSet::<u8>::from([b'A', b'C', b'T', b'G', b'$']);
     
     let mut suffix_sequence = Sequence::new();
     let mut separator = 0; 
 
+    // Transform set of sequences into one global search string
+    // Separate words using any characters that are not members of the alphabet
     for a in matrix {
         suffix_sequence.extend(a.clone());
         suffix_sequence.push(separator);
@@ -671,47 +674,44 @@ pub fn longest_common_substring(matrix: &Tile) -> Sequence {
         while alphabet.contains(&separator) { separator += 1; }
     }
 
+    // Build suffix tre using ukonnen's algorithm in O(n)
     let mut ukonnen_builder = SuffixTreeBuilder::new(alphabet);
     let mut graph = ukonnen_builder.build(&suffix_sequence);
 
-    fn dfs_recursive_substrings(graph: &Graph<SuffixTreeNode, SuffixTreeEdge>, node_id: u64, 
-                                    cur_suffix: &mut Vec<(i64, i64)>, cur_length: usize, 
-                                        lcs: &mut Vec<(i64, i64)>, longest: &mut usize, len: usize)
-    {
-        if cur_length > *longest {
-            *longest = cur_length;
-            *lcs = cur_suffix.clone();
-        } 
 
-        for e in graph.out_edges(node_id){
-            if graph.get_node(&graph.get_edge(e).end).data.reachable_suffixes.iter().sum::<u64>() == len as u64{
-                let start = graph.get_edge(e).data.as_ref().unwrap().suffix_start;
-                let stop = graph.get_edge(e).data.as_ref().unwrap().suffix_stop;
-                let word_len = (stop - start + 1) as usize;
-                cur_suffix.push((start, stop + 1));
-                dfs_recursive_substrings(graph, graph.get_edge(e).end, cur_suffix, cur_length + word_len, lcs, longest, len);
-                cur_suffix.pop();
+    // DFS
+    // Finds the longest common substring
+    let mut stack = Vec::<(u64, Sequence)>::new();
+    stack.push((graph.get_root().unwrap(), Sequence::new()));
+    let mut max_len = 0;
+    let mut lcs = Sequence::new();
+
+    while !stack.is_empty() {
+        
+        let (cur_node_id, cur_sequence)  = stack.pop().unwrap();
+
+        if cur_sequence.len() > max_len {
+            max_len = cur_sequence.len();
+            lcs = cur_sequence.clone();
+        }
+
+        for eid in graph.out_edges(cur_node_id) {
+        
+            let rs_i = graph.get_node(&graph.get_edge(eid).end).data.reachable_suffixes.iter();
+
+            if rs_i.clone().filter(|x| {**x == 0}).count() == 0 && rs_i.sum::<u64>() >= bound as u64 {
+        
+                let start = graph.get_edge(eid).data.as_ref().unwrap().suffix_start;
+                let stop = graph.get_edge(eid).data.as_ref().unwrap().suffix_stop;
+
+                let mut t = cur_sequence.clone();
+                for i in start..stop+1 { t.push(suffix_sequence[i as usize]); }
+                stack.push((graph.get_edge(eid).end, t));
             }
         }
     }
 
-
-    let root = graph.get_root().unwrap();
-    let mut longest = 0;
-    let mut cur_len = 0;
-    let mut lcs : Vec<(i64, i64)> = vec![];
-    let mut cur : Vec<(i64, i64)> = vec![];
-    dfs_recursive_substrings(&mut graph, root, &mut cur, cur_len, &mut lcs, &mut longest, matrix.len());
-
-    // Retrieve LCS based on (start_ids, end_idx) edges from suffix tree
-    let mut result = Sequence::new();
-    for substring_idx in lcs {
-        for i in substring_idx.0..substring_idx.1 {
-            result.push(suffix_sequence[i as usize]);
-        }
-    }
-
-    result
+    lcs
 }
 
 
