@@ -68,7 +68,7 @@ impl SuffixTreeBuilder {
         let mut word_idx = 0_usize;
         for (id, x) in seq.into_iter().enumerate() {
             word_len += 1;
-            if !self.alphabet.contains(&x) {
+            if !self.alphabet.contains(&x) || id == seq.into_iter().count() - 1 {
                 wordmap.extend(vec![(word_idx, id); word_len]);
                 word_len = 0;
                 word_idx += 1;

@@ -712,6 +712,49 @@ pub fn longest_common_substring(matrix: &Tile, bound: usize) -> Sequence {
     lcs
 }
 
+pub fn linguistic_complexity(seq: Sequence) -> f32 {
+
+    // Define alphabet
+    let alphabet = HashSet::<u8>::from([b'A', b'C', b'T', b'G']);
+    let alphabet_len = alphabet.len();
+
+    // Add the strings to tree and traverse from root to node. 
+    // Each root to node path will denote suffixes of a string. 
+    let mut ukonnen_builder = SuffixTreeBuilder::new(alphabet);
+    let graph = ukonnen_builder.build(&seq);
+
+    // Count unique substrings
+    // All the prefixes of these suffixes are unique substrings.
+    // Their number can be obtained by summing-up the length of all edges
+    let mut num_substrings = 0;
+    for eid in graph.edges() {
+        let start = graph.get_edge(eid).data.as_ref().unwrap().suffix_start;
+        let stop = graph.get_edge(eid).data.as_ref().unwrap().suffix_stop;
+        num_substrings += stop - start + 1;
+    }
+
+    // The maximum number of k-length substrings for n-letter string is either:
+    // limited by the number of substrings that can be formed from a given alphabet (4^k)
+    // or by the number of k-windows that can be shifted within n-length string
+    let mut max_complexity = 0;
+    for k in 1..seq.len()+1 {
+        // Perform 4^k only when 4^k < seq.len(), however 4^k test can result in overflow
+        // Use k < log4(seq.len()) instead. Convert log4(seq.len()) => log10(seq.len())/log10(4) 
+        // This will increase accuracy as log10 is better: 
+        // Check -> https://doc.rust-lang.org/std/primitive.f64.html#method.log
+        if (k as f32) < ((seq.len() as f32).log10() / (4 as f32).log10()) {
+            max_complexity += u128::pow(alphabet_len as u128, k as u32);
+        }
+        else {
+            max_complexity += (seq.len() - k + 1) as u128;
+            
+        }
+
+    }
+    
+    num_substrings as f32 / max_complexity as f32
+}
+
 
 #[cfg(test)]
 mod tests {
