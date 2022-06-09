@@ -15,6 +15,9 @@ use std::fs::File;
 use std::io::{Write, BufReader, BufRead, Error, BufWriter};
 use super::graph::trie::{Trie, TrieNode};
 
+// TODO: Remove later:
+use crate::ds::graph::GraphProperties;
+
 // Count number of chars in Sequence sequence
 // Return array with numbers representing #occur of given char
 // count[0] == count ['A'] and count[23] == count['Z']
@@ -742,12 +745,11 @@ pub fn linguistic_complexity(seq: Sequence) -> f32 {
         // Use k < log4(seq.len()) instead. Convert log4(seq.len()) => log10(seq.len())/log10(4) 
         // This will increase accuracy as log10 is better: 
         // Check -> https://doc.rust-lang.org/std/primitive.f64.html#method.log
-        if (k as f32) < ((seq.len() as f32).log10() / (4 as f32).log10()) {
+        if (k as f32) < ((seq.len() as f32).log10() / (4.0_f32).log10()) {
             max_complexity += u128::pow(alphabet_len as u128, k as u32);
         }
         else {
             max_complexity += (seq.len() - k + 1) as u128;
-            
         }
 
     }
