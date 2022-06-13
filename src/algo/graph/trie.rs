@@ -8,6 +8,7 @@ use crate::ds::graph::GraphErr;
 use crate::ds::graph::GraphProperties;
 
 /// Ukonen Node
+#[derive(Clone)]
 pub struct TrieNode {
     pub substring: Vec<Vec<u8>>,
     pub children: Vec<i64>,

@@ -5,14 +5,14 @@ use std::collections::HashSet;
 use crate::ds::graph::Graph;
 use crate::ds::graph::GraphErr;
 
-pub struct Dfs<'a, N: fmt::Display, E: fmt::Display + Clone> {
+pub struct Dfs<'a, N: fmt::Display + Clone, E: fmt::Display + Clone> {
     current: u64,
     stack: Vec<u64>,
     visited: HashSet<u64>,
     graph: &'a Graph<N,E>
 }
 
-impl<'a, N: fmt::Display, E: fmt::Display + Clone> Dfs<'a, N, E> {
+impl<'a, N: fmt::Display + Clone, E: fmt::Display + Clone> Dfs<'a, N, E> {
 
     pub fn new(graph: &'a Graph<N, E>) -> Dfs<'a, N, E> {
         let mut stack = Vec::<u64>::new();

@@ -35,6 +35,10 @@ impl Tile
         self.data.len()
     }
 
+    pub fn extend(&mut self, data: Vec<Sequence>) {
+        self.data.extend(data);
+    }
+
     // Convert tile into Array2 
     // TODO: move into From method
     pub fn into_array2(self) -> Array2<u16> {

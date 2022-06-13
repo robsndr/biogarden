@@ -1,4 +1,4 @@
-use hashbrown::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
 use rand::{thread_rng, Rng};
 use std::hash::Hasher;
 use std::hash::Hash;
@@ -70,9 +70,9 @@ pub struct Graph<N: fmt::Display, E: fmt::Display> {
     idx: u64,
 }
 
-impl<N: fmt::Display, E: fmt::Display + Clone> Graph<N, E> {
+impl<N: fmt::Display + Clone, E: fmt::Display + Clone> Graph<N, E> {
 
-    pub fn new(props: GraphProperties) -> Graph<N, E> {
+    pub fn new(props: GraphProperties) -> Self {
         Graph {
             nodes: HashMap::new(),
             edges: HashMap::new(),
@@ -230,6 +230,51 @@ impl<N: fmt::Display, E: fmt::Display + Clone> Graph<N, E> {
         self.nodes.len()
     }
     
+    pub fn reverse(&mut self) {
+    
+        for (_, edge) in &mut self.edges {
+            let temp = edge.start;
+            edge.start = edge.end;
+            edge.end = temp;
+        }
+
+        for (_, node) in &mut self.nodes {
+            let temp = node.outgoing.clone();
+            node.outgoing = node.incoming.clone();
+            node.incoming = temp;   
+        }
+    }
+
+    pub fn subgraph(&mut self, overlay: &HashSet<u64>) -> Self {
+
+        // Allocate graph data structure for subgraph
+        let mut g = Graph::<N, E>::new(self.properties.clone());
+        
+        // Mapping of old node ids, to node ids in subgraph 
+        // Needed to establish valid edges in 
+        let mut id_map = HashMap::<u64, u64>::new();
+
+        // Map and copy overlay nodes to subgraph
+        for id in overlay {
+            if self.nodes.contains_key(id) {
+                let new_id = g.add_node(self.get_node(id).data.clone());
+                id_map.insert(*id, new_id);
+            }
+        }
+        
+        // Establish connections between nodes in overlay 
+        for (initial_id, subgraph_id) in id_map.iter() {
+            for e_id in self.out_edges(*initial_id) {
+                let edge = self.get_edge(e_id);
+                if overlay.contains(&edge.end) {
+                    g.add_edge(&subgraph_id, &id_map[&edge.end], edge.data.clone()).unwrap();
+                }
+            }
+        }
+
+        g
+    }
+
     pub fn write_dot(&self, f: &str) {
         let mut w = File::create(f).unwrap();
         if self.properties.directed {

@@ -1,4 +1,6 @@
-use std::collections::HashSet;
+use std::collections::{HashSet, HashMap};
+use std::collections::VecDeque;
+use std::fmt;
 
 use crate::ds::tile::Tile;
 use crate::ds::sequence::Sequence;
@@ -36,27 +38,121 @@ pub fn overlap_graph(sequences: &Tile, k: usize) -> Graph::<Sequence, u8> {
     g
 }
 
-pub fn connected_components(g: &Graph<u64, u8>) -> (u32, Vec<Vec<u64>>) {
+// Connected components based on Kosaraju's Algorithm O(V+E)
+pub fn connected_components<N, E>(g: &mut Graph<N, E>) -> Vec<HashSet::<u64>> 
+            where N: fmt::Display + Clone , E: fmt::Display + Clone
+{
 
-    let mut dfs = Dfs::new(g);
+    // Define dfs with backtrack, where nodes are added to stack after all their children are processed
+    fn dfs_backtrack<N, E>(g: &Graph<N, E>, nid: u64, stack: &mut Vec::<u64>, visited: &mut HashSet::<u64>) 
+        where N: fmt::Display  + Clone, E: fmt::Display + Clone
+    {
 
-    let mut processed = HashSet::<u64>::new();
-    let mut ctr : u32 = 0;
-    let mut cc : Vec<u64> = vec![];
-    let mut components : Vec<Vec<u64>> = vec![];
-    
+        if visited.contains(&nid) {
+            return;
+        }
+
+        visited.insert(nid);
+        
+        for node in g.out_neighbors(nid) {
+            dfs_backtrack(g, *node, stack, visited);
+        }
+
+        stack.push(nid);
+
+    }
+
+    // Run the backtrack DFS
+    let mut visited = HashSet::<u64>::new();
+    let mut stack = Vec::<u64>::new();
+
     for n in g.nodes() {
-        if !processed.contains(n) {
-            dfs.init(n);
-            cc.clear();
-            while let Ok(id) = dfs.process_node() {
-                processed.insert(id);
-                cc.push(id);
-            }
-            components.push(cc.clone());
-            ctr += 1;
+        if !visited.contains(n) {
+            dfs_backtrack(g, *n, &mut stack, &mut visited);
         }
     }
-    (ctr, components)
+
+    // Reverse graph
+    g.reverse();
+
+    // Stack based DFS, no backtracking needed
+    let mut dfs = Dfs::new(g);
+    let mut cc = HashSet::<u64>::new();
+    let mut components : Vec<HashSet::<u64>> = vec![];
+    let mut processed = HashSet::<u64>::new();
+
+    while !stack.is_empty() {
+        let n = stack.pop().unwrap();
+        if !processed.contains(&n) {
+            dfs.init(&n);
+            while let Ok(id) = dfs.process_node() {
+                processed.insert(id);
+                cc.insert(id);
+            }
+            components.push(cc.clone());
+            cc.clear();
+        }
+    }
+
+    // Reverse graph back to its initial form
+    g.reverse();
+
+    components
 }
 
+// pub fn cycles<N: fmt::Display , E: fmt::Display + Clone >(g: &Graph<N, E>) -> Vec<Vec<u64>> {
+
+//     let mut processing = HashSet::<u64>::new();    
+//     let mut visited = Vec::<u64>::new();
+//     let mut dfs_stack = Vec::<u64>::new();
+//     // Cycle metadata
+//     let mut cycle_trace = HashMap::<u64, u64>::new();
+//     let mut cycle_origins = Vec::<u64>::new();
+//     let mut cycles = Vec::<Vec<u64>>::new();
+
+//     let mut cur_node_id : u64;
+
+//     for node in g.nodes() {
+//         dfs_stack.push(*node);
+
+//         while !dfs_stack.is_empty() {
+//             cur_node_id = dfs_stack.pop().unwrap();
+
+//             if !visited.contains(&cur_node_id) { 
+//                 if processing.contains(&cur_node_id) { 
+//                     cycle_origins.push(cur_node_id); 
+//                 }
+//                 else {
+//                     processing.insert(cur_node_id);
+//                     for s in g.out_neighbors(cur_node_id) {
+//                         cycle_trace.insert(*s, cur_node_id);
+//                         dfs_stack.push(*s);
+//                     }
+//                 }
+//             }
+
+//         }
+
+//         visited.extend(processing.iter());
+//         processing.clear();
+
+//         for n in cycle_origins.iter() {
+//             let mut cycle = Vec::<u64>::new();
+            
+//             let mut predecessor = cycle_trace[n];
+//             while predecessor != *n {
+//                 cycle.push(predecessor);
+//                 predecessor = cycle_trace[&predecessor];
+//             }
+
+//             cycle.push(*n);
+//             cycle.reverse();
+//             cycles.push(cycle);
+//         } 
+        
+//         cycle_trace.clear();
+//         cycle_origins.clear();
+//     }
+
+//     cycles
+// }

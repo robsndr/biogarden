@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::collections::hash_map::Entry;
-use std::cmp;
 use allwords::{Alphabet};
+use std::error;
+use std::cmp;
 
 use super::graph::suffix_tree::SuffixTreeBuilder;
 use super::graph::suffix_tree::SuffixTreeEdge;
@@ -756,6 +757,20 @@ pub fn linguistic_complexity(seq: Sequence) -> f32 {
     
     num_substrings as f32 / max_complexity as f32
 }
+
+pub fn generate_k_mers(seq: &Sequence, k: usize) -> Vec<Sequence> {
+
+    // TODO: return proper error
+    if k > seq.len() {
+        panic!("LEN(SEQ1) !< LEN(SEQ2)");
+    }
+
+    (0..seq.len()-k+1).into_iter()
+                    .map(|i| Sequence::from(&seq[i..k+i]) )
+                    .collect()
+}
+
+
 
 
 #[cfg(test)]
