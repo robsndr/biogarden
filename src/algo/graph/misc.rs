@@ -100,59 +100,84 @@ pub fn connected_components<N, E>(g: &mut Graph<N, E>) -> Vec<HashSet::<u64>>
     components
 }
 
-// pub fn cycles<N: fmt::Display , E: fmt::Display + Clone >(g: &Graph<N, E>) -> Vec<Vec<u64>> {
+fn unblock(nid: u64, blocked_set: &mut HashSet::<u64>, blocked_map: &mut HashMap::<u64, HashSet<u64>>) {
+    blocked_set.remove(&nid);
+    
+    if !blocked_map.contains_key(&nid) {
+        return;
+    }
 
-//     let mut processing = HashSet::<u64>::new();    
-//     let mut visited = Vec::<u64>::new();
-//     let mut dfs_stack = Vec::<u64>::new();
-//     // Cycle metadata
-//     let mut cycle_trace = HashMap::<u64, u64>::new();
-//     let mut cycle_origins = Vec::<u64>::new();
-//     let mut cycles = Vec::<Vec<u64>>::new();
+    let blocked_mapings = blocked_map.get(&nid).unwrap().clone();
+    for n in blocked_mapings.iter() {
+        blocked_map.get_mut(&nid).unwrap().remove(n);
+        if blocked_set.contains(n) {
+            unblock(*n, blocked_set, blocked_map);
+        }
+    }
+}
 
-//     let mut cur_node_id : u64;
+// Find cycles within a graph using Johnson's algorithm
+pub fn cycles<N, E>(g: &mut Graph<N, E>, test: u64) -> Vec<Vec::<u64>> 
+            where N: fmt::Display + Clone , E: fmt::Display + Clone
+{
 
-//     for node in g.nodes() {
-//         dfs_stack.push(*node);
 
-//         while !dfs_stack.is_empty() {
-//             cur_node_id = dfs_stack.pop().unwrap();
 
-//             if !visited.contains(&cur_node_id) { 
-//                 if processing.contains(&cur_node_id) { 
-//                     cycle_origins.push(cur_node_id); 
-//                 }
-//                 else {
-//                     processing.insert(cur_node_id);
-//                     for s in g.out_neighbors(cur_node_id) {
-//                         cycle_trace.insert(*s, cur_node_id);
-//                         dfs_stack.push(*s);
-//                     }
-//                 }
-//             }
+    fn dfs_backtrack<N, E>(g: &Graph<N, E>, nid: u64, stack: &mut Vec::<u64>, blocked_set: &mut HashSet::<u64>, 
+                            blocked_map: &mut HashMap::<u64, HashSet<u64>>, cycles: &mut Vec<Vec::<u64>>) -> bool
+        where N: fmt::Display  + Clone, E: fmt::Display + Clone
+    {
+        println!("{}\n", nid+1);
+        let mut f : bool = false;
+        stack.push(nid);
+        blocked_set.insert(nid);
+        println!("ASD");
+        for w in g.out_neighbors(nid) {
+            if w == stack.first().unwrap() {
+                cycles.push(stack.clone());
+                f = true;
+            } 
+            else if !blocked_set.contains(w) {
+                if dfs_backtrack(g, *w, stack, blocked_set, blocked_map, cycles) {
+                    f = true;
+                }
+            }
+        }
 
-//         }
+        if f {
+            unblock(nid, blocked_set, blocked_map);
+        } 
+        else {
+            for w in g.out_neighbors(nid) {
+                //if (v∉B(w)) put v on B(w);
+                if !blocked_map.contains_key(w) {
+                    blocked_map.insert(*w, HashSet::new());
+                }
+                if !blocked_map.get(w).unwrap().contains(w) {
+                    blocked_map.get_mut(w).unwrap().insert(nid);
+                }
+            }
+        }
+        // v = stack.pop();
+        println!("{:?}", blocked_set);
+        let v = stack.pop().unwrap();
+        println!("POP: {}", v+1);
 
-//         visited.extend(processing.iter());
-//         processing.clear();
+        return f;
+    }
 
-//         for n in cycle_origins.iter() {
-//             let mut cycle = Vec::<u64>::new();
+
+    let mut cycles : Vec<Vec::<u64>> = vec![];
+
+    // while g.node_count() > 1 {
+
+    let nid = g.nodes().next().expect("Can't get start node");
+    let mut stack = Vec::<u64>::new();
+    let mut blocked_set = HashSet::<u64>::new();
+    let mut blocked_map = HashMap::<u64, HashSet::<u64>>::new();
             
-//             let mut predecessor = cycle_trace[n];
-//             while predecessor != *n {
-//                 cycle.push(predecessor);
-//                 predecessor = cycle_trace[&predecessor];
-//             }
+    dfs_backtrack(g,test, &mut stack, &mut blocked_set, &mut blocked_map, &mut cycles);
+    // }
 
-//             cycle.push(*n);
-//             cycle.reverse();
-//             cycles.push(cycle);
-//         } 
-        
-//         cycle_trace.clear();
-//         cycle_origins.clear();
-//     }
-
-//     cycles
-// }
+    cycles
+}
