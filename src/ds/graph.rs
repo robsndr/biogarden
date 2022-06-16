@@ -59,9 +59,9 @@ pub struct Node<T: fmt::Display> {
 /// Graph data-structure
 pub struct Graph<N: fmt::Display, E: fmt::Display> {
     /// Mapping of vertex ids and vertex values
-    nodes: HashMap<u64, Node<N>>,
+    pub nodes: HashMap<u64, Node<N>>,
     /// Mapping between edges and weights
-    edges: HashMap<u64, Edge<E>>,
+    pub edges: HashMap<u64, Edge<E>>,
     /// Properties of the represented graph
     properties: GraphProperties,
     /// Id of root node
@@ -184,6 +184,24 @@ impl<N: fmt::Display + Clone, E: fmt::Display + Clone> Graph<N, E> {
         // Remove edge from storage container
         self.edges.remove(id)
     }    
+
+    pub fn remove_node(&mut self, id: u64) -> Option<Node<N>> {
+
+        if !self.nodes.contains_key(&id) {
+            return None;
+        }
+
+        // Need to clone, as containers can't be iterated and modified at the same time
+        let in_edges = self.get_node(&id).incoming.clone();
+        let out_edges = self.get_node(&id).outgoing.clone();
+
+        // Remove incoming and outgoing edges from node with `id` 
+        in_edges.iter().for_each( |in_edge| { self.remove_edge(in_edge); });
+        out_edges.iter().for_each( |out_edge| { self.remove_edge(out_edge); });
+
+        // Remove node from ndoes hashset
+        self.nodes.remove(&id)
+    }
 
     pub fn edges(&self) -> impl Iterator<Item=&u64> {
         self.edges.keys()

@@ -30,7 +30,7 @@ impl Sequence {
         self.chain.extend(b.chain);
     }
 
-    pub fn back(&mut self) -> Option<&u8> {
+    pub fn back(&self) -> Option<&u8> {
         self.chain.get(self.chain.len() -1)
     }
 

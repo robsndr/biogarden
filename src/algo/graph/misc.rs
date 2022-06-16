@@ -1,6 +1,7 @@
 use std::collections::{HashSet, HashMap};
 use std::collections::VecDeque;
 use std::fmt;
+use std::mem;
 
 use crate::ds::tile::Tile;
 use crate::ds::sequence::Sequence;
@@ -121,20 +122,21 @@ pub fn cycles<N, E>(g: &mut Graph<N, E>, test: u64) -> Vec<Vec::<u64>>
             where N: fmt::Display + Clone , E: fmt::Display + Clone
 {
 
-
-
     fn dfs_backtrack<N, E>(g: &Graph<N, E>, nid: u64, stack: &mut Vec::<u64>, blocked_set: &mut HashSet::<u64>, 
                             blocked_map: &mut HashMap::<u64, HashSet<u64>>, cycles: &mut Vec<Vec::<u64>>) -> bool
         where N: fmt::Display  + Clone, E: fmt::Display + Clone
     {
-        println!("{}\n", nid+1);
+
+        println!("LEN: {}", stack.len());
+
         let mut f : bool = false;
         stack.push(nid);
         blocked_set.insert(nid);
-        println!("ASD");
         for w in g.out_neighbors(nid) {
             if w == stack.first().unwrap() {
+                stack.push(*w);
                 cycles.push(stack.clone());
+                stack.pop();
                 f = true;
             } 
             else if !blocked_set.contains(w) {
@@ -159,9 +161,9 @@ pub fn cycles<N, E>(g: &mut Graph<N, E>, test: u64) -> Vec<Vec::<u64>>
             }
         }
         // v = stack.pop();
-        println!("{:?}", blocked_set);
-        let v = stack.pop().unwrap();
-        println!("POP: {}", v+1);
+        // println!("{:?}", blocked_set);
+        stack.pop().unwrap();
+        // println!("POP: {}", v+1);
 
         return f;
     }
@@ -169,15 +171,19 @@ pub fn cycles<N, E>(g: &mut Graph<N, E>, test: u64) -> Vec<Vec::<u64>>
 
     let mut cycles : Vec<Vec::<u64>> = vec![];
 
-    // while g.node_count() > 1 {
+    // println!("POP: {} ", g.node_count());
 
-    let nid = g.nodes().next().expect("Can't get start node");
-    let mut stack = Vec::<u64>::new();
-    let mut blocked_set = HashSet::<u64>::new();
-    let mut blocked_map = HashMap::<u64, HashSet::<u64>>::new();
-            
-    dfs_backtrack(g,test, &mut stack, &mut blocked_set, &mut blocked_map, &mut cycles);
-    // }
+    while g.node_count() > 1 {
+
+        let nid = g.nodes().next().expect("Can't get start node");
+        let mut stack = Vec::<u64>::new();
+        let mut blocked_set = HashSet::<u64>::new();
+        let mut blocked_map = HashMap::<u64, HashSet::<u64>>::new();
+                
+        dfs_backtrack(g, *nid, &mut stack, &mut blocked_set, &mut blocked_map, &mut cycles);
+
+        g.remove_node(*nid);
+    }
 
     cycles
 }
