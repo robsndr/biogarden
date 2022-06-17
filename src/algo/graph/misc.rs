@@ -101,89 +101,86 @@ pub fn connected_components<N, E>(g: &mut Graph<N, E>) -> Vec<HashSet::<u64>>
     components
 }
 
-fn unblock(nid: u64, blocked_set: &mut HashSet::<u64>, blocked_map: &mut HashMap::<u64, HashSet<u64>>) {
-    blocked_set.remove(&nid);
-    
-    if !blocked_map.contains_key(&nid) {
-        return;
-    }
-
-    let blocked_mapings = blocked_map.get(&nid).unwrap().clone();
-    for n in blocked_mapings.iter() {
-        blocked_map.get_mut(&nid).unwrap().remove(n);
-        if blocked_set.contains(n) {
-            unblock(*n, blocked_set, blocked_map);
-        }
-    }
-}
 
 // Find cycles within a graph using Johnson's algorithm
-pub fn cycles<N, E>(g: &mut Graph<N, E>, test: u64) -> Vec<Vec::<u64>> 
+pub fn cycles<N, E>(graph: &mut Graph<N, E>, test: u64) -> Vec<Vec::<u64>> 
             where N: fmt::Display + Clone , E: fmt::Display + Clone
 {
 
-    fn dfs_backtrack<N, E>(g: &Graph<N, E>, nid: u64, stack: &mut Vec::<u64>, blocked_set: &mut HashSet::<u64>, 
-                            blocked_map: &mut HashMap::<u64, HashSet<u64>>, cycles: &mut Vec<Vec::<u64>>) -> bool
-        where N: fmt::Display  + Clone, E: fmt::Display + Clone
-    {
-
-        println!("LEN: {}", stack.len());
-
-        let mut f : bool = false;
-        stack.push(nid);
-        blocked_set.insert(nid);
-        for w in g.out_neighbors(nid) {
-            if w == stack.first().unwrap() {
-                stack.push(*w);
-                cycles.push(stack.clone());
-                stack.pop();
-                f = true;
-            } 
-            else if !blocked_set.contains(w) {
-                if dfs_backtrack(g, *w, stack, blocked_set, blocked_map, cycles) {
-                    f = true;
-                }
+    fn unblock(cur_node: u64, blocked_set: &mut HashSet<u64>, blocked_map: &mut HashMap<u64, HashSet<u64>>) {
+        let mut stack : Vec<u64> = vec![cur_node];
+        while !stack.is_empty() {
+            let node = stack.pop().unwrap();
+            if blocked_set.contains(&node) {
+                stack.extend(blocked_map.get(&node).unwrap_or(&HashSet::<u64>::new()).iter().cloned());
+                blocked_set.remove(&node);
+                blocked_map.remove(&node);
             }
         }
-
-        if f {
-            unblock(nid, blocked_set, blocked_map);
-        } 
-        else {
-            for w in g.out_neighbors(nid) {
-                //if (v∉B(w)) put v on B(w);
-                if !blocked_map.contains_key(w) {
-                    blocked_map.insert(*w, HashSet::new());
-                }
-                if !blocked_map.get(w).unwrap().contains(w) {
-                    blocked_map.get_mut(w).unwrap().insert(nid);
-                }
-            }
-        }
-        // v = stack.pop();
-        // println!("{:?}", blocked_set);
-        stack.pop().unwrap();
-        // println!("POP: {}", v+1);
-
-        return f;
     }
-
 
     let mut cycles : Vec<Vec::<u64>> = vec![];
 
-    // println!("POP: {} ", g.node_count());
+    let mut start_node : u64;
+    let mut path : Vec<u64>;
+    
+    let mut blocked_set = HashSet::<u64>::new();
+    let mut closed_set = HashSet::<u64>::new();
+    let mut blocked_map = HashMap::<u64, HashSet::<u64>>::new();
 
-    while g.node_count() > 1 {
+    let mut stack : Vec<(u64, Vec<u64>)> = vec![];
 
-        let nid = g.nodes().next().expect("Can't get start node");
-        let mut stack = Vec::<u64>::new();
-        let mut blocked_set = HashSet::<u64>::new();
-        let mut blocked_map = HashMap::<u64, HashSet::<u64>>::new();
+
+    while graph.node_count() > 1 {
+
+        start_node = *graph.nodes().next().unwrap();
+        path = vec![start_node];
+        
+        blocked_set.clear();
+        closed_set.clear();
+        blocked_map.clear();
+        stack.clear();
+
+        blocked_set.insert(start_node);
+        stack.push((start_node, graph.out_neighbors(start_node).cloned().collect()));
+
+        while !stack.is_empty() {
+            let (cur_node, neighbours) = stack.last_mut().unwrap();
+            if !neighbours.is_empty() {
+                let next_node = neighbours.pop().unwrap();
+                if next_node == start_node {
+                    cycles.push(path.clone());
+                    closed_set.extend(path.clone());
+                }
+                else if !blocked_set.contains(&next_node) {
+                    path.push(next_node);
+                    stack.push((next_node, graph.out_neighbors(next_node).cloned().collect()));
+                    closed_set.remove(&next_node);
+                    blocked_set.insert(next_node);
+                    continue
+                }
+            }
                 
-        dfs_backtrack(g, *nid, &mut stack, &mut blocked_set, &mut blocked_map, &mut cycles);
+            if neighbours.is_empty() {
+                if closed_set.contains(cur_node) {
+                    unblock(*cur_node, &mut  blocked_set, &mut blocked_map);
+                }
+                else {
+                    for nbr in graph.out_neighbors(*cur_node) {
+                        if !blocked_map.contains_key(nbr) {
+                            blocked_map.insert(*nbr, HashSet::<u64>::new());
+                        }
+                        if !blocked_map[nbr].contains(cur_node) {
+                            blocked_map.get_mut(nbr).unwrap().insert(*cur_node);
+                        }
+                    }
+                }
+                stack.pop();
+                path.pop();
+            } 
+        }
 
-        g.remove_node(*nid);
+        graph.remove_node(start_node);
     }
-
     cycles
 }
