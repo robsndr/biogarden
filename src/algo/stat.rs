@@ -1,5 +1,6 @@
 use statrs::function::factorial::{binomial, factorial};
 use std::collections::HashMap;
+use std::collections::BTreeMap;
 use num::*;
 use num::ToPrimitive;
 use num::pow::pow;
@@ -293,6 +294,29 @@ pub fn spectral_mass_shift(s1: Vec<f32>, s2: Vec<f32>) -> (usize, f32) {
     (*counts.get(&max).unwrap(), max as f32 / 1000.0)
 }
 
+
+pub fn n_statistic(tile: &Tile, p: usize) -> usize {
+
+    // map lenght to the number of occurences
+    let mut length_map =  BTreeMap::<usize, usize>::new();
+    let mut total_length = 0_usize;
+
+    for seq in tile {
+        *length_map.entry(seq.len()).or_insert(0) += 1;
+        total_length += seq.len();
+    }
+    
+    let mut accumulator = 0_usize;
+    let mut nxx = 0_usize;
+
+    for (len, cnt) in length_map.into_iter().rev() {
+        nxx = len;
+        accumulator += len * cnt;
+        if accumulator*100 / total_length >= p { break; }
+    }
+
+    nxx
+}
 
 #[cfg(test)]
 mod tests {

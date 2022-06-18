@@ -23,6 +23,7 @@ pub fn overlap_graph(sequences: &Tile, k: usize) -> Graph::<Sequence, u8> {
         node_ids.push(g.add_node(seq.clone()));
     }
 
+    
     // Connect overlap graph
     for (i, seq) in sequences.into_iter().enumerate() {
         let last = seq.into_iter().rev().take(k).rev(); 
