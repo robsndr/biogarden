@@ -95,10 +95,10 @@ impl<N: fmt::Display + Clone, E: fmt::Display + Clone> Graph<N, E> {
 
     pub fn add_edge(&mut self, a: &u64, b: &u64, data: Option<E>) -> Result<u64, GraphErr> {
         
-        let e = self.has_edge(a, b);
-        if  e.is_ok() {
-            return e;
-        };
+        // let e = self.has_edge(a, b);
+        // if  e.is_ok() {
+        //     return e;
+        // };
 
         let id1 = if self.nodes.get(a).is_some() {
             *a
@@ -248,6 +248,13 @@ impl<N: fmt::Display + Clone, E: fmt::Display + Clone> Graph<N, E> {
         self.nodes.len()
     }
     
+    pub fn node_degree(&self, id: &u64) -> Option<usize> {
+        match self.nodes.get(&id) {
+            Some(x) => Some(x.outgoing.len() + x.incoming.len()),
+            None => None
+        }
+    }
+
     pub fn reverse(&mut self) {
     
         for (_, edge) in &mut self.edges {

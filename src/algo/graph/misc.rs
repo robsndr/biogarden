@@ -123,13 +123,11 @@ pub fn cycles<N, E>(graph: &mut Graph<N, E>, test: u64) -> Vec<Vec::<u64>>
 
     let mut start_node : u64;
     let mut path : Vec<u64>;
-    
     let mut blocked_set = HashSet::<u64>::new();
     let mut closed_set = HashSet::<u64>::new();
     let mut blocked_map = HashMap::<u64, HashSet::<u64>>::new();
 
     let mut stack : Vec<(u64, Vec<u64>)> = vec![];
-
 
     while graph.node_count() > 1 {
 
@@ -184,3 +182,39 @@ pub fn cycles<N, E>(graph: &mut Graph<N, E>, test: u64) -> Vec<Vec::<u64>>
     }
     cycles
 }
+
+
+pub fn eulerian_circuit<N, E>(graph: &mut Graph<N, E>, source: u64) -> Vec<Vec<u64> >
+            where N: fmt::Display + Clone , E: fmt::Display + Clone
+{
+    let mut stack : Vec<(u64, Graph<N, E>, Vec<u64>)> = vec![(source, graph.clone(), vec![])];
+    let mut paths : Vec<Vec<u64>> = vec![vec![]];
+    
+    let edge_count = graph.edge_count();
+
+    while !stack.is_empty() {
+        let (cur_node, graph, mut cur_path) = stack.pop().unwrap();
+        cur_path.push(cur_node);
+        
+        for neighbour in graph.out_neighbors(cur_node) {
+            let mut g = graph.clone();
+            let edge_id = g.has_edge(&cur_node, neighbour).unwrap();
+            g.remove_edge(&edge_id);
+            stack.push((*neighbour, g, cur_path.clone()))
+        }
+            
+
+        if graph.node_degree(&cur_node).unwrap() == 0 {
+            // Remove last entry from path -> redundant
+            // Tail will be equivalent to the head of the circle
+            cur_path.pop();
+            if cur_path.len() == edge_count {
+                paths.push(cur_path.clone());
+            }
+        }
+    }
+        
+    // # Remove invalid paths
+    paths
+}
+

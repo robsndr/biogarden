@@ -25,7 +25,7 @@ impl DeBruijnBuilder {
     
         // Pre-calculate reverse complements of input reads
         let mut rev_reads = Tile::new();
-        reads.into_iter().for_each(|kmer|{ rev_reads.push(complement_dna(kmer.clone()))});
+        // reads.into_iter().for_each(|kmer|{ rev_reads.push(complement_dna(kmer.clone()))});
     
         // Construct deBruijn graph, iterate over all kmers and their complements 
         for kmer in reads.into_iter().chain(rev_reads.into_iter().as_ref()) {
