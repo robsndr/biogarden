@@ -1,6 +1,7 @@
 use statrs::function::factorial::{binomial, factorial};
 use std::collections::HashMap;
 use std::collections::BTreeMap;
+use std::cmp::Ordering;
 use num::*;
 use num::ToPrimitive;
 use num::pow::pow;
@@ -280,7 +281,7 @@ pub fn spectral_mass_shift(s1: &Vec<f32>, s2: &Vec<f32>) -> (usize, f32) {
 
     // Calculate minkovsky difference for s1 x s2
     let minkovsky_diff : Vec<i32> = iproduct!(s1.iter(), s2.iter())
-            .map(|(v, x)| { ((v - x) * 100.0).ceil() as i32})
+            .map(|(v, x)| { ((v - x) * 100.0).ceil() as i32}) // TODO: Introduce better approximation/rounding function
             .collect();
 
     // Calculate mode of obtained set equvalent to mass shift
@@ -332,10 +333,11 @@ pub fn prefix_spectrum(seq: &Sequence) -> Vec<f32> {
     let mut weight_sum = 0_f32;
 
     let mut spectrum : Vec<f32> = seq.into_iter()
-       .map(|x| { 
-            weight_sum += monoisotopic_mass_table.get(x).unwrap_or(&0.0); 
-            weight_sum})
-       .collect();
+        .map(|x| 
+            { 
+                weight_sum += monoisotopic_mass_table.get(x).unwrap_or(&0.0); 
+                weight_sum})
+        .collect();
     // spectrum.pop();
     spectrum
 }
@@ -359,7 +361,8 @@ pub fn suffix_spectrum(seq: &Sequence) -> Vec<f32> {
        .rev()
        .map(|x| { 
             weight_sum += monoisotopic_mass_table.get(x).unwrap_or(&0.0); 
-            weight_sum})
+            weight_sum
+        })
        .collect();
     // spectrum.pop();
     spectrum
@@ -371,7 +374,7 @@ pub fn complete_spectrum(seq: &Sequence) -> Vec<f32> {
     spectrum
 }
 
-pub fn match_sepctrum_to_protein(tile: &Tile, spectrum: &Vec<f32>) -> Sequence {
+pub fn match_spectrum_to_protein(tile: &Tile, spectrum: &Vec<f32>) -> Sequence {
         
     let mut max = 0;
     let mut max_idx = 0;
