@@ -276,11 +276,11 @@ pub fn count_basepair_matchings(rna: &Sequence) -> BigUint {
 /// * `s1` - evaluated mass spectrum 1
 /// * `s2` - evaluated mass spectrum 2 
 /// 
-pub fn spectral_mass_shift(s1: Vec<f32>, s2: Vec<f32>) -> (usize, f32) {
+pub fn spectral_mass_shift(s1: &Vec<f32>, s2: &Vec<f32>) -> (usize, f32) {
 
     // Calculate minkovsky difference for s1 x s2
     let minkovsky_diff : Vec<i32> = iproduct!(s1.iter(), s2.iter())
-            .map(|(v, x)| ((v - x) * 1000.0) as i32)
+            .map(|(v, x)| { ((v - x) * 100.0).ceil() as i32})
             .collect();
 
     // Calculate mode of obtained set equvalent to mass shift
@@ -291,7 +291,7 @@ pub fn spectral_mass_shift(s1: Vec<f32>, s2: Vec<f32>) -> (usize, f32) {
         *count
     }).unwrap_or(0);
 
-    (*counts.get(&max).unwrap(), max as f32 / 1000.0)
+    (*counts.get(&max).unwrap(), max as f32)
 }
 
 
@@ -317,6 +317,77 @@ pub fn n_statistic(tile: &Tile, p: usize) -> usize {
 
     nxx
 }
+
+pub fn prefix_spectrum(seq: &Sequence) -> Vec<f32> {
+
+    let monoisotopic_mass_table : HashMap<u8, f32> = HashMap::from([   
+        (b'F', 147.06841),   (b'I', 113.08406),   (b'V', 99.06841),   (b'L', 113.08406),   
+        (b'S', 87.03203),    (b'P', 97.05276),    (b'M', 131.04049),  (b'T', 101.04768),   
+        (b'A', 71.03711),    (b'Y', 163.06333 ),  (b'-', 0.0),        (b'H', 137.05891),   
+        (b'N', 114.04293),   (b'D', 115.02694),   (b'Q', 128.05858),  (b'K', 128.09496),   
+        (b'E', 129.04259),   (b'C', 103.00919),   (b'G', 57.02146),   (b'R', 156.10111),      
+        (b'W', 186.07931)
+    ]);
+
+    let mut weight_sum = 0_f32;
+
+    let mut spectrum : Vec<f32> = seq.into_iter()
+       .map(|x| { 
+            weight_sum += monoisotopic_mass_table.get(x).unwrap_or(&0.0); 
+            weight_sum})
+       .collect();
+    // spectrum.pop();
+    spectrum
+}
+
+
+
+pub fn suffix_spectrum(seq: &Sequence) -> Vec<f32> {
+
+    let monoisotopic_mass_table : HashMap<u8, f32> = HashMap::from([   
+        (b'F', 147.06841),   (b'I', 113.08406),   (b'V', 99.06841),   (b'L', 113.08406),   
+        (b'S', 87.03203),    (b'P', 97.05276),    (b'M', 131.04049),  (b'T', 101.04768),   
+        (b'A', 71.03711),    (b'Y', 163.06333 ),  (b'-', 0.0),        (b'H', 137.05891),   
+        (b'N', 114.04293),   (b'D', 115.02694),   (b'Q', 128.05858),  (b'K', 128.09496),   
+        (b'E', 129.04259),   (b'C', 103.00919),   (b'G', 57.02146),   (b'R', 156.10111),      
+        (b'W', 186.07931)
+    ]);
+
+    let mut weight_sum = 0_f32;
+
+    let mut spectrum : Vec<f32> = seq.into_iter()
+       .rev()
+       .map(|x| { 
+            weight_sum += monoisotopic_mass_table.get(x).unwrap_or(&0.0); 
+            weight_sum})
+       .collect();
+    // spectrum.pop();
+    spectrum
+}
+
+pub fn complete_spectrum(seq: &Sequence) -> Vec<f32> {
+    let mut spectrum = prefix_spectrum(seq);
+    spectrum.extend(suffix_spectrum(seq));
+    spectrum
+}
+
+pub fn match_sepctrum_to_protein(tile: &Tile, spectrum: &Vec<f32>) -> Sequence {
+        
+    let mut max = 0;
+    let mut max_idx = 0;
+
+    for (idx, s) in tile.into_iter().enumerate() {
+        let ps = complete_spectrum(&s);
+        let (cnt, shift) = spectral_mass_shift(spectrum, &ps);
+        if cnt >= max {
+            max = cnt;
+            max_idx = idx;
+        }
+    }
+
+    tile[max_idx].clone()
+}
+
 
 #[cfg(test)]
 mod tests {
