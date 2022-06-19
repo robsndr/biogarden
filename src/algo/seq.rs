@@ -139,10 +139,8 @@ pub fn translate_rna(rna: Sequence) -> Vec<Sequence> {
     proteins
 }
 
-pub fn hamming_distance(s1: &Sequence, s2: &Sequence) -> u32 {
-    let s1 = s1.to_string();
-    let s2 = s2.to_string();
-    s1.chars().zip(s2.chars()).filter(|&(a, b)| a != b).count() as u32
+pub fn hamming_distance(s1: &Sequence, s2: &Sequence) -> usize {
+    s1.into_iter().zip(s2.into_iter()).filter(|(a, b)| a != b).count()
 }
 
 /// Obtain tuple containing edit-distance and edit-alignment of two genetic sequences.
@@ -646,13 +644,13 @@ pub fn correct_read_errors(reads: &Tile, split_margin: usize, hd_margin: usize) 
         // Find correct reads/complements satisfying `H(x) <= hamming_distance_margin`
         for cr in correct_reads.iter() {
             // H(x) <= hamming_distance_margin
-            if hamming_distance(fr, cr) <= hd_margin as u32 {
+            if hamming_distance(fr, cr) <= hd_margin {
                 corrections.push((fr.clone(), cr.clone()));
                 break;
             }
             // H(complement(x)) <= hamming_distance_margin
             let complement = complement_dna(cr.clone());
-            if hamming_distance(fr, &complement) == hd_margin as u32 {
+            if hamming_distance(fr, &complement) == hd_margin {
                 corrections.push((fr.clone(), complement));
                 break;
             }
