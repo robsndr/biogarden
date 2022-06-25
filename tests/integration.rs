@@ -34,14 +34,6 @@ mod integration {
     }
 
     #[test]
-    fn hamming_distance() {
-        let input = read_sequences("input/hamming.fasta");
-        let hd = analysis::seq::hamming_distance(&input[0], &input[1]);
-        assert!(hd.is_ok());
-        assert_eq!(hd.unwrap(), 481);
-    }
-
-    #[test]
     fn count_nucleotides() {
         let input = read_sequence("input/count_nucleotides.fasta");
         let counts = analysis::seq::count_nucleotides(&input);
@@ -60,6 +52,20 @@ mod integration {
             }
         }
         assert_eq!(0.5273311897106109, gcc);
+    }
+
+    #[test]
+    fn hamming_distance() {
+        let input = read_sequences("input/hamming_distance.fasta");
+        let hd = analysis::seq::hamming_distance(&input[0], &input[1]);
+        assert_eq!(hd.unwrap(), 477);
+    }
+
+    #[test]
+    fn edit_distance() {
+        let input = read_sequences("input/edit_distance.fasta");
+        let ed = analysis::seq::edit_distance(&input[0], &input[1]);
+        assert_eq!(ed.unwrap(), 299);
     }
     
 }
