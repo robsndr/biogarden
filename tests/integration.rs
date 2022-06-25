@@ -1,9 +1,10 @@
 // use crate biotech;
 use biotech::algo;
+use biotech::analysis;
 use biotech::io::fasta::*;
 use biotech::ds::sequence::{Sequence};
 use biotech::ds::tile::{Tile};
-
+use std::collections::HashMap;
 
 #[cfg(test)]
 mod integration {
@@ -27,11 +28,38 @@ mod integration {
         matrix
     }
 
+    fn read_sequence(name: &str) -> Sequence {
+        let x = read_sequences(name);
+        x[0].clone()
+    }
+
     #[test]
     fn hamming_distance() {
         let input = read_sequences("input/hamming.fasta");
-        if input.len() != 2 { panic!("Wrong input size.")};
-        let hd = algo::seq::hamming_distance(&input[0], &input[1]);
-        assert_eq!(hd, 481);
+        let hd = analysis::seq::hamming_distance(&input[0], &input[1]);
+        assert!(hd.is_ok());
+        assert_eq!(hd.unwrap(), 481);
     }
+
+    #[test]
+    fn count_nucleotides() {
+        let input = read_sequence("input/count_nucleotides.fasta");
+        let counts = analysis::seq::count_nucleotides(&input);
+        assert_eq!(counts, HashMap::<u8, usize>::from([(b'A', 195), (b'C', 217), (b'G', 216), (b'T', 229)]));
+    }
+
+    #[test]
+    fn gc_content() {
+        let matrix = read_sequences("input/gc_content.fasta");
+        let mut gcc = 0.0;
+        // Get maximum GC content in the set of all input sequences
+        for seq in &matrix {
+            let temp = analysis::seq::gc_content(&seq);
+            if temp > gcc {
+                gcc = temp;
+            }
+        }
+        assert_eq!(0.5273311897106109, gcc);
+    }
+    
 }

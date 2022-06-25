@@ -13,7 +13,7 @@ use itertools::iproduct;
 use crate::ds::sequence::Sequence;
 use crate::ds::tile::Tile;
 
-use super::seq::count_nucleotides;
+// use crate::biotech::analysis::sequence::count_nucleotides;
 
 pub fn mendel_first_law(k: u16, m: u16, n: u16 ) -> f32 {
     
@@ -235,35 +235,35 @@ pub fn expected_restriction_sites(seq: &Sequence, n: usize, gc_content: &[f32]) 
     expected_occurences
 }
 
-pub fn count_basepair_matchings(rna: &Sequence) -> BigUint {
+// pub fn count_basepair_matchings(rna: &Sequence) -> BigUint {
 
-    let cnt = count_nucleotides(rna);
+//     let cnt = count_nucleotides(rna);
 
-    let gc_min = cmp::min(cnt[&b'G'], cnt[&b'C']);
-    let gc_max = cmp::max(cnt[&b'G'], cnt[&b'C']);
+//     let gc_min = cmp::min(cnt[&b'G'], cnt[&b'C']);
+//     let gc_max = cmp::max(cnt[&b'G'], cnt[&b'C']);
 
-    let au_min = cmp::min(cnt[&b'A'], cnt[&b'U']);
-    let au_max = cmp::max(cnt[&b'A'], cnt[&b'U']);
+//     let au_min = cmp::min(cnt[&b'A'], cnt[&b'U']);
+//     let au_max = cmp::max(cnt[&b'A'], cnt[&b'U']);
 
-    // Number of possible GC/AU matchings is equivalent to:
-    // (gc_cnt)(gc_cnt-1)(gc_cnt-2)...(2)(1) = gc_cnt!
-    fn factorial(num: u128) -> u128 {
-        match num {
-            0  => 1,
-            1.. => (1..num+1).product(),
-        }
-    }
+//     // Number of possible GC/AU matchings is equivalent to:
+//     // (gc_cnt)(gc_cnt-1)(gc_cnt-2)...(2)(1) = gc_cnt!
+//     fn factorial(num: u128) -> u128 {
+//         match num {
+//             0  => 1,
+//             1.. => (1..num+1).product(),
+//         }
+//     }
 
-    // Generate the number of possible matchings for `GC` and `AU` respectively
-    let x1 = factorial(gc_min as u128) * binomial(gc_max as u64, gc_min as u64) as u128;
-    let x2 = factorial(au_min as u128) * binomial(au_max as u64, au_min as u64) as u128;
+//     // Generate the number of possible matchings for `GC` and `AU` respectively
+//     let x1 = factorial(gc_min as u128) * binomial(gc_max as u64, gc_min as u64) as u128;
+//     let x2 = factorial(au_min as u128) * binomial(au_max as u64, au_min as u64) as u128;
 
-    // Combine the partial results into total number of matchings
-    let x1_long = BigUint::from(x1);
-    let x2_long = BigUint::from(x2);
+//     // Combine the partial results into total number of matchings
+//     let x1_long = BigUint::from(x1);
+//     let x2_long = BigUint::from(x2);
     
-    x1_long * x2_long
-}
+//     x1_long * x2_long
+// }
 
 /// Return frequency and value of the most frequently occurring shift between peaks of two mass spectrums.
 ///   

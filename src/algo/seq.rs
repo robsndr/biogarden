@@ -12,28 +12,15 @@ use super::graph::suffix_tree::SuffixTreeNode;
 use crate::ds::sequence::Sequence;
 use crate::ds::graph::Graph;
 use crate::ds::tile::Tile;
+// use crate::analysis::seq::hamming_distance;
+
 use std::fs::File;
 use std::io::{Write, BufReader, BufRead, Error, BufWriter};
 use super::graph::trie::{Trie, TrieNode};
 
+
 // TODO: Remove later:
 use crate::ds::graph::GraphProperties;
-
-// Count number of chars in Sequence sequence
-// Return array with numbers representing #occur of given char
-// count[0] == count ['A'] and count[23] == count['Z']
-pub fn count_nucleotides(seq: &Sequence) -> HashMap<u8, u16> {
-    let mut count = HashMap::<u8, u16>::new();
-    for c in seq.into_iter() {
-        if !count.contains_key(c) {
-            count.insert(*c, 1);
-        }
-        else {
-            *count.get_mut(c).unwrap() += 1; 
-        }
-    }
-    count
-}
 
 // Transcribe the DNS sequence into RNA
 pub fn transcribe_dna(dna: Sequence) -> Sequence {
@@ -54,18 +41,6 @@ pub fn complement_dna(seq: Sequence) -> Sequence {
     t = t.replace("C", "G");
     t = t.replace("X", "C");
     Sequence::from(t)
-}
-
-// Percentage of G/C nucleotides in sequence
-// Return percentage value
-pub fn gc_content(seq: &Sequence) -> f64 {
-    let mut gc_count : u32 = 0;
-    for c in seq {
-        if *c == b'G' ||  *c == b'C' {
-            gc_count += 1;
-        }
-    }
-    gc_count as f64 / seq.len() as f64
 }
 
 // Make parametrizable number of sequences to find
@@ -139,9 +114,6 @@ pub fn translate_rna(rna: Sequence) -> Vec<Sequence> {
     proteins
 }
 
-pub fn hamming_distance(s1: &Sequence, s2: &Sequence) -> usize {
-    s1.into_iter().zip(s2.into_iter()).filter(|(a, b)| a != b).count()
-}
 
 /// Obtain tuple containing edit-distance and edit-alignment of two genetic sequences.
 ///   
@@ -612,53 +584,53 @@ pub fn protein_from_prefix_spectrum(spec: Vec<f32>) -> Sequence {
 /// * `split_margin` - number of reads/complements required to treat a read as correct
 /// * `hd_margin` - hamming distance used for matching faulty reads to correct ones
 /// 
-pub fn correct_read_errors(reads: &Tile, split_margin: usize, hd_margin: usize) -> Vec<(Sequence, Sequence)> {
+// pub fn correct_read_errors(reads: &Tile, split_margin: usize, hd_margin: usize) -> Vec<(Sequence, Sequence)> {
     
-    // Count number of repeated reads and complements 
-    let mut read_counter  = HashMap::<Sequence, usize>::new();
-    for read in reads {
-        // Insert read if not present already and increment count
-        *read_counter.entry(read.clone()).or_insert(0) += 1;
-        // Handle complement case
-        let complement = complement_dna(read.clone());
-        if read_counter.contains_key(&complement) {
-            *read_counter.get_mut(&complement).unwrap() += 1;
-            *read_counter.get_mut(read).unwrap() += 1;
-        }
-    }
+//     // Count number of repeated reads and complements 
+//     let mut read_counter  = HashMap::<Sequence, usize>::new();
+//     for read in reads {
+//         // Insert read if not present already and increment count
+//         *read_counter.entry(read.clone()).or_insert(0) += 1;
+//         // Handle complement case
+//         let complement = complement_dna(read.clone());
+//         if read_counter.contains_key(&complement) {
+//             *read_counter.get_mut(&complement).unwrap() += 1;
+//             *read_counter.get_mut(read).unwrap() += 1;
+//         }
+//     }
 
-    // Split according to split margin
-    let mut correct_reads = HashSet::<Sequence>::new();
-    let mut faulty_reads = HashSet::<Sequence>::new();
-    read_counter.iter().for_each(|(fr, cnt)| {
-        if *cnt >= split_margin {  
-            correct_reads.insert(fr.clone()) 
-        } else { 
-            faulty_reads.insert(fr.clone()) 
-        };
-    });
+//     // Split according to split margin
+//     let mut correct_reads = HashSet::<Sequence>::new();
+//     let mut faulty_reads = HashSet::<Sequence>::new();
+//     read_counter.iter().for_each(|(fr, cnt)| {
+//         if *cnt >= split_margin {  
+//             correct_reads.insert(fr.clone()) 
+//         } else { 
+//             faulty_reads.insert(fr.clone()) 
+//         };
+//     });
     
-    // Compute corrections satisfying hamming margin, applicable to faulty reads 
-    let mut corrections = Vec::<(Sequence, Sequence)>::new();
-    for fr in faulty_reads.iter() {
-        // Find correct reads/complements satisfying `H(x) <= hamming_distance_margin`
-        for cr in correct_reads.iter() {
-            // H(x) <= hamming_distance_margin
-            if hamming_distance(fr, cr) <= hd_margin {
-                corrections.push((fr.clone(), cr.clone()));
-                break;
-            }
-            // H(complement(x)) <= hamming_distance_margin
-            let complement = complement_dna(cr.clone());
-            if hamming_distance(fr, &complement) == hd_margin {
-                corrections.push((fr.clone(), complement));
-                break;
-            }
-        }
-    }
+//     // Compute corrections satisfying hamming margin, applicable to faulty reads 
+//     let mut corrections = Vec::<(Sequence, Sequence)>::new();
+//     for fr in faulty_reads.iter() {
+//         // Find correct reads/complements satisfying `H(x) <= hamming_distance_margin`
+//         for cr in correct_reads.iter() {
+//             // H(x) <= hamming_distance_margin
+//             if analysis::seq::hamming_distance(fr, cr) <= hd_margin {
+//                 corrections.push((fr.clone(), cr.clone()));
+//                 break;
+//             }
+//             // H(complement(x)) <= hamming_distance_margin
+//             let complement = complement_dna(cr.clone());
+//             if analysis::seq::hamming_distance(fr, &complement) == hd_margin {
+//                 corrections.push((fr.clone(), complement));
+//                 break;
+//             }
+//         }
+//     }
 
-    corrections
-}
+//     corrections
+// }
 
 pub fn longest_common_substring(matrix: &Tile, bound: usize) -> Sequence {
 
@@ -771,82 +743,82 @@ pub fn generate_k_mers(seq: &Sequence, k: usize) -> Vec<Sequence> {
 
 
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
 
-    // #[test]
-    // fn test_count_nucleotides() {
-    //     let input = Sequence::from("AGCTTTTCATTCTGACTGCAACGGGCAATATGTCT\
-    //                               CTGTGTGGAATTAAAAAAAGAGTGTCTGATGCAGC");
-    //     assert_eq!([20, 12, 17, 21], count_nucleotides(&input));
-    // }
+//     // #[test]
+//     // fn test_count_nucleotides() {
+//     //     let input = Sequence::from("AGCTTTTCATTCTGACTGCAACGGGCAATATGTCT\
+//     //                               CTGTGTGGAATTAAAAAAAGAGTGTCTGATGCAGC");
+//     //     assert_eq!([20, 12, 17, 21], count_nucleotides(&input));
+//     // }
 
-    #[test]
-    fn test_transcribe_dna() {
-        let input = Sequence::from("GATGGAACTTGACTACGTAAATT");
-        let result = Sequence::from("GAUGGAACUUGACUACGUAAAUU");
-        assert_eq!(result, transcribe_dna(input))
-    }
+//     #[test]
+//     fn test_transcribe_dna() {
+//         let input = Sequence::from("GATGGAACTTGACTACGTAAATT");
+//         let result = Sequence::from("GAUGGAACUUGACUACGUAAAUU");
+//         assert_eq!(result, transcribe_dna(input))
+//     }
 
-    #[test]
-    fn test_complement_dna() {
-        let input = Sequence::from("AAAACCCGGT");
-        let result = Sequence::from("ACCGGGTTTT");
-        assert_eq!(result, complement_dna(input));
-    }
+//     #[test]
+//     fn test_complement_dna() {
+//         let input = Sequence::from("AAAACCCGGT");
+//         let result = Sequence::from("ACCGGGTTTT");
+//         assert_eq!(result, complement_dna(input));
+//     }
 
-    #[test]
-    fn test_gc_content() {
-        let input = Sequence::from("CCTGCGGAAGATCGGCACTAGAATAGCCAG\
-                                    AACCGTTTCTCTGAGGCTTCCGGCCTTCCC");
-        let result : f64 = 0.5833333333333334;
-        assert_eq!(result, gc_content(&input));
-    }
+//     #[test]
+//     fn test_gc_content() {
+//         let input = Sequence::from("CCTGCGGAAGATCGGCACTAGAATAGCCAG\
+//                                     AACCGTTTCTCTGAGGCTTCCGGCCTTCCC");
+//         let result : f64 = 0.5833333333333334;
+//         assert_eq!(result, gc_content(&input));
+//     }
 
-    #[test]
-    fn test_translate_rna() {
-        let input = Sequence::from("AUGGCCAUGGCGCCCAGAACUGAGA\
-                                    UCAAUAGUACCCGUAUUAACGGGUGA");
-        let result = Sequence::from("MAMAPRTEINSTRING");
-        assert_eq!(result, *translate_rna(input).first().unwrap());
-    }
+//     #[test]
+//     fn test_translate_rna() {
+//         let input = Sequence::from("AUGGCCAUGGCGCCCAGAACUGAGA\
+//                                     UCAAUAGUACCCGUAUUAACGGGUGA");
+//         let result = Sequence::from("MAMAPRTEINSTRING");
+//         assert_eq!(result, *translate_rna(input).first().unwrap());
+//     }
 
-    #[test]
-    fn test_hamming_distance() {
-        let input1 = Sequence::from("GAGCCTACTAACGGGAT");
-        let input2 = Sequence::from("CATCGTAATGACGGCCT");
-        let result : u32 = 7;
-        assert_eq!(result, hamming_distance(&input1, &input2));
+//     #[test]
+//     fn test_hamming_distance() {
+//         let input1 = Sequence::from("GAGCCTACTAACGGGAT");
+//         let input2 = Sequence::from("CATCGTAATGACGGCCT");
+//         let result : u32 = 7;
+//         assert_eq!(result, hamming_distance(&input1, &input2));
 
-    }
+//     }
 
-    #[test]
-    fn test_substring_positions() {
-        let seq = Sequence::from("GATATATGCATATACTT");
-        let pat = Sequence::from("ATAT");
-        assert_eq!(vec![1, 3, 9], knuth_morris_pratt(&seq, &pat));
-    }
+//     #[test]
+//     fn test_substring_positions() {
+//         let seq = Sequence::from("GATATATGCATATACTT");
+//         let pat = Sequence::from("ATAT");
+//         assert_eq!(vec![1, 3, 9], knuth_morris_pratt(&seq, &pat));
+//     }
 
-    #[test]
-    fn test_transition_transversion_ratio() {
-        let a = Sequence::from("GCAACGCACAACGAAAACCCTTAGGGACTGGATTATTTCGT\
-                                GATCGTTGTAGTTATTGGAAGTACGGGCATCAACCCAGTT");
-        let b = Sequence::from("TTATCTGACAAAGAAAGCCGTCAACGGCTGGATAATTTCGC\
-                                GATCGTGCTGGTTACTGGCGGTACGAGTGTTCCTTTGGGT");
-        let ratio = transition_transversion_ratio(&a, &b);
-        assert_eq!(1.21428571429, ratio);
-    }
+//     #[test]
+//     fn test_transition_transversion_ratio() {
+//         let a = Sequence::from("GCAACGCACAACGAAAACCCTTAGGGACTGGATTATTTCGT\
+//                                 GATCGTTGTAGTTATTGGAAGTACGGGCATCAACCCAGTT");
+//         let b = Sequence::from("TTATCTGACAAAGAAAGCCGTCAACGGCTGGATAATTTCGC\
+//                                 GATCGTGCTGGTTACTGGCGGTACGAGTGTTCCTTTGGGT");
+//         let ratio = transition_transversion_ratio(&a, &b);
+//         assert_eq!(1.21428571429, ratio);
+//     }
 
-    #[test]
-    fn test_shortest_supersequence() {
-        let s2 = Sequence::from("TTATGTGATATCCCCGCTTCTCACAATGCTCTTAGTTTACCTC\
-                                 GAACTAAGTCTGATCGCAGCGGCCGGTATTCCTTTCTACGCG");
-        let s1 = Sequence::from("GCTCACGGATTCGAAAGTCGAGTGTCCCCCAGCTGGATGCATTCTT\
-                                 TGGGAGTGGCCAAGGAGGGTTATCAGAAGAACAGATTAATTTG");
-        let res = Sequence::from("GCTCTACTGTGATATCCCCGCTTCTCACAATGCTCGTTAGTGT\
-                                  TACCTCCCAGAACTGGATGCAGTTCTTTGGGAGTGGCGCAAGC\
-                                  GAGCCGGTTATTCAGAAGAACAGATTAATCTTACGCG");
-        assert_eq!(res, longest_common_supersequence(&s1, &s2));
-    }
-}
+//     #[test]
+//     fn test_shortest_supersequence() {
+//         let s2 = Sequence::from("TTATGTGATATCCCCGCTTCTCACAATGCTCTTAGTTTACCTC\
+//                                  GAACTAAGTCTGATCGCAGCGGCCGGTATTCCTTTCTACGCG");
+//         let s1 = Sequence::from("GCTCACGGATTCGAAAGTCGAGTGTCCCCCAGCTGGATGCATTCTT\
+//                                  TGGGAGTGGCCAAGGAGGGTTATCAGAAGAACAGATTAATTTG");
+//         let res = Sequence::from("GCTCTACTGTGATATCCCCGCTTCTCACAATGCTCGTTAGTGT\
+//                                   TACCTCCCAGAACTGGATGCAGTTCTTTGGGAGTGGCGCAAGC\
+//                                   GAGCCGGTTATTCAGAAGAACAGATTAATCTTACGCG");
+//         assert_eq!(res, longest_common_supersequence(&s1, &s2));
+//     }
+// }

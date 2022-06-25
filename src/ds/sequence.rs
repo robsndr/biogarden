@@ -200,7 +200,7 @@ impl<'a> IntoIterator for &'a Sequence {
     type IntoIter = std::slice::Iter<'a, u8>;
 
     fn into_iter(self) -> Self::IntoIter {
-        (&self.chain).iter()
+        self.chain.iter()
     }
 }
 
@@ -209,11 +209,11 @@ impl<'a> IntoIterator for &'a Sequence {
 // Iterator Trait
 impl<'a> IntoIterator for &'a mut Sequence {
 
-    type Item = <std::slice::Iter<'a, u8> as Iterator>::Item;
-    type IntoIter = std::slice::Iter<'a, u8>;
+    type Item = <std::slice::IterMut<'a, u8> as Iterator>::Item;
+    type IntoIter = std::slice::IterMut<'a, u8>;
 
     fn into_iter(self) -> Self::IntoIter {
-        (&mut self.chain).iter()
+        self.chain.iter_mut()
     }
 }
 

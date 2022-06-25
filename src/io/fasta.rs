@@ -1,106 +1,3 @@
-// Copyright 2014-2018 Johannes Köster, Christopher Schröder, Henning Timm.
-// Licensed under the MIT license (http://opensource.org/licenses/MIT)
-// This file may not be copied, modified, or distributed
-// except according to those terms.
-//! Structs and trait to read and write files in FASTA format.
-//!
-//! # Example
-//!
-//! ## Read
-//!
-//! In this example, we parse a fasta file from stdin and compute some statistics
-//!
-//! ```
-//! use bio::io::fasta;
-//! use std::io;
-//!
-//! let mut reader = fasta::Reader::new(io::stdin());
-//!
-//! let mut nb_reads = 0;
-//! let mut nb_bases = 0;
-//!
-//! for result in reader.records() {
-//!     let record = result.expect("Error during fasta record parsing");
-//!     println!("{}", record.id());
-//!
-//!     nb_reads += 1;
-//!     nb_bases += record.seq().len();
-//! }
-//!
-//! println!("Number of reads: {}", nb_reads);
-//! println!("Number of bases: {}", nb_bases);
-//! ```
-//!
-//! We can also use a `while` loop to iterate over records.
-//! This is slightly faster than the `for` loop.
-//! ```
-//! use bio::io::fasta;
-//! use std::io;
-//! let mut records = fasta::Reader::new(io::stdin()).records();
-//!
-//! let mut nb_reads = 0;
-//! let mut nb_bases = 0;
-//!
-//! while let Some(Ok(record)) = records.next() {
-//!     nb_reads += 1;
-//!     nb_bases += record.seq().len();
-//! }
-//!
-//! println!("Number of reads: {}", nb_reads);
-//! println!("Number of bases: {}", nb_bases);
-//! ```
-//!
-//! ## Write
-//!
-//! In this example we generate 10 random sequences with length 100 and write them to stdout.
-//!
-//! ```
-//! use std::io;
-//! use bio::io::fasta;
-//!
-//! let mut seed = 42;
-//!
-//! let nucleotides = [b'A', b'C', b'G', b'T'];
-//!
-//! let mut writer = fasta::Writer::new(io::stdout());
-//!
-//! for _ in 0..10 {
-//!     let seq = (0..100).map(|_| {
-//!         seed = ((seed ^ seed << 13) ^ seed >> 7) ^ seed << 17; // don't use this random generator
-//!         nucleotides[seed % 4]
-//!     }).collect::<Vec<u8>>();
-//!
-//!    writer.write("random", None, seq.as_slice()).expect("Error writing record.");
-//! }
-//! ```
-//!
-//! ## Read and Write
-//!
-//! In this example we filter reads from stdin on sequence length and write them to stdout
-//!
-//! ```
-//! use bio::io::fasta;
-//! use bio::io::fasta::FastaRead;
-//! use std::io;
-//!
-//! let mut reader = fasta::Reader::new(io::stdin());
-//! let mut writer = fasta::Writer::new(io::stdout());
-//! let mut record = fasta::Record::new();
-//!
-//! while let Ok(()) = reader.read(&mut record) {
-//!     if record.is_empty() {
-//!         break;
-//!     }
-//!
-//!     if record.seq().len() > 100 {
-//!         writer
-//!             .write_record(&record)
-//!             .ok()
-//!             .expect("Error writing record.");
-//!     }
-//! }
-//! ```
-
 
 use std::cmp::min;
 use std::collections;
@@ -157,19 +54,6 @@ impl<R> Reader<io::BufReader<R>>
 where
     R: io::Read,
 {
-    /// Create a new Fasta reader given an instance of `io::Read`.
-    ///
-    /// # Example
-    /// ```rust
-    /// # use std::io;
-    /// # use bio::io::fasta::Reader;
-    /// # fn main() {
-    /// # const fasta_file: &'static [u8] = b">id desc
-    /// # AAAA
-    /// # ";
-    /// let reader = Reader::new(fasta_file);
-    /// # }
-    /// ```
     pub fn new(reader: R) -> Self {
         Reader {
             reader: io::BufReader::new(reader),
@@ -177,19 +61,6 @@ where
         }
     }
 
-    /// Create a new Fasta reader given a capacity and an instance of `io::Read`.
-    ///
-    /// # Example
-    /// ```rust
-    /// # use std::io;
-    /// # use bio::io::fasta::Reader;
-    /// # fn main() {
-    /// # const fasta_file: &'static [u8] = b">id desc
-    /// # AAAA
-    /// # ";
-    /// let reader = Reader::with_capacity(16384, fasta_file);
-    /// # }
-    /// ```
     pub fn with_capacity(capacity: usize, reader: R) -> Self {
         Reader {
             reader: io::BufReader::with_capacity(capacity, reader),
@@ -202,20 +73,7 @@ impl<B> Reader<B>
 where
     B: io::BufRead,
 {
-    /// Create a new Fasta reader with an object that implements `io::BufRead`.
-    ///
-    /// # Example
-    /// ```rust
-    /// # use std::io;
-    /// # use bio::io::fasta::Reader;
-    /// # fn main() {
-    /// # const fasta_file: &'static [u8] = b">id desc
-    /// # AAAA
-    /// # ";
-    /// let buffer = io::BufReader::with_capacity(16384, fasta_file);
-    /// let reader = Reader::from_bufread(buffer);
-    /// # }
-    /// ```
+
     pub fn from_bufread(bufreader: B) -> Self {
         Reader {
             reader: bufreader,
@@ -223,26 +81,6 @@ where
         }
     }
 
-    /// Return an iterator over the records of this Fasta file.
-    ///
-    /// # Example
-    /// ```rust
-    /// # use std::io;
-    /// # use bio::io::fasta::Reader;
-    /// # use bio::io::fasta::Record;
-    /// # fn main() {
-    /// # const fasta_file: &'static [u8] = b">id desc
-    /// # AAAA
-    /// # ";
-    /// # let reader = Reader::new(fasta_file);
-    /// for record in reader.records() {
-    ///     let record = record.unwrap();
-    ///     assert_eq!(record.id(), "id");
-    ///     assert_eq!(record.desc().unwrap(), "desc");
-    ///     assert_eq!(record.seq().to_vec(), b"AAAA");
-    /// }
-    /// # }
-    /// ```
     pub fn records(self) -> Records<B> {
         Records {
             reader: self,
@@ -255,41 +93,6 @@ impl<B> FastaRead for Reader<B>
 where
     B: io::BufRead,
 {
-    /// Read the next FASTA record into the given `Record`.
-    /// An empty record indicates that no more records can be read.
-    ///
-    /// Use this method when you want to read records as fast as
-    /// possible because it allows the reuse of a `Record` allocation.
-    ///
-    /// The [records](Reader::records) iterator provides a more ergonomic
-    /// approach to accessing FASTA records.
-    ///
-    /// # Errors
-    ///
-    /// This function will return an error if the record is incomplete,
-    /// syntax is violated or any form of I/O error is encountered.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use bio::io::fasta::Record;
-    /// use bio::io::fasta::{FastaRead, Reader};
-    ///
-    /// const fasta_file: &'static [u8] = b">id desc
-    /// AAAA
-    /// ";
-    /// let mut reader = Reader::new(fasta_file);
-    /// let mut record = Record::new();
-    ///
-    /// // Check for errors parsing the record
-    /// reader
-    ///     .read(&mut record)
-    ///     .expect("fasta reader: got an io::Error or could not read_line()");
-    ///
-    /// assert_eq!(record.id(), "id");
-    /// assert_eq!(record.desc().unwrap(), "desc");
-    /// assert_eq!(record.seq().to_vec(), b"AAAA");
-    /// ```
     fn read(&mut self, record: &mut Record) -> io::Result<()> {
         record.clear();
         if self.line.is_empty() {
@@ -361,35 +164,6 @@ impl<W: io::Write> Writer<W> {
         Writer { writer: bufwriter }
     }
 
-    /// Directly write a [`fasta::Record`](struct.Record.html).
-    ///
-    /// # Errors
-    /// If there is an issue writing to the `Writer`.
-    ///
-    /// # Examples
-    /// ```rust
-    /// use bio::io::fasta::{Record, Writer};
-    /// use std::fs;
-    /// use std::io;
-    /// use std::path::Path;
-    ///
-    /// let path = Path::new("test.fa");
-    /// let file = fs::File::create(path).unwrap();
-    /// {
-    ///     let handle = io::BufWriter::new(file);
-    ///     let mut writer = Writer::new(handle);
-    ///     let record = Record::with_attrs("id", Some("desc"), b"ACGT");
-    ///
-    ///     let write_result = writer.write_record(&record);
-    ///     assert!(write_result.is_ok());
-    /// }
-    ///
-    /// let actual = fs::read_to_string(path).unwrap();
-    /// let expected = ">id desc\nACGT\n";
-    ///
-    /// assert!(fs::remove_file(path).is_ok());
-    /// assert_eq!(actual, expected)
-    /// ```
     pub fn write_record(&mut self, record: &Record) -> io::Result<()> {
         self.write(record.id(), record.desc(), record.seq())
     }
@@ -433,19 +207,7 @@ impl Record {
         }
     }
 
-    /// Create a new `Record` from given attributes.
-    ///
-    /// # Examples
-    /// ```rust
-    /// use bio::io::fasta::Record;
-    ///
-    /// let read_id = "read1";
-    /// let description = Some("sampleid=foobar");
-    /// let sequence = b"ACGT";
-    /// let record = Record::with_attrs(read_id, description, sequence);
-    ///
-    /// assert_eq!(">read1 sampleid=foobar\nACGT\n", record.to_string())
-    /// ```
+
     pub fn with_attrs(id: &str, desc: Option<&str>, seq: TextSlice<'_>) -> Self {
         let desc = desc.map(|desc| desc.to_owned());
         Record {
@@ -499,34 +261,7 @@ impl Record {
 }
 
 impl fmt::Display for Record {
-    /// Allows for using `Record` in a given formatter `f`. In general this is for
-    /// creating a `String` representation of a `Record` and, optionally, writing it to
-    /// a file.
-    ///
-    /// # Errors
-    /// Returns [`std::fmt::Error`](https://doc.rust-lang.org/std/fmt/struct.Error.html)
-    /// if there is an issue formatting to the stream.
-    ///
-    /// # Examples
-    ///
-    /// Read in a Fasta `Record` and create a `String` representation of it.
-    ///
-    /// ```rust
-    /// use bio::io::fasta::Reader;
-    /// use std::fmt::Write;
-    /// // create a "fake" fasta file
-    /// let fasta: &'static [u8] = b">id comment1 comment2\nACGT\n";
-    /// let mut records = Reader::new(fasta).records().map(|r| r.unwrap());
-    /// let record = records.next().unwrap();
-    ///
-    /// let mut actual = String::new();
-    /// // populate `actual` with a string representation of our record
-    /// write!(actual, "{}", record).unwrap();
-    ///
-    /// let expected = std::str::from_utf8(fasta).unwrap();
-    ///
-    /// assert_eq!(actual, expected)
-    /// ```
+
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         let header = match self.desc() {
             Some(d) => format!("{} {}", self.id().to_owned(), d),
