@@ -1,5 +1,6 @@
 use std::cmp;
 use std::collections::HashMap;
+use std::collections::HashSet;
 
 use crate::ds::sequence::Sequence;
 use crate::error::{BioError, Result};
@@ -68,7 +69,6 @@ pub fn gc_content(seq: &Sequence) -> f64 {
 /// let a = Sequence::from("GAGCCTACTAACGGGAT");
 /// let b = Sequence::from("CATCGTAATGACGGCCT");
 /// let h_dist = hamming_distance(&a, &b);
-/// assert!(h_dist.is_ok());
 /// assert_eq!(h_dist.unwrap(), 7);
 /// ```
 pub fn hamming_distance(seq1: &Sequence, seq2: &Sequence) -> Result<usize> {
@@ -82,7 +82,7 @@ pub fn hamming_distance(seq1: &Sequence, seq2: &Sequence) -> Result<usize> {
     }
 }
 
-/// Obtain tuple containing edit-distance and edit-alignment of two genetic sequences.
+/// Obtain edit-distance between two genetic sequences
 ///   
 /// The Hamming distance provides a way to model point mutations transforming one genetic string into another.
 /// In practice, point mutations include insertions and deletions in addition to replacements only.
@@ -100,7 +100,6 @@ pub fn hamming_distance(seq1: &Sequence, seq2: &Sequence) -> Result<usize> {
 /// let a = Sequence::from("ACTGGATTC");
 /// let b = Sequence::from("ACGT");
 /// let ed = edit_distance(&a, &b);
-/// assert!(ed.is_ok());
 /// assert_eq!(ed.unwrap(), 5);
 /// ```
 pub fn edit_distance(seq1: &Sequence, seq2: &Sequence) -> Result<usize> {
@@ -128,4 +127,91 @@ pub fn edit_distance(seq1: &Sequence, seq2: &Sequence) -> Result<usize> {
     }
 
     Ok(memo[seq1.len()][seq2.len()] as usize)
+}
+
+/// Calculate the ratio of transitions to transversions between two genetic strings
+///   
+/// Point mutations between genetic strings occur in two flavors: transitions or transversions.
+/// Transitions occur for replacements between thymine and cytosine (A <-> C), 
+/// or adenine and guanine (uracil (U) for RNA) (A <-> G).
+/// The number of transitions to transversions is usually a bit higher for coding regions.
+/// This makes the transition-transversion ratio a suitable tool to identify those in a long strand.
+///
+/// # Arguments
+/// * `seq1`, `seq2` - sequences to between which transition-transversion ratio is calculated
+///
+/// # Example
+/// ```
+/// use biotech::analysis::seq::transition_transversion_ratio;
+/// use biotech::ds::sequence::Sequence;
+/// 
+/// let a = Sequence::from("TTAGGGACTGGATTATTTCGTGATCGTTGTAGTTATTGGAAGTACGGGCATCAACCCAGTT");
+/// let b = Sequence::from("TCAACGGCTGGATAATTTCGCGATCGTGCTGGTTACTGGCGGTACGAGTGTTCCTTTGGGT");
+/// assert_eq!(transition_transversion_ratio(&a, &b).unwrap(), 1.875);
+/// ```
+pub fn transition_transversion_ratio(seq1: &Sequence, seq2: &Sequence) -> Result<f64> {
+
+    if seq1.len() != seq2.len() {
+        return Err(BioError::InvalidInputSize);
+    }
+    
+    let missmatch_iter = seq1.into_iter().zip(seq2.into_iter()).filter(|(a, b)| a != b);
+    let hamming_distance = missmatch_iter.clone().count() as f64;
+    let mut transitions : f64 = 0.0;
+    for (&a, &b) in missmatch_iter {
+        transitions += match (a, b) {
+            (b'C', b'T') => { 1.0 }
+            (b'T', b'C') => { 1.0 }
+            (b'A', b'G') => { 1.0 }
+            (b'G', b'A') => { 1.0 }
+            _ => { 0.0 }
+        }
+    }
+    // transversions == hamming_distance - transitions
+    Ok(transitions / (hamming_distance  - transitions))
+}
+
+
+
+
+pub fn linguistic_complexity(seq: Sequence) -> f32 {
+
+    // Define alphabet
+    let alphabet = HashSet::<u8>::from([b'A', b'C', b'T', b'G']);
+    let alphabet_len = alphabet.len();
+
+    // Add the strings to tree and traverse from root to node. 
+    // Each root to node path will denote suffixes of a string. 
+    let mut ukonnen_builder = SuffixTreeBuilder::new(alphabet);
+    let graph = ukonnen_builder.build(&seq);
+
+    // Count unique substrings
+    // All the prefixes of these suffixes are unique substrings.
+    // Their number can be obtained by summing-up the length of all edges
+    let mut num_substrings = 0;
+    for eid in graph.edges() {
+        let start = graph.get_edge(eid).data.as_ref().unwrap().suffix_start;
+        let stop = graph.get_edge(eid).data.as_ref().unwrap().suffix_stop;
+        num_substrings += stop - start + 1;
+    }
+
+    // The maximum number of k-length substrings for n-letter string is either:
+    // limited by the number of substrings that can be formed from a given alphabet (4^k)
+    // or by the number of k-windows that can be shifted within n-length string
+    let mut max_complexity = 0;
+    for k in 1..seq.len()+1 {
+        // Perform 4^k only when 4^k < seq.len(), however 4^k test can result in overflow
+        // Use k < log4(seq.len()) instead. Convert log4(seq.len()) => log10(seq.len())/log10(4) 
+        // This will increase accuracy as log10 is better: 
+        // Check -> https://doc.rust-lang.org/std/primitive.f64.html#method.log
+        if (k as f32) < ((seq.len() as f32).log10() / (4.0_f32).log10()) {
+            max_complexity += u128::pow(alphabet_len as u128, k as u32);
+        }
+        else {
+            max_complexity += (seq.len() - k + 1) as u128;
+        }
+
+    }
+    
+    num_substrings as f32 / max_complexity as f32
 }

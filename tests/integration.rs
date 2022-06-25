@@ -68,4 +68,10 @@ mod integration {
         assert_eq!(ed.unwrap(), 299);
     }
     
+    #[test]
+    fn transitions_transversions() {
+        let input = read_sequences("input/transversions.fasta");
+        let ratio = analysis::seq::transition_transversion_ratio(&input[0], &input[1]);
+        assert_eq!(ratio.unwrap(), 2.032258064516129);
+    }
 }
