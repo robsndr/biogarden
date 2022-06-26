@@ -74,4 +74,18 @@ mod integration {
         let ratio = analysis::seq::transition_transversion_ratio(&input[0], &input[1]);
         assert_eq!(ratio.unwrap(), 2.032258064516129);
     }
+
+    #[test]
+    fn linguistic_complexity() {
+        let input = read_sequence("input/linguistic_complexity.fasta");
+        let lc = analysis::seq::linguistic_complexity(&input);
+        assert_eq!(lc.unwrap(), 0.9330378);
+    }
+
+    #[test]
+    fn protein_mass() {
+        let input = read_sequence("input/protein_mass.fasta");
+        let mass = analysis::spectro::weighted_mass(&input);
+        assert_eq!(mass.unwrap(), 114193.58444000047);
+    }
 }

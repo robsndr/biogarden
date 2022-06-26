@@ -242,8 +242,7 @@ pub fn complete_spectrum(seq: &Sequence) -> Result<Vec<f64>> {
 /// use biotech::analysis::spectro::infer_protein;
 /// use biotech::ds::sequence::Sequence;
 ///
-/// let spectrum = Vec::<f64>::from([
-///     3524.8542, 3710.9335, 3841.974, 3970.0326, 4057.0646]);
+/// let spectrum = Vec::<f64>::from([3524.8542, 3710.9335, 3841.974, 3970.0326, 4057.0646]);
 /// let error_margin = 0.01_f64;
 /// let inferred_protein = infer_protein(&spectrum, error_margin);
 ///

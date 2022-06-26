@@ -7,6 +7,7 @@ use std::fmt;
 #[derive(Debug)] // Allow the use of "{:?}" format specifier
 pub enum BioError {
     InvalidInputSize,
+    ItemNotFound,
 }
 
 // Allow the use of "{}" format specifier
@@ -14,6 +15,7 @@ impl fmt::Display for BioError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             BioError::InvalidInputSize => write!(f, "Provided inputs have invalid size!"),
+            BioError::ItemNotFound => write!(f, "The requested item does not exist!"),
         }
     }
 }
@@ -23,6 +25,7 @@ impl Error for BioError {
     fn source(&self) -> Option<&(dyn Error + 'static)>{
         match *self {
             BioError::InvalidInputSize => None,
+            BioError::ItemNotFound => None,
         }
     }
 }
