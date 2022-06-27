@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use crate::algo::seq::complement_dna;
 use crate::ds::tile::Tile;
 use crate::ds::sequence::Sequence;
 use crate::ds::graph::Graph;

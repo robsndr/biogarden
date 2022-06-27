@@ -104,6 +104,12 @@ impl From<Array3<u16>> for Tile
     }
 }
 
+impl From<&[Sequence]> for Tile {
+    fn from(s: &[Sequence]) -> Self {
+        Tile { data: s.to_vec() }
+    }
+}
+
 /*** Utility Traits ***/ 
 // Iterator Trait
 impl IntoIterator for Tile 
@@ -132,7 +138,7 @@ impl fmt::Display for Tile
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for x in &self.data {
-            write!(f,"{}\n", x);
+            writeln!(f,"{}", x);
         }
         Ok(())
     }

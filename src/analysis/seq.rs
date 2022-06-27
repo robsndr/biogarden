@@ -4,7 +4,7 @@ use std::collections::HashSet;
 
 use crate::ds::sequence::Sequence;
 use crate::error::{BioError, Result};
-use crate::algo::graph::suffix_tree::SuffixTreeBuilder;
+use crate::ds::builders::suffix_tree::SuffixTreeBuilder;
 
 /// Gets a HashMap containing occurrences of nucleobases in a bio-sequence
 ///

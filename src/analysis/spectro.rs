@@ -8,7 +8,7 @@ use crate::error::{BioError, Result};
 
 // Define the spectral masses (in Units) of different amino-bases
 lazy_static! {
-    static ref monoisotopic_mass_table: HashMap<u8, f64> = HashMap::from([
+    static ref MONOISOTOPIC_MASS_TABLE: HashMap<u8, f64> = HashMap::from([
         (b'F', 147.06841),
         (b'I', 113.08406),
         (b'V', 99.06841),
@@ -54,7 +54,7 @@ lazy_static! {
 pub fn weighted_mass(protein: &Sequence) -> Result<f64> {
     let mut mass: f64 = 0.0;
     for amino in protein {
-        mass += monoisotopic_mass_table
+        mass += MONOISOTOPIC_MASS_TABLE
             .get(amino)
             .ok_or(BioError::ItemNotFound)?;
     }
@@ -152,7 +152,7 @@ pub fn prefix_spectrum(seq: &Sequence) -> Result<Vec<f64>> {
     let spectrum: Result<Vec<f64>> = seq
         .into_iter()
         .map(|x| {
-            weight_sum += monoisotopic_mass_table
+            weight_sum += MONOISOTOPIC_MASS_TABLE
                 .get(x)
                 .ok_or(BioError::ItemNotFound)?;
             Ok(weight_sum)
@@ -192,7 +192,7 @@ pub fn suffix_spectrum(seq: &Sequence) -> Result<Vec<f64>> {
         .into_iter()
         .rev()
         .map(|x| {
-            weight_sum += monoisotopic_mass_table
+            weight_sum += MONOISOTOPIC_MASS_TABLE
                 .get(x)
                 .ok_or(BioError::ItemNotFound)?;
             Ok(weight_sum)
@@ -252,7 +252,7 @@ pub fn infer_protein(spectrum: &[f64], margin: f64) -> Result<Sequence> {
     let mut result = Sequence::new();
     for i in 1..spectrum.len() {
         let diff = spectrum[i] - spectrum[i - 1];
-        let x = monoisotopic_mass_table
+        let x = MONOISOTOPIC_MASS_TABLE
             .iter()
             .find_map(|(key, &value)| {
                 if (value - diff).abs() < margin {

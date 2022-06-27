@@ -88,4 +88,36 @@ mod integration {
         let mass = analysis::spectro::weighted_mass(&input);
         assert_eq!(mass.unwrap(), 114193.58444000047);
     }
+
+    #[test]
+    fn n_statistic() {
+        let input = read_sequences("input/nxx_stat.fasta");
+        let n75 = analysis::stat::n_statistic(&input, 75);
+        assert_eq!(n75, 97);
+        let n50 = analysis::stat::n_statistic(&input, 50);
+        assert_eq!(n50, 125);
+    }
+
+    #[test]
+    fn expected_restriction_sites() {
+        // Inputs
+        let recognition_seq = Sequence::from("AGCAAGGTG");
+        let n = 888799;
+        let gc = Vec::<f64>::from([
+            0.000, 0.075, 0.114, 0.199, 0.205, 
+            0.270, 0.321, 0.357, 0.422, 0.452, 
+            0.523, 0.572, 0.629, 0.692, 0.712, 
+            0.761, 0.835, 0.885, 0.922, 1.000
+        ]);
+        // Outputs
+        let expected_result = Vec::<f64>::from([
+            0.000, 0.004, 0.021, 0.224, 0.252, 
+            0.708, 1.258, 1.721, 2.594, 2.954, 
+            3.517, 3.567, 3.239, 2.479, 2.186, 
+            1.446, 0.523, 0.165, 0.043, 0.000
+        ]);
+        // Compute
+        let result = analysis::stat::expected_restriction_sites(&recognition_seq, n, &gc);
+        assert_eq!(result, expected_result);
+    }
 }
