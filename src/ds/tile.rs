@@ -73,10 +73,10 @@ impl From<Array2<u16>> for Tile
 {
     fn from(arr: Array2<u16>) -> Self {
         let mut temp = Tile::new();
-        for (i, ax) in arr.axis_iter(Axis(0)).enumerate() {
+        for ax in arr.axis_iter(Axis(0)) {
             let mut s : String = "".to_string();
-            for (j, value) in ax.indexed_iter() {
-                s.push((*value as u8) as char)
+            for &value in ax.iter() {
+                s.push((value as u8) as char)
             }
             temp.push(Sequence::from(s));
         }
@@ -88,11 +88,11 @@ impl From<Array3<u16>> for Tile
 {
     fn from(arr: Array3<u16>) -> Self {
         let mut temp = Tile::new();
-        for (i, ax1) in arr.axis_iter(Axis(0)).enumerate() {
+        for ax1 in arr.axis_iter(Axis(0)) {
             let mut s : String = "".to_string();
-            for (j, ax2) in ax1.axis_iter(Axis(0)).enumerate() {
-                for (k, val) in ax2.indexed_iter() {
-                    if *val == 1 {
+            for ax2 in ax1.axis_iter(Axis(0)) {
+                for (k, &val) in ax2.indexed_iter() {
+                    if val == 1 {
                         s.push((k as u8) as char);
                         break;
                     }
@@ -138,7 +138,7 @@ impl fmt::Display for Tile
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for x in &self.data {
-            writeln!(f,"{}", x);
+            writeln!(f,"{}", x)?;
         }
         Ok(())
     }

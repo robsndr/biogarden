@@ -26,11 +26,9 @@ use crate::ds::tile::Tile;
 ///
 /// let recognition_seq = Sequence::from("AG");
 /// let n = 10;
-/// let gc = Vec::<f64>::from([0.25, 0.5, 0.75]);
+/// let gc = [0.25, 0.5, 0.75];
 ///
-/// assert_eq!(expected_restriction_sites(&recognition_seq, n, &gc),
-///            Vec::<f64>::from([0.422, 0.563, 0.422]
-/// ))
+/// assert_eq!(expected_restriction_sites(&recognition_seq, n, &gc), [0.422, 0.563, 0.422])
 /// ```
 pub fn expected_restriction_sites(seq: &Sequence, n: usize, gc_content: &[f64]) -> Vec<f64> {
     // Count number of times A/T or G/C occur in sequence `seq`

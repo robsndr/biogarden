@@ -1,9 +1,7 @@
 use std::fmt;
 use std::collections::{HashMap, HashSet};
-use std::ops::{Index, IndexMut};
+use std::ops::{Index};
 
-use crate::ds::tile::Tile;
-use crate::ds::sequence::Sequence;
 use crate::ds::graph::Graph;
 use crate::ds::graph::GraphProperties;
 
@@ -29,7 +27,7 @@ pub struct SuffixTreeBuilder {
 
 impl SuffixTreeBuilder {
 
-    pub fn new(alphabet: HashSet<u8>) -> SuffixTreeBuilder {
+    pub fn new(alphabet: &HashSet<u8>) -> SuffixTreeBuilder {
 
         SuffixTreeBuilder {
             idx : 0,
@@ -41,7 +39,7 @@ impl SuffixTreeBuilder {
             root_id : 0,
             // graph :  graph,
             previous_new_node : 0,
-            alphabet: alphabet,
+            alphabet: alphabet.clone(),
         }
     }    
 

@@ -1,62 +1,76 @@
+use allwords::Alphabet;
 use std::collections::HashMap;
 use std::collections::HashSet;
-use allwords::{Alphabet};
 
-use crate::ds::sequence::Sequence;
-use crate::ds::graph::Graph;
-use crate::ds::tile::Tile;
-use crate::analysis;
-use crate::processing::patterns::knuth_morris_pratt;
+use crate::processing::constants::CODON_TABLE;
+use crate::analysis::seq::hamming_distance;
 use crate::ds::builders::trie::{Trie, TrieNode};
+use crate::ds::graph::Graph;
+use crate::ds::sequence::Sequence;
+use crate::ds::tile::Tile;
+use crate::processing::patterns::find_motif;
 
-// Transcribe the DNS sequence into RNA
+/// Transcribe the DNS sequence into RNA
+///
+/// During RNA transcription a strand of DNA is converted into RNA, where thymine (T) is replaced by uracil (U).
+///
+/// # Arguments
+/// * `dna` - DNA string to transcribe into RNA
+///
+/// # Example
+/// ```
+/// use biotech::processing::transformers::transcribe_dna;
+/// use biotech::ds::sequence::Sequence;
+///
+/// let dna = Sequence::from("GATGGAACTTGACTACGTAAATT");
+/// let rna = Sequence::from("GAUGGAACUUGACUACGUAAAUU");
+///
+/// assert_eq!(transcribe_dna(dna), rna);
+/// ```
 pub fn transcribe_dna(dna: Sequence) -> Sequence {
-    let temp = String::from(dna);
-    Sequence::from(temp.replace("T", "U"))
+    dna.into_iter()
+        .map(|x| if x == b'T' { b'U' } else { x })
+        .collect()
 }
 
-// Complement the Sequence string by reversing in the first step.
-// Swap: 'A' <-> 'T' and 'G' <-> 'C'
-pub fn complement_dna(seq: Sequence) -> Sequence {
-    let mut t = seq.into_iter().rev().map(|c| c as char).collect::<String>();
-    // A <-> T
-    t = t.replace("A", "X");
-    t = t.replace("T", "A");
-    t = t.replace("X", "T");
-    // G <-> C
-    t = t.replace("G", "X");
-    t = t.replace("C", "G");
-    t = t.replace("X", "C");
-    Sequence::from(t)
+/// Complement DNA by reversing in the first step.
+///
+/// In the double helix, adenine (A) always bonds with Thymine (T), and cytosine (C) always bonds with guanine (G).
+/// To generate the complementary strand of the primary one must be reversed and bases must be swapped: A-T and G-C.
+///
+/// # Arguments
+/// * `dna` - DNA string to transcribe into RNA
+///
+/// # Example
+/// ```
+/// use biotech::processing::transformers::complement_dna;
+/// use biotech::ds::sequence::Sequence;
+///
+/// let seq = Sequence::from("AAAACCCGGT");
+/// let complement = Sequence::from("ACCGGGTTTT");
+///
+/// assert_eq!(complement_dna(seq), complement);
+/// ```
+pub fn complement_dna(dna: Sequence) -> Sequence {
+    dna.into_iter()
+        .rev()
+        .map(|x| match x {
+            b'A' => b'T',
+            b'T' => b'A',
+            b'G' => b'C',
+            b'C' => b'G',
+            _ => x,
+        })
+        .collect()
 }
 
 // Make parametrizable number of sequences to find
 pub fn translate_rna(rna: Sequence) -> Vec<Sequence> {
+    let mut proteins: Vec<Sequence> = vec![];
 
-    let mut proteins : Vec<Sequence> = vec![];
-
-    // mRNA <-> amino-acid translation table (codon table)
-    let codon_table = HashMap::from([   
-        ("UUU", "F"),    ("CUU", "L"),   ("AUU", "I"),   ("GUU", "V"),
-        ("UUC", "F"),    ("CUC", "L"),   ("AUC", "I"),   ("GUC", "V"),
-        ("UUA", "L"),    ("CUA", "L"),   ("AUA", "I"),   ("GUA", "V"),
-        ("UUG", "L"),    ("CUG", "L"),   ("AUG", "M"),   ("GUG", "V"),
-        ("UCU", "S"),    ("CCU", "P"),   ("ACU", "T"),   ("GCU", "A"),
-        ("UCC", "S"),    ("CCC", "P"),   ("ACC", "T"),   ("GCC", "A"),
-        ("UCA", "S"),    ("CCA", "P"),   ("ACA", "T"),   ("GCA", "A"),
-        ("UCG", "S"),    ("CCG", "P"),   ("ACG", "T"),   ("GCG", "A"),
-        ("UAU", "Y"),    ("CAU", "H"),   ("AAU", "N"),   ("GAU", "D"),
-        ("UAC", "Y"),    ("CAC", "H"),   ("AAC", "N"),   ("GAC", "D"),
-        ("UAA", "Stop"), ("CAA", "Q"),   ("AAA", "K"),   ("GAA", "E"),
-        ("UAG", "Stop"), ("CAG", "Q"),   ("AAG", "K"),   ("GAG", "E"),
-        ("UGU", "C"),    ("CGU", "R"),   ("AGU", "S"),   ("GGU", "G"),
-        ("UGC", "C"),    ("CGC", "R"),   ("AGC", "S"),   ("GGC", "G"),
-        ("UGA", "Stop"), ("CGA", "R"),   ("AGA", "R"),   ("GGA", "G"),
-        ("UGG", "W"),    ("CGG", "R"),   ("AGG", "R"),   ("GGG", "G") 
-    ]);
     // Container for final result of transcription
     let mut amino_acid = String::new();
-    // Run the translation 
+    // Run the translation
     let s = String::from(rna);
     let mut z = s.chars().peekable();
     // Iterate until end of strand is reached
@@ -67,46 +81,42 @@ pub fn translate_rna(rna: Sequence) -> Vec<Sequence> {
             // Take 3 characters from strand, that denote codon
             let chunk: String = z.by_ref().take(3).collect();
             // Check for start codon
-            if chunk == "AUG"{
-                amino_acid.push_str(codon_table.get(&chunk as &str).unwrap());
+            if chunk == "AUG" {
+                amino_acid.push_str(CODON_TABLE.get(&chunk as &str).unwrap());
                 break;
             }
         }
         // Copy current iterator to resume search for start codon at that position
-        let mut zi = z.clone(); 
+        let mut zi = z.clone();
         // Decode until stop codon reached
         while zi.peek().is_some() {
             // Take 3 characters from strand, that denote codon
             let chunk: String = zi.by_ref().take(3).collect();
-            match codon_table.get(&chunk as &str) {
+            match CODON_TABLE.get(&chunk as &str) {
                 Some(value) => {
-                    // If stop codon reached, store current protein strand and proceed 
-                    if value == &"Stop"{
+                    // If stop codon reached, store current protein strand and proceed
+                    if value == &"Stop" {
                         proteins.push(Sequence::from(amino_acid.clone()));
                         break;
-                    }
-                    else {
+                    } else {
                         amino_acid.push_str(value);
                     }
-                },
+                }
                 None => {
                     println!("value: {}", &chunk);
                     println!("Codon not found in codon table.");
                     break;
                 }
-                
             }
         }
     }
     proteins
 }
 
-
 pub fn open_reading_frames(dna: &Sequence) -> Vec<Sequence> {
+    let mut reading_frames: Vec<Sequence> = vec![];
 
-    let mut reading_frames : Vec<Sequence> = vec![];
-
-    let mut strands : Vec<Sequence> = vec![];
+    let mut strands: Vec<Sequence> = vec![];
     strands.push(dna.clone());
     strands.push(complement_dna(dna.clone()));
 
@@ -116,16 +126,14 @@ pub fn open_reading_frames(dna: &Sequence) -> Vec<Sequence> {
             temp.chain.drain(0..i);
             temp = transcribe_dna(temp);
             reading_frames.extend(translate_rna(temp));
-        }    
+        }
     }
     reading_frames
 }
 
-
 pub fn rna_splice(mut pre_rna: Sequence, introns: &Tile) -> Sequence {
-
     for intr in introns {
-        let res = knuth_morris_pratt(&pre_rna, intr);
+        let res = find_motif(&pre_rna, intr);
         for index in res {
             pre_rna.chain.drain(index..(index + intr.len()));
         }
@@ -134,7 +142,6 @@ pub fn rna_splice(mut pre_rna: Sequence, introns: &Tile) -> Sequence {
 }
 
 pub fn k_mer_composition(seq: &Sequence, k: usize, alphabet: &[u8]) -> Vec<usize> {
-
     // Generate all possible k-mers from alphabet
     let mut kmers = Tile::new();
     let a = Alphabet::from_chars_in_str(std::str::from_utf8(alphabet).unwrap()).unwrap();
@@ -149,7 +156,7 @@ pub fn k_mer_composition(seq: &Sequence, k: usize, alphabet: &[u8]) -> Vec<usize
     // Calculate k-mer composition
     let mut kmer_composition = vec![];
     for kmer in &kmers {
-        let pos = knuth_morris_pratt(seq, kmer);
+        let pos = find_motif(seq, kmer);
         kmer_composition.push(pos.iter().count());
     }
 
@@ -163,17 +170,20 @@ pub fn k_mer_composition(seq: &Sequence, k: usize, alphabet: &[u8]) -> Vec<usize
 /// Errors can be corrected by splitting the obtained set into correct and faulty reads first.
 /// If a read or its complement appears in the set at least `split_margin` times, it is regarded as correct.
 /// Faulty reads are corrected based on their hamming distance to one of the correct reads.
-/// 
+///
 /// # Arguments
 ///
 /// * `reads` - tile containing the analyzed reads
 /// * `split_margin` - number of reads/complements required to treat a read as correct
 /// * `hd_margin` - hamming distance used for matching faulty reads to correct ones
-/// 
-pub fn correct_read_errors(reads: &Tile, split_margin: usize, hd_margin: usize) -> Vec<(Sequence, Sequence)> {
-    
-    // Count number of repeated reads and complements 
-    let mut read_counter  = HashMap::<Sequence, usize>::new();
+///
+pub fn correct_read_errors(
+    reads: &Tile,
+    split_margin: usize,
+    hd_margin: usize,
+) -> Vec<(Sequence, Sequence)> {
+    // Count number of repeated reads and complements
+    let mut read_counter = HashMap::<Sequence, usize>::new();
     for read in reads {
         // Insert read if not present already and increment count
         *read_counter.entry(read.clone()).or_insert(0) += 1;
@@ -189,26 +199,26 @@ pub fn correct_read_errors(reads: &Tile, split_margin: usize, hd_margin: usize) 
     let mut correct_reads = HashSet::<Sequence>::new();
     let mut faulty_reads = HashSet::<Sequence>::new();
     read_counter.iter().for_each(|(fr, cnt)| {
-        if *cnt >= split_margin {  
-            correct_reads.insert(fr.clone()) 
-        } else { 
-            faulty_reads.insert(fr.clone()) 
+        if *cnt >= split_margin {
+            correct_reads.insert(fr.clone())
+        } else {
+            faulty_reads.insert(fr.clone())
         };
     });
-    
-    // Compute corrections satisfying hamming margin, applicable to faulty reads 
+
+    // Compute corrections satisfying hamming margin, applicable to faulty reads
     let mut corrections = Vec::<(Sequence, Sequence)>::new();
     for fr in faulty_reads.iter() {
         // Find correct reads/complements satisfying `H(x) <= hamming_distance_margin`
         for cr in correct_reads.iter() {
             // H(x) <= hamming_distance_margin
-            if analysis::seq::hamming_distance(fr, cr).unwrap() <= hd_margin {
+            if hamming_distance(fr, cr).unwrap() <= hd_margin {
                 corrections.push((fr.clone(), cr.clone()));
                 break;
             }
             // H(complement(x)) <= hamming_distance_margin
             let complement = complement_dna(cr.clone());
-            if analysis::seq::hamming_distance(fr, &complement).unwrap() == hd_margin {
+            if hamming_distance(fr, &complement).unwrap() == hd_margin {
                 corrections.push((fr.clone(), complement));
                 break;
             }
@@ -218,41 +228,37 @@ pub fn correct_read_errors(reads: &Tile, split_margin: usize, hd_margin: usize) 
     corrections
 }
 
-
-
 pub fn generate_k_mers(seq: &Sequence, k: usize) -> Vec<Sequence> {
-
     // TODO: return proper error
     if k > seq.len() {
         panic!("LEN(SEQ1) !< LEN(SEQ2)");
     }
 
-    (0..seq.len()-k+1).into_iter()
-                    .map(|i| Sequence::from(&seq[i..k+i]) )
-                    .collect()
+    (0..seq.len() - k + 1)
+        .into_iter()
+        .map(|i| Sequence::from(&seq[i..k + i]))
+        .collect()
 }
 
 pub fn sort_lexicographically(sequences: &Tile, alphabet: &[u8]) -> Tile {
-
     let mut trie_builder = Trie::new(alphabet);
     let trie = trie_builder.build(sequences).unwrap();
 
     fn walk_trie_rec(trie: &Graph<TrieNode, u8>, node_id: u64, sorted: &mut Tile) {
-        
         if trie.out_neighbors(node_id).count() == 0 {
             return;
         }
 
         let node = trie.get_node(&node_id);
- 
-        for c in node.data.children.iter() {
-            if *c != -1 {
-                if trie.get_node(&(*c as u64)).data.ending == true {
-                    let substrings = &trie.get_node(&(*c as u64)).data.substring;
-                    substrings.iter().for_each(|s| sorted.push(Sequence::from(s)));
+        for &c in node.data.children.iter() {
+            if c != -1 {
+                if trie.get_node(&(c as u64)).data.ending == true {
+                    let substrings = &trie.get_node(&(c as u64)).data.substring;
+                    substrings
+                        .iter()
+                        .for_each(|s| sorted.push(Sequence::from(s)));
                 }
-    
-                walk_trie_rec(trie, *c as u64, sorted);
+                walk_trie_rec(trie, c as u64, sorted);
             }
         }
     }

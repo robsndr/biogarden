@@ -75,7 +75,7 @@ pub fn weighted_mass(protein: &Sequence) -> Result<f64> {
 /// ```
 /// use biotech::analysis::spectro::spectral_mass_shift;
 ///
-/// let spec_1 = Vec::<f64>::from([
+/// let spec_1 = [
 ///     186.07931, 
 ///     287.12699, 
 ///     548.20532, 
@@ -83,16 +83,16 @@ pub fn weighted_mass(protein: &Sequence) -> Result<f64> {
 ///     681.22845, 
 ///     706.27446, 
 ///     782.27613
-/// ]);
+/// ];
 /// 
-/// let spec_2 = Vec::<f64>::from([
+/// let spec_2 = [
 ///     101.04768, 
 ///     158.06914, 
 ///     202.09536, 
 ///     318.09979, 
 ///     419.14747, 
 ///     463.17369
-/// ]);
+/// ];
 ///
 /// let (peak_count, shift) = spectral_mass_shift(&spec_1, &spec_2).unwrap();
 ///
@@ -135,7 +135,7 @@ pub fn spectral_mass_shift(s1: &[f64], s2: &[f64]) -> Result<(usize, f64)> {
 /// let protein = Sequence::from("IASWMQS");
 /// let spectrum = prefix_spectrum(&protein);
 /// 
-/// let result = Vec::<f64>::from([
+/// let result = [
 ///     113.08406, 
 ///     184.12117, 
 ///     271.1532, 
@@ -143,7 +143,7 @@ pub fn spectral_mass_shift(s1: &[f64], s2: &[f64]) -> Result<(usize, f64)> {
 ///     588.273, 
 ///     716.33158, 
 ///     803.36361
-/// ]);
+/// ];
 ///
 /// assert_eq!(spectrum.unwrap(), result);
 /// ```
@@ -174,7 +174,7 @@ pub fn prefix_spectrum(seq: &Sequence) -> Result<Vec<f64>> {
 /// let protein = Sequence::from("IASWMQS");
 /// let spectrum = suffix_spectrum(&protein);
 /// 
-/// let result = Vec::<f64>::from([
+/// let result = [
 ///     87.03203, 
 ///     215.09061000000003, 
 ///     346.13110000000006, 
@@ -182,7 +182,7 @@ pub fn prefix_spectrum(seq: &Sequence) -> Result<Vec<f64>> {
 ///     619.24244, 
 ///     690.27955, 
 ///     803.36361
-/// ]);
+/// ];
 ///
 /// assert_eq!(spectrum.unwrap(), result);
 /// ```
@@ -213,7 +213,7 @@ pub fn suffix_spectrum(seq: &Sequence) -> Result<Vec<f64>> {
 ///
 /// let protein = Sequence::from("IASW");
 /// let spectrum = complete_spectrum(&protein);
-/// let result = Vec::<f64>::from([
+/// let result = [
 ///     113.08406, 
 ///     184.12117, 
 ///     271.1532, 
@@ -222,7 +222,7 @@ pub fn suffix_spectrum(seq: &Sequence) -> Result<Vec<f64>> {
 ///     273.11134, 
 ///     344.14844999999997, 
 ///     457.23250999999993
-/// ]);
+/// ];
 /// assert_eq!(spectrum.unwrap(), result);
 /// ```
 pub fn complete_spectrum(seq: &Sequence) -> Result<Vec<f64>> {
@@ -242,7 +242,7 @@ pub fn complete_spectrum(seq: &Sequence) -> Result<Vec<f64>> {
 /// use biotech::analysis::spectro::infer_protein;
 /// use biotech::ds::sequence::Sequence;
 ///
-/// let spectrum = Vec::<f64>::from([3524.8542, 3710.9335, 3841.974, 3970.0326, 4057.0646]);
+/// let spectrum = [3524.8542, 3710.9335, 3841.974, 3970.0326, 4057.0646];
 /// let error_margin = 0.01_f64;
 /// let inferred_protein = infer_protein(&spectrum, error_margin);
 ///
@@ -288,14 +288,14 @@ pub fn infer_protein(spectrum: &[f64], margin: f64) -> Result<Sequence> {
 ///     Sequence::from("PVSMGAD")
 /// ]));
 ///
-/// let spectrum = Vec::<f64>::from([
+/// let spectrum = [
 ///     445.17838, 
 ///     115.02694, 
 ///     186.07931, 
 ///     314.13789, 
 ///     317.1198, 
 ///     215.09061
-/// ]);
+/// ];
 ///
 /// let matched_protein = match_protein(&proteins, &spectrum);
 /// assert_eq!(matched_protein.unwrap(), Sequence::from("PVSMGAD"));

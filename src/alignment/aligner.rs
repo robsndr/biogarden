@@ -1,12 +1,7 @@
-use std::collections::HashMap;
-use std::collections::HashSet;
-use std::collections::hash_map::Entry;
 use std::cmp;
-use ndarray::prelude::*;
 use ndarray::Array2;
 
 use crate::ds::sequence::Sequence;
-use crate::ds::tile::Tile;
 
 pub struct SequenceAligner {
     // Size of cost and size buffers
@@ -141,7 +136,7 @@ impl SequenceAligner  {
         // Backtrace to find optimal alignment
         let mut k = max_pos.0;
         let mut l = max_pos.1;
-        let trace_valid = |x: &usize, y: &usize| -> bool { *y != 0 };
+        let trace_valid = |_: &usize, y: &usize| -> bool { *y != 0 };
         let (s1_aligned, s2_aligned) = self.backtrack(seq1, seq2, &mut k, &mut l, &trace_valid);
 
         (alignment_score, s1_aligned, s2_aligned)
@@ -174,7 +169,7 @@ impl SequenceAligner  {
         // Backtrace to find optimal alignment
         let mut k = max_pos.0;
         let mut l = max_pos.1;
-        let trace_valid = |k: &usize, l: &usize| -> bool { *l != 0 };
+        let trace_valid = |_: &usize, l: &usize| -> bool { *l != 0 };
         let (s1_aligned, s2_aligned) = self.backtrack(seq1, seq2, &mut k, &mut l, &trace_valid);
 
         (alignment_score, s1_aligned, s2_aligned)

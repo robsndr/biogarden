@@ -1,11 +1,8 @@
 use std::collections::{HashMap, HashSet};
 use rand::{thread_rng, Rng};
-use std::hash::Hasher;
-use std::hash::Hash;
 use std::io::Write;
 use std::fs::File;
 use std::fmt;
-use std::io;
 
 #[derive(Clone, Debug, PartialEq)]
 /// Graph operation error
@@ -87,7 +84,7 @@ impl<N: fmt::Display + Clone, E: fmt::Display + Clone> Graph<N, E> {
         // TODO: Make sure that indizes are unique
         // TODO: Improve idx generation by random sequence qenerator
         // let nid = rng.gen_range(0..10000000000); 
-        let mut nid = self.idx;
+        let nid = self.idx;
         self.idx = self.idx.wrapping_add(1);
         self.nodes.insert(nid, Node{ id: nid, data: data, incoming: vec![], outgoing: vec![],});
         nid
@@ -115,7 +112,7 @@ impl<N: fmt::Display + Clone, E: fmt::Display + Clone> Graph<N, E> {
         // TODO: Make sure that indizes are unique
         // TODO: Improve idx generation by random sequence qenerator
         // let mut rng = thread_rng();
-        let mut eid = self.idx % 1000000000000;
+        let eid = self.idx % 1000000000000;
         self.idx = self.idx.wrapping_add(1);
 
         self.edges.insert(eid, Edge{start: id1, end: id2, data: data.clone()});

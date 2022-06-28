@@ -1,7 +1,5 @@
 use std::collections::{HashSet, HashMap};
-use std::collections::VecDeque;
 use std::fmt;
-use std::mem;
 
 use crate::ds::tile::Tile;
 use crate::ds::sequence::Sequence;

@@ -200,7 +200,7 @@ pub fn linguistic_complexity(seq: &Sequence) -> Result<f32> {
 
     // Add the strings to tree and traverse from root to node.
     // Each root to node path will denote suffixes of a string.
-    let mut ukonnen_builder = SuffixTreeBuilder::new(alphabet);
+    let mut ukonnen_builder = SuffixTreeBuilder::new(&alphabet);
     let graph = ukonnen_builder.build(seq);
 
     // Count unique substrings

@@ -1,6 +1,3 @@
-use std::io::Error as IoError;
-use std::str::Utf8Error;
-use std::convert::From;
 use std::error::Error;
 use std::fmt;
 

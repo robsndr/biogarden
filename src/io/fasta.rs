@@ -1,6 +1,4 @@
 
-use std::cmp::min;
-use std::collections;
 use std::convert::AsRef;
 use std::fs;
 use std::io;
