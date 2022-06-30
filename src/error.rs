@@ -5,6 +5,7 @@ use std::fmt;
 pub enum BioError {
     InvalidInputSize,
     ItemNotFound,
+    TypeConversionError, 
 }
 
 // Allow the use of "{}" format specifier
@@ -13,6 +14,7 @@ impl fmt::Display for BioError {
         match *self {
             BioError::InvalidInputSize => write!(f, "Provided inputs have invalid size!"),
             BioError::ItemNotFound => write!(f, "The requested item does not exist!"),
+            BioError::TypeConversionError => write!(f, "The requested type conversion resulted in an error!"),
         }
     }
 }
@@ -23,6 +25,7 @@ impl Error for BioError {
         match *self {
             BioError::InvalidInputSize => None,
             BioError::ItemNotFound => None,
+            BioError::TypeConversionError => None,
         }
     }
 }

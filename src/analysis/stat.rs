@@ -69,12 +69,10 @@ pub fn expected_restriction_sites(seq: &Sequence, n: usize, gc_content: &[f64]) 
 /// use biotech::ds::tile::Tile;
 ///
 /// let mut contigs = Tile::new();
-/// contigs.extend(Vec::from([
-///     Sequence::from("GATTACA"),
-///     Sequence::from("TACTACTAC"),
-///     Sequence::from("ATTGAT"),
-///     Sequence::from("GAAGA")
-/// ]));
+/// contigs.push(Sequence::from("GATTACA"));
+/// contigs.push(Sequence::from("TACTACTAC"));
+/// contigs.push(Sequence::from("ATTGAT"));
+/// contigs.push(Sequence::from("GAAGA"));
 ///
 /// // Calculate N75 statistic
 /// assert_eq!(n_statistic(&contigs, 75), 6);

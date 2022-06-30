@@ -280,13 +280,10 @@ pub fn infer_protein(spectrum: &[f64], margin: f64) -> Result<Sequence> {
 /// use biotech::ds::tile::Tile;
 ///
 /// let mut proteins = Tile::new();
-/// 
-/// proteins.extend(Vec::from([
-///     Sequence::from("GSDMQS"),
-///     Sequence::from("VWICN"), 
-///     Sequence::from("IASWMQS"), 
-///     Sequence::from("PVSMGAD")
-/// ]));
+/// proteins.push(Sequence::from("GSDMQS"));
+/// proteins.push(Sequence::from("VWICN"));
+/// proteins.push(Sequence::from("IASWMQS"));
+/// proteins.push(Sequence::from("PVSMGAD"));
 ///
 /// let spectrum = [
 ///     445.17838, 

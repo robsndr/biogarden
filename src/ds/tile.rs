@@ -35,8 +35,12 @@ impl Tile
         self.data.len()
     }
 
-    pub fn extend(&mut self, data: Vec<Sequence>) {
-        self.data.extend(data);
+    // pub fn extend(&mut self, data: Vec<Sequence>) {
+    //     self.data.extend(data);
+    // }
+
+    pub fn extend(&mut self, b: Tile) {
+        self.data.extend(b.data);
     }
 
     // Convert tile into Array2 
@@ -156,3 +160,12 @@ impl IndexMut<usize> for Tile {
         &mut self.data[i]
     }
 }
+
+impl Eq for Tile {}
+
+impl PartialEq for Tile {
+    fn eq(&self, other: &Self) -> bool {
+        self.data == other.data
+    }
+}
+

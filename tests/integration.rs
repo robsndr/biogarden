@@ -125,8 +125,8 @@ mod integration {
         let input = read_sequences("input/find_motif.fasta");
         let positions = processing::patterns::find_motif(&input[0], &input[1]);
         let expected_pos = Vec::from([
-                22, 65, 72, 138, 177, 254, 261, 268, 315, 348, 368, 454, 470, 489, 496, 550, 557,
-                601, 608, 648, 687, 694, 711, 718, 777
+            22, 65, 72, 138, 177, 254, 261, 268, 315, 348, 368, 454, 470, 489, 496, 550, 557, 601,
+            608, 648, 687, 694, 711, 718, 777,
         ]);
         assert_eq!(positions, expected_pos);
     }
@@ -147,17 +147,15 @@ mod integration {
         assert_eq!(scss, result);
     }
 
-
     #[test]
     fn longest_common_substring() {
         let input = read_sequences("input/longest_common_substring.fasta");
-        let result = read_sequence("output/longest_common_substring.fasta");        
+        let result = read_sequence("output/longest_common_substring.fasta");
         let alphabet = HashSet::<u8>::from([b'A', b'C', b'T', b'G']);
         let bound = 0;
         let lcs = processing::patterns::longest_common_substring(&input, &alphabet, bound);
         assert_eq!(lcs.unwrap(), result);
     }
-    
     #[test]
     fn transcribe_dna() {
         let input = read_sequence("input/transcribe_dna.fasta");
@@ -165,11 +163,70 @@ mod integration {
         let rna = processing::transformers::transcribe_dna(input);
         assert_eq!(rna, output);
     }
-        
     #[test]
     fn complement_dna() {
         let input = read_sequence("input/complement_dna.fasta");
         let complement = read_sequence("output/complement_dna.fasta");
         assert_eq!(processing::transformers::complement_dna(input), complement);
+    }
+
+    #[test]
+    fn translate_rna() {
+        let input = read_sequence("input/translate_rna.fasta");
+        let complement = read_sequences("output/translate_rna.fasta");
+        assert_eq!(
+            processing::transformers::translate_rna(input, Some(1)),
+            complement
+        );
+    }
+
+    #[test]
+    fn orf() {
+        let input = read_sequence("input/orf.fasta");
+        let orfs = read_sequences("output/orf.fasta");
+        assert_eq!(processing::transformers::open_reading_frames(&input), orfs);
+    }
+    #[test]
+    fn rna_splice() {
+        let mut seq = read_sequence("input/rna_splice_seq.fasta");
+        let introns = read_sequences("input/rna_splice_introns.fasta");
+        // Remove introns from preRNA
+        seq = processing::transformers::splice_introns(seq, &introns);
+        // Transcribe into RNA
+        seq = processing::transformers::transcribe_dna(seq);
+        // Translate RNA into protein and compare expected output
+        let protein = read_sequences("output/splice_rna.fasta");
+        assert_eq!(
+            processing::transformers::translate_rna(seq, Some(1)),
+            protein
+        );
+    }
+
+    #[test]
+    fn kmer_composition() {
+        let seq = read_sequence("input/kmer_composition.fasta");
+        let result = Vec::from([
+            366, 390, 359, 391, 387, 395, 397, 362, 362, 377, 363, 376, 393, 393, 390, 369, 377,
+            381, 406, 389, 390, 395, 386, 396, 361, 395, 422, 359, 389, 386, 407, 346, 389, 400,
+            391, 369, 377, 391, 406, 374, 398, 400, 391, 364, 408, 376, 421, 373, 392, 375, 405,
+            418, 410, 384, 384, 426, 406, 374, 362, 380, 395, 374, 384, 360, 363, 374, 396, 392,
+            393, 401, 357, 397, 409, 395, 400, 378, 375, 405, 359, 399, 375, 390, 404, 370, 386,
+            404, 381, 419, 375, 379, 388, 390, 408, 395, 385, 417, 349, 410, 392, 368, 398, 384,
+            360, 400, 406, 396, 358, 392, 366, 417, 395, 380, 393, 371, 404, 409, 363, 401, 396,
+            370, 418, 360, 406, 404, 379, 404, 390, 362, 377, 353, 381, 384, 404, 400, 417, 407,
+            398, 416, 393, 390, 419, 405, 360, 345, 391, 380, 389, 401, 360, 397, 379, 405, 364,
+            401, 366, 396, 374, 393, 397, 362, 364, 422, 404, 367, 385, 411, 414, 384, 386, 415,
+            387, 359, 368, 388, 376, 380, 393, 368, 382, 397, 379, 389, 398, 403, 425, 378, 380,
+            421, 362, 385, 391, 397, 400, 424, 342, 378, 369, 371, 366, 362, 380, 360, 397, 434,
+            403, 402, 413, 400, 382, 397, 383, 378, 403, 394, 386, 385, 419, 367, 376, 413, 406,
+            356, 399, 410, 393, 396, 410, 425, 401, 355, 347, 368, 367, 383, 411, 397, 398, 388,
+            412, 402, 366, 354, 380, 394, 388, 394, 397, 371, 375, 359, 410, 395, 358, 387, 374,
+            367,
+        ]);
+        assert_eq!(
+            processing::transformers::k_mer_composition(&seq, 4, &[b'A', b'C', b'G', b'T'])
+                .unwrap(),
+            result
+        );
     }
 }

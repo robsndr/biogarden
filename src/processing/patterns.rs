@@ -262,11 +262,10 @@ pub fn shortest_common_supersequence(seq1: &Sequence, seq2: &Sequence) -> Sequen
 /// use std::collections::HashSet;
 /// 
 /// let mut sequences = Tile::new();
-/// sequences.extend(Vec::from([
-///     Sequence::from("GATTACA"),
-///     Sequence::from("TAGACCA"),
-///     Sequence::from("ATACA")
-/// ]));
+/// sequences.push(Sequence::from("GATTACA"));
+/// sequences.push(Sequence::from("TAGACCA"));
+/// sequences.push(Sequence::from("ATACA"));
+/// 
 /// let alphabet = HashSet::<u8>::from([b'A', b'C', b'T', b'G']);
 /// let bound = 0;
 /// 
