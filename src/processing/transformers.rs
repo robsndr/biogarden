@@ -2,7 +2,6 @@ use allwords::Alphabet;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
-use crate::analysis::seq::hamming_distance;
 use crate::ds::builders::trie::{Trie, TrieNode};
 use crate::ds::graph::Graph;
 use crate::ds::sequence::Sequence;
@@ -10,6 +9,7 @@ use crate::ds::tile::Tile;
 use crate::error::{BioError, Result};
 use crate::processing::constants;
 use crate::processing::patterns::find_motif;
+use crate::analysis::seq::hamming_distance;
 
 /// Transcribe the DNS sequence into RNA
 ///
@@ -266,7 +266,7 @@ pub fn k_mer_composition(seq: &Sequence, k: usize, alphabet: &[u8]) -> Result<Ve
         kmers.push(Sequence::from(w));
     }
     // Sort k-mers according to ordering from alphabet
-    kmers = sort_lexicographically(&kmers, alphabet);
+    kmers = sort_lexicographically(&kmers, alphabet)?;
 
     // Calculate k-mer composition
     let mut kmer_composition = vec![];
@@ -390,15 +390,53 @@ pub fn correct_read_errors(
     Ok(corrections)
 }
 
-pub fn sort_lexicographically(sequences: &Tile, alphabet: &[u8]) -> Tile {
+/// Sort sequences of varying length lexicographically, according to the order of bases define in an alphabet
+///   
+/// # Arguments
+///
+/// * `reads` - tile containing reads
+/// * `split_margin` - number of reads/complements required to treat a read as correct
+/// * `hd_margin` - hamming distance used for matching faulty reads to correct ones
+///
+/// # Example
+/// ```
+/// use biotech::processing::transformers::sort_lexicographically;
+/// use biotech::ds::sequence::Sequence;
+/// use biotech::ds::tile::Tile;
+///
+/// let mut reads = Tile::new();
+/// reads.push(Sequence::from("TAT"));
+/// reads.push(Sequence::from("TGAAA"));
+/// reads.push(Sequence::from("GAGGA"));
+/// reads.push(Sequence::from("ATCAA"));
+/// reads.push(Sequence::from("TTGA"));
+/// 
+/// // Define custom alphabet
+/// let alphabet = [b'G', b'T', b'A', b'C'];
+/// 
+/// // Tile sorted according to custom lexicographic order
+/// let mut result = Tile::new();
+/// result.push(Sequence::from("GAGGA"));
+/// result.push(Sequence::from("TGAAA"));
+/// result.push(Sequence::from("TTGA"));
+/// result.push(Sequence::from("TAT"));
+/// result.push(Sequence::from("ATCAA"));
+/// 
+/// // Sort
+/// let sorted = sort_lexicographically(&reads, &alphabet).unwrap();
+/// assert_eq!(sorted, result);
+/// ```
+pub fn sort_lexicographically(sequences: &Tile, alphabet: &[u8]) -> Result<Tile> {
+    // Build Trie data structure on which search is performed
     let mut trie_builder = Trie::new(alphabet);
-    let trie = trie_builder.build(sequences).unwrap();
-
+    let trie = trie_builder.build(sequences)?;
+    // Define recursive function that is used to perform a DFS on the Trie
     fn walk_trie_rec(trie: &Graph<TrieNode, u8>, node_id: u64, sorted: &mut Tile) {
+        // Leaf node found -> terminate search path
         if trie.out_neighbors(node_id).count() == 0 {
             return;
         }
-
+        // Iterate over children and recurse
         let node = trie.get_node(&node_id);
         for &c in node.data.children.iter() {
             if c != -1 {
@@ -412,10 +450,9 @@ pub fn sort_lexicographically(sequences: &Tile, alphabet: &[u8]) -> Tile {
             }
         }
     }
-
+    // Sort
     let mut sorted = Tile::new();
-    let root = trie.get_root().unwrap();
+    let root = trie.get_root().ok_or(BioError::ItemNotFound)?;
     walk_trie_rec(trie, root, &mut sorted);
-
-    sorted
+    Ok(sorted)
 }
