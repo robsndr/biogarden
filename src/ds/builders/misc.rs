@@ -102,7 +102,7 @@ pub fn connected_components<N, E>(g: &mut Graph<N, E>) -> Vec<HashSet::<u64>>
 
 
 // Find cycles within a graph using Johnson's algorithm
-pub fn cycles<N, E>(graph: &mut Graph<N, E>, test: u64) -> Vec<Vec::<u64>> 
+pub fn cycles<N, E>(graph: &mut Graph<N, E>) -> Vec<Vec::<u64>> 
             where N: fmt::Display + Clone , E: fmt::Display + Clone
 {
 

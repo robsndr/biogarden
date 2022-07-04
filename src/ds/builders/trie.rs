@@ -1,7 +1,6 @@
 use std::fmt;
 
 use std::collections::HashMap;
-use std::ops::{Index, IndexMut};
 
 use crate::ds::graph::Graph;
 use crate::ds::graph::GraphErr;
@@ -94,7 +93,6 @@ impl Trie {
             let cur_node = self.graph.get_node_mut(&cur_node_id);
             let next_node_id = cur_node.data.children[idx] as u64;
 
-            let next_node = self.graph.get_node_mut(&next_node_id);
             substring.push(*c);
 
             cur_node_id = next_node_id;
@@ -111,7 +109,7 @@ impl Trie {
                 &'a T: 'a + Clone + IntoIterator<Item=&'a u8>
     {
         for word in wordlist {
-            if self.insert_word(&word).is_err() {
+            if self.insert_word(word).is_err() {
                 return Err(GraphErr::CannotAddEdge)
             }
         }

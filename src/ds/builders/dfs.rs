@@ -18,10 +18,10 @@ impl<'a, N: fmt::Display + Clone, E: fmt::Display + Clone> Dfs<'a, N, E> {
         let current = *graph.nodes().last().unwrap();
         stack.push(current);
         Dfs {
-            current: current,
-            stack: stack,
+            current,
+            stack,
             visited: HashSet::new(),
-            graph: graph
+            graph
         }
     }
 

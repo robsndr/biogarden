@@ -14,9 +14,6 @@ pub type Text = Vec<u8>;
 /// Type alias for a text slice, i.e. ``&[u8]``.
 pub type TextSlice<'a> = &'a [u8];
 
-/// Maximum size of temporary buffer used for reading indexed FASTA files.
-const MAX_FASTA_BUFFER_SIZE: usize = 512;
-
 /// Trait for FASTA readers.
 pub trait FastaRead {
     fn read(&mut self, record: &mut Record) -> io::Result<()>;

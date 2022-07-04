@@ -88,14 +88,12 @@ pub fn longest_common_subsequence(seq1: &Sequence, seq2: &Sequence) -> Sequence 
             if seq1[i - 1] == seq2[j - 1] {
                 match_table[i][j] = match_table[i - 1][j - 1] + 1;
                 prev_table[i][j] = (i - 1, j - 1);
-            } else {
-                if match_table[i - 1][j] > match_table[i][j - 1] {
+            } else if match_table[i - 1][j] > match_table[i][j - 1] {
                     match_table[i][j] = match_table[i - 1][j];
                     prev_table[i][j] = (i - 1, j);
-                } else {
+            } else {
                     match_table[i][j] = match_table[i][j - 1];
                     prev_table[i][j] = (i, j - 1);
-                }
             }
         }
     }
@@ -295,11 +293,10 @@ pub fn longest_common_substring(tile: &Tile, alphabet: &HashSet::<u8>, bound: us
     // Initialize data for LCS search
     let mut lcs = Sequence::new();
     let mut max_len = 0;
-    let mut stack = Vec::<(u64, Sequence)>::new();
-    stack.push((
+    let mut stack = vec![(
         graph.get_root().ok_or(BioError::ItemNotFound)?,
         Sequence::new(),
-    ));
+    )];
 
     // DFS
     while !stack.is_empty() {
@@ -447,5 +444,5 @@ pub fn subsequences(a: &Sequence, b: &Sequence, limit: Option<usize>) -> Vec<Vec
     }
 
     subsequences_recursive(a, a_idx, b, b_idx, limit, &mut temp, &mut result);
-    return result;
+    result
 }

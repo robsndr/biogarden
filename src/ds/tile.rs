@@ -35,6 +35,10 @@ impl Tile
         self.data.len()
     }
 
+    pub fn is_empty(& self) -> bool {
+        self.data.is_empty()
+    }
+
     // pub fn extend(&mut self, data: Vec<Sequence>) {
     //     self.data.extend(data);
     // }
@@ -68,6 +72,12 @@ impl Tile
             }
         }  
         converted
+    }
+}
+
+impl Default for Tile {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -132,7 +142,7 @@ impl<'a> IntoIterator for &'a Tile {
     type IntoIter = std::slice::Iter<'a, Sequence>;
 
     fn into_iter(self) -> Self::IntoIter {
-        (&self.data).into_iter() // can also be .iter()
+        (&self.data).iter() // can also be .iter()
     }
 }
 
@@ -156,7 +166,7 @@ impl Index<usize> for Tile {
 }
 
 impl IndexMut<usize> for Tile {
-    fn index_mut<'a>(&'a mut self, i: usize) -> &'a mut Sequence {
+    fn index_mut(&'_ mut self, i: usize) -> &'_ mut Sequence {
         &mut self.data[i]
     }
 }

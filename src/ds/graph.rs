@@ -105,7 +105,7 @@ impl<N: fmt::Display + Clone, E: fmt::Display + Clone> Graph<N, E> {
     }
 
     pub fn add_node(&mut self, data: N) -> u64 {
-        let mut rng = thread_rng();
+        // let mut rng = thread_rng();
         // TODO: Make sure that indizes are unique
         // TODO: Improve idx generation by random sequence qenerator
         // let nid = rng.gen_range(0..10000000000); 
@@ -140,7 +140,7 @@ impl<N: fmt::Display + Clone, E: fmt::Display + Clone> Graph<N, E> {
         let eid = self.idx % 1000000000000;
         self.idx = self.idx.wrapping_add(1);
 
-        self.edges.insert(eid, Edge{start: id1, end: id2, data: data.clone()});
+        self.edges.insert(eid, Edge{start: id1, end: id2, data: data});
         self.nodes.get_mut(&id1).unwrap().outgoing.push(eid);
         self.nodes.get_mut(&id2).unwrap().incoming.push(eid);
 
@@ -173,15 +173,16 @@ impl<N: fmt::Display + Clone, E: fmt::Display + Clone> Graph<N, E> {
 
     pub fn has_edge(&self, a: &u64, b: &u64) -> Result<u64, GraphErr> {
         let node = self.nodes.get(a);
+
         let edge_id = match self.nodes.get(a) {
             Some(x) => x.outgoing.iter().find(|idx| self.edges.get(idx).unwrap().end == *b),
             _ => None
         };
-        let result = match edge_id {
+        
+        match edge_id {
             Some(id) => Ok(*id),
             _ => Err(GraphErr::NoSuchEdge)
-        };
-        result
+        }
     }    
 
     pub fn remove_edge(&mut self, id: &u64) -> Option<Edge<E>> {
@@ -271,21 +272,18 @@ impl<N: fmt::Display + Clone, E: fmt::Display + Clone> Graph<N, E> {
     }
     
     pub fn node_degree(&self, id: &u64) -> Option<usize> {
-        match self.nodes.get(&id) {
-            Some(x) => Some(x.outgoing.len() + x.incoming.len()),
-            None => None
-        }
+        self.nodes.get(id).map(|x| x.outgoing.len() + x.incoming.len())
     }
 
     pub fn reverse(&mut self) {
     
-        for (_, edge) in &mut self.edges {
+        for edge in self.edges.values_mut() {
             let temp = edge.start;
             edge.start = edge.end;
             edge.end = temp;
         }
 
-        for (_, node) in &mut self.nodes {
+        for node in self.nodes.values_mut() {
             let temp = node.outgoing.clone();
             node.outgoing = node.incoming.clone();
             node.incoming = temp;   
@@ -314,7 +312,7 @@ impl<N: fmt::Display + Clone, E: fmt::Display + Clone> Graph<N, E> {
             for e_id in self.out_edges(*initial_id) {
                 let edge = self.get_edge(e_id);
                 if overlay.contains(&edge.end) {
-                    g.add_edge(&subgraph_id, &id_map[&edge.end], edge.data.clone()).unwrap();
+                    g.add_edge(subgraph_id, &id_map[&edge.end], edge.data.clone()).unwrap();
                 }
             }
         }
@@ -330,7 +328,7 @@ impl<N: fmt::Display + Clone, E: fmt::Display + Clone> Graph<N, E> {
         else {
             writeln!(&mut w, "strict graph sample {{").unwrap();
         }
-        for (id, edge) in &self.edges {
+        for edge in self.edges.values() {
             match (self.properties.directed, edge.data.as_ref()) {
                 (true, Some(data)) =>  writeln!(&mut w, "  {} -> {} [ label = \"{}\" ];", edge.start, edge.end, data).unwrap(),
                 (true, None) => writeln!(&mut w, "  {} -> {};", edge.start, edge.end).unwrap(),

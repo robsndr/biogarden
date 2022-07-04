@@ -1,7 +1,6 @@
 #![warn(missing_debug_implementations)]
 use ndarray::prelude::*;
 use std::hash::{Hash, Hasher};
-use std::ops::{Index, IndexMut};
 use crate::io::fasta;
 use std::ops::Add;
 use std::fmt; 
@@ -18,7 +17,7 @@ impl Sequence {
         Sequence { chain: Vec::<u8>::new(), id: None}
     }
 
-    pub fn push(&mut self, x: u8) -> () {
+    pub fn push(&mut self, x: u8) {
         self.chain.push(x);
     }
 
@@ -31,11 +30,15 @@ impl Sequence {
     }
 
     pub fn back(&self) -> Option<&u8> {
-        self.chain.get(self.chain.len() -1)
+        self.chain.last()
     }
 
     pub fn len(&self) -> usize {
         self.chain.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.chain.is_empty()
     }
 
     pub fn reverse(&mut self) {
@@ -73,6 +76,12 @@ impl Sequence {
             }   
         }
         flag
+    }
+}
+
+impl Default for Sequence {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

@@ -66,7 +66,7 @@ impl SuffixTreeBuilder {
         let mut word_idx = 0_usize;
         for (id, x) in seq.into_iter().enumerate() {
             word_len += 1;
-            if !self.alphabet.contains(&x) || id == seq.into_iter().count() - 1 {
+            if !self.alphabet.contains(x) || id == seq.into_iter().count() - 1 {
                 wordmap.extend(vec![(word_idx, id); word_len]);
                 word_len = 0;
                 word_idx += 1;
@@ -237,7 +237,7 @@ impl SuffixTreeBuilder {
     //    1. update reachability information in every node
     //    2. fix suffix end index from '1' to end position of given suffix
     //
-    fn postprocess(graph: &mut Graph<SuffixTreeNode, SuffixTreeEdge>, node_id: u64, wordmap: &Vec<(usize, usize)>)
+    fn postprocess(graph: &mut Graph<SuffixTreeNode, SuffixTreeEdge>, node_id: u64, wordmap: &[(usize, usize)])
     {
         // Items need to be cloned, because 'graph' is borrowed later
         // TODO: restructure to omit cloning 
@@ -304,6 +304,12 @@ impl SuffixTreeNode {
     }
 }
 
+impl Default for SuffixTreeNode {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl fmt::Display for SuffixTreeNode  {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "UN: Link {:?}", self.link)
@@ -323,6 +329,12 @@ impl SuffixTreeEdge {
             suffix_start: 0,
             suffix_stop: 0,
         }
+    }
+}
+
+impl Default for SuffixTreeEdge {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

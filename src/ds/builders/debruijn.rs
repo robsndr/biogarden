@@ -23,7 +23,7 @@ impl DeBruijnBuilder {
         let mut kmer2_id = 0_u64;
     
         // Pre-calculate reverse complements of input reads
-        let mut rev_reads = Tile::new();
+        let rev_reads = Tile::new();
         // reads.into_iter().for_each(|kmer|{ rev_reads.push(complement_dna(kmer.clone()))});
     
         // Construct deBruijn graph, iterate over all kmers and their complements 
@@ -55,5 +55,11 @@ impl DeBruijnBuilder {
         }
 
         graph
+    }
+}
+
+impl Default for DeBruijnBuilder {
+    fn default() -> Self {
+        Self::new()
     }
 }

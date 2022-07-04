@@ -172,10 +172,9 @@ pub fn signed_permutations(l: usize, a: &mut Vec<i32>, result: &mut Vec<Vec<i32>
 pub fn p_distance_matrix(matrix: &Tile) -> Array2<f32> {
     let (rows, columns) = matrix.size();
     let mut distances = Array2::<f32>::zeros((rows, rows));
-    let mut p_dist: f32 = 0.0;
     for (i, a_row) in matrix.into_iter().enumerate() {
         for (j, b_row) in matrix.into_iter().enumerate() {
-            p_dist = 0.0;
+            let mut p_dist = 0.0;
             if i != j {
                 p_dist = a_row.into_iter().zip(b_row).filter(|(a, b)| a != b).count() as f32;
             }

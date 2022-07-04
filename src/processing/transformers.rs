@@ -272,7 +272,7 @@ pub fn k_mer_composition(seq: &Sequence, k: usize, alphabet: &[u8]) -> Result<Ve
     let mut kmer_composition = vec![];
     for kmer in &kmers {
         let pos = find_motif(seq, kmer);
-        kmer_composition.push(pos.iter().count());
+        kmer_composition.push(pos.len());
     }
     Ok(kmer_composition)
 }

@@ -373,9 +373,7 @@ impl SequenceAligner  {
                             *l -= 1;
                         }
 
-                        _ => {
-                            ()
-                        }
+                        _ => {}
                     }
 
                 }
@@ -410,9 +408,7 @@ impl SequenceAligner  {
                         }
                     }
                 }
-                _ => {
-                    ()
-                }
+                _ => {}
             }
         }
 
@@ -430,5 +426,11 @@ impl SequenceAligner  {
         self.m_trace = Array2::zeros(self.buffer_size);
         self.x_trace = Array2::from_elem(self.buffer_size, b'I');
         self.y_trace = Array2::from_elem(self.buffer_size, b'I');
+    }
+}
+
+impl Default for SequenceAligner {
+    fn default() -> Self {
+        Self::new()
     }
 }

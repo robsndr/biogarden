@@ -302,7 +302,7 @@ pub fn match_protein(tile: &Tile, spectrum: &[f64]) -> Result<Sequence> {
     let mut max_idx = 0;
 
     for (idx, s) in tile.into_iter().enumerate() {
-        let ps = complete_spectrum(&s)?;
+        let ps = complete_spectrum(s)?;
         let (cnt, _) = spectral_mass_shift(spectrum, &ps)?;
         if cnt >= max {
             max = cnt;
