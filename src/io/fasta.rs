@@ -1,4 +1,6 @@
 
+// Fasta reader source: https://github.com/rust-bio/rust-bio/blob/master/src/io/fasta.rs
+
 use std::convert::AsRef;
 use std::fs;
 use std::io;
@@ -9,9 +11,7 @@ use serde::{Serialize, Deserialize};
 use anyhow::Context;
 use std::fmt;
 
-/// Type alias for an owned text, i.e. ``Vec<u8>``.
 pub type Text = Vec<u8>;
-/// Type alias for a text slice, i.e. ``&[u8]``.
 pub type TextSlice<'a> = &'a [u8];
 
 /// Trait for FASTA readers.

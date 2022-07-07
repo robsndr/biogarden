@@ -34,6 +34,7 @@ lazy_static! {
     ]).unwrap();
 }
 
+/// blosum62 scoring function
 pub fn blosum62(a: &u8, b: &u8) -> i32 {
     // print!("{}   {}\n", a - 65 , b-65);
     BLOSUM62[((*a as usize) - 65, (*b as usize) - 65)]
@@ -73,10 +74,10 @@ lazy_static! {
     ]).unwrap();
 }
 
+/// pam250 scoring function
 pub fn pam250(a: &u8, b: &u8) -> i32 {
     PAM250[((*a as usize) - 65, (*b as usize) - 65)]
 }
-
 
 lazy_static! {
     static ref UNIT: ndarray::Array2<i32> = ndarray::Array::from_shape_vec((26, 26), vec![
@@ -109,6 +110,7 @@ lazy_static! {
     ]).unwrap();
 }
 
+/// unit scoring function
 pub fn unit(a: &u8, b: &u8) -> i32 {
     UNIT[((*a as usize) - 65, (*b as usize) - 65)]
 }
@@ -144,6 +146,6 @@ lazy_static! {
     ]).unwrap();
 }
 
-pub fn unit2(a: &u8, b: &u8) -> i32 {
+fn unit2(a: &u8, b: &u8) -> i32 {
     UNIT2[((*a as usize) - 65, (*b as usize) - 65)]
 }

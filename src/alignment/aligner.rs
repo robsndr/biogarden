@@ -1,8 +1,30 @@
 use std::cmp;
 use ndarray::Array2;
 
+use crate::error::{BioError, Result};
 use crate::ds::sequence::Sequence;
 
+/// Compute the alignment of genetic strings against each other
+/// 
+/// Sequence alignment is the process of comparing and detecting similarities between biological sequences. 
+/// It imposes a way of arranging sequences to identify regions of similarity, that may be a consequence of evolutionary relationships.
+/// 
+/// Four operations are performed to align genetic strings: insertion, deletion, substitution, and match.
+/// A scoring function can be used to quantify the likelihood of different bases being matched against each other. 
+/// Depending on the end-goal and given scenario, different types of alignment can be performed.
+/// An hypothetical alignment scenario might look as follows:
+/// ```no_compile
+/// // No alignment:
+/// CGATGCTAGCGTATCGTAGTCTATCGTAC
+/// ACGATGCTAGCGTTTCGTATCATCGTA
+///
+/// // Aligned:
+/// -CGATGCTAGCGTATCGTAGTCTATCGTAC
+/// ACGATGCTAGCGTTTCGTA-TC-ATCGTA-
+/// ```
+/// 
+/// The implemented aligner supports affine gap penalties, which can differentiate between the cost `a` of starting a gap
+/// and the cost of extending of an already started one `b`.
 pub struct SequenceAligner {
     // Size of cost and size buffers
     buffer_size: (usize, usize),
@@ -18,6 +40,7 @@ pub struct SequenceAligner {
 
 impl SequenceAligner  {
 
+    /// Construct new aligner object
     pub fn new() -> SequenceAligner {
         let buffer_dim = (1024_usize, 1024_usize);
         SequenceAligner {
@@ -31,8 +54,39 @@ impl SequenceAligner  {
         }
     }
 
+    /// Compute the global alignment of two genetic strings
+    ///
+    /// Maximize the cumulative alignment score between two sequences
+    /// 
+    /// # Arguments
+    /// * `seq1`, `seq2` - sequences to align
+    /// * `score` - scoring function to be used during alignment 
+    /// * `a` - penalty for opening a gap
+    /// * `b` - penalty for extending a gap
+    ///
+    /// # Example
+    /// ```
+    /// use biotech::alignment::aligner::SequenceAligner;
+    /// use biotech::alignment::score::blosum62;
+    /// use biotech::ds::sequence::Sequence;
+    /// 
+    /// let mut aligner = SequenceAligner::new();
+    ///
+    /// let s1 = Sequence::from("PRTEINS");
+    /// let s2 = Sequence::from("PRTWPSEIN");
+    /// let (align_score, s1_aligned, s2_aligned) = 
+    ///     aligner.global_alignment(&s1, &s2, &blosum62, -11, -1).unwrap();
+    /// 
+    /// assert_eq!(align_score, 8);
+    /// assert_eq!(s1_aligned, Sequence::from("PRT---EINS"));
+    /// assert_eq!(s2_aligned, Sequence::from("PRTWPSEIN-"));
+    /// ```
     pub fn global_alignment(&mut self, seq1: &Sequence, seq2: &Sequence,
-                            score: &dyn Fn(&u8, &u8) -> i32, a: i32, b: i32) -> (i32, Sequence, Sequence) {
+                            score: &dyn Fn(&u8, &u8) -> i32, a: i32, b: i32) -> Result<(i32, Sequence, Sequence)> {
+
+        if a > 0 || b > 0 {
+            return Err(BioError::InvalidArgumentRange);
+        }
 
         // Allocate a larger buffer if sequences cannot fit
         if seq1.len() > self.buffer_size.0 || seq2.len() > self.buffer_size.1 {
@@ -63,11 +117,42 @@ impl SequenceAligner  {
         let trace_valid = |x: &usize, y: &usize| -> bool { *x != 0 || *y != 0 };
         let (s1_aligned, s2_aligned) = self.backtrack(seq1, seq2, &mut k, &mut l, &trace_valid);
 
-        (alignment_score, s1_aligned, s2_aligned)
+        Ok((alignment_score, s1_aligned, s2_aligned))
     }
 
+    /// Compute the local alignment of two genetic strings
+    ///
+    /// Maximize the alignment score across all substrings of two genetic sequences
+    /// 
+    /// # Arguments
+    /// * `seq1`, `seq2` - sequences to align
+    /// * `score` - scoring function to be used during alignment 
+    /// * `a` - penalty for opening a gap
+    /// * `b` - penalty for extending a gap
+    ///
+    /// # Example
+    /// ```
+    /// use biotech::alignment::aligner::SequenceAligner;
+    /// use biotech::alignment::score::blosum62;
+    /// use biotech::ds::sequence::Sequence;
+    /// 
+    /// let mut aligner = SequenceAligner::new();
+    ///
+    /// let s1 = Sequence::from("PLEASANTLY");
+    /// let s2 = Sequence::from("MEANLY");
+    /// let (align_score, s1_aligned, s2_aligned) = 
+    ///     aligner.local_alignment(&s1, &s2, &blosum62, -11, -1).unwrap();
+    /// 
+    /// assert_eq!(align_score, 12);
+    /// assert_eq!(s1_aligned, Sequence::from("LEAS"));
+    /// assert_eq!(s2_aligned, Sequence::from("MEAN"));
+    /// ```
     pub fn local_alignment(&mut self, seq1: &Sequence, seq2: &Sequence,
-                            score: &dyn Fn(&u8, &u8) -> i32, a: i32, b: i32) -> (i32, Sequence, Sequence) {
+                            score: &dyn Fn(&u8, &u8) -> i32, a: i32, b: i32) -> Result<(i32, Sequence, Sequence)> {
+
+        if a > 0 || b > 0 {
+            return Err(BioError::InvalidArgumentRange);
+        }
 
         // Allocate a larger buffer if sequences cannot fit
         if seq1.len() > self.buffer_size.0 || seq2.len() > self.buffer_size.1 {
@@ -96,15 +181,47 @@ impl SequenceAligner  {
         let trace_valid = |x: &usize, y: &usize| -> bool { (*x != 0 || *y != 0) && self.m[[*x,*y]] > 0 };
         let (s1_aligned, s2_aligned) = self.backtrack(seq1, seq2, &mut k, &mut l, &trace_valid);
 
-        (align_score, s1_aligned, s2_aligned)
+        Ok((align_score, s1_aligned, s2_aligned))
     }
 
+    /// Compute the fitting alignment of two genetic strings
+    ///
+    /// Maximize the alignment score of a string `seq1` against another string `seq2`,
+    /// where `seq2` is aligned with a substring `seq1′` of `seq1`.
+    /// 
+    /// # Arguments
+    /// * `seq1`, `seq2` - sequences to align, len(seq1) >= len(seq2)
+    /// * `score` - scoring function to be used during alignment 
+    /// * `a` - penalty for opening a gap
+    /// * `b` - penalty for extending a gap
+    ///
+    /// # Example
+    /// ```
+    /// use biotech::alignment::aligner::SequenceAligner;
+    /// use biotech::alignment::score::unit;
+    /// use biotech::ds::sequence::Sequence;
+    /// 
+    /// let mut aligner = SequenceAligner::new();
+    ///
+    /// let s1 = Sequence::from("GCAAACCATAAGCCCTACGTGCCGCCTGTTTAAACTCGCGAACTGAAT\
+    ///                          CTTCTGCTTCACGGTGAAAGTACCACAATGGTATCACACCCCAAGGAAAC");
+    /// let s2 = Sequence::from("GCCGTCAGGCTGGTGTCCG");
+    /// let (align_score, s1_aligned, s2_aligned) = 
+    ///     aligner.fitting_alignment(&s1, &s2, &unit, -1, -1).unwrap();
+    /// 
+    /// assert_eq!(align_score, 5);
+    /// assert_eq!(s1_aligned, Sequence::from("GCCCT-A--C-G-TG-CCG"));
+    /// assert_eq!(s2_aligned, Sequence::from("GCCGTCAGGCTGGTGTCCG"));
+    /// ```
     pub fn fitting_alignment(&mut self, seq1: &Sequence, seq2: &Sequence,
-                                score: &dyn Fn(&u8, &u8) -> i32, a: i32, b: i32) -> (i32, Sequence, Sequence) {
+                                score: &dyn Fn(&u8, &u8) -> i32, a: i32, b: i32) -> Result<(i32, Sequence, Sequence)> {
 
-        // TODO: Refactor into proper Result<> return value
+        if a > 0 || b > 0 {
+            return Err(BioError::InvalidArgumentRange);
+        }
+
         if seq1.len() < seq2.len() {
-            panic!("LEN(SEQ1) !< LEN(SEQ2)");
+            return Err(BioError::InvalidInputSize);
         }
 
         // Allocate a larger buffer if sequences cannot fit
@@ -139,11 +256,39 @@ impl SequenceAligner  {
         let trace_valid = |_: &usize, y: &usize| -> bool { *y != 0 };
         let (s1_aligned, s2_aligned) = self.backtrack(seq1, seq2, &mut k, &mut l, &trace_valid);
 
-        (alignment_score, s1_aligned, s2_aligned)
+        Ok((alignment_score, s1_aligned, s2_aligned))
     }
 
+    /// Compute the overlap alignment of two genetic strings
+    ///
+    /// Maximize the local alignment score over all substrings of `seq1` and `seq2`, 
+    /// where a suffix of `seq1` is aligned with a prefix of `seq2`. 
+    /// 
+    /// # Arguments
+    /// * `seq1`, `seq2` - sequences to align
+    /// * `score` - scoring function to be used during alignment 
+    /// * `a` - penalty for opening a gap
+    /// * `b` - penalty for extending a gap
+    ///
+    /// # Example
+    /// ```
+    /// use biotech::alignment::aligner::SequenceAligner;
+    /// use biotech::alignment::score::unit;
+    /// use biotech::ds::sequence::Sequence;
+    /// 
+    /// let mut aligner = SequenceAligner::new();
+    ///
+    /// let s1 = Sequence::from("CTAAGGGATTCCGGTAATTAGACAG");
+    /// let s2 = Sequence::from("ATAGACCATATGTCAGTGACTGTGTAA");
+    /// let (align_score, s1_aligned, s2_aligned) = 
+    ///     aligner.overlap_alignment(&s1, &s2, &unit, -2, -2).unwrap();
+    /// 
+    /// assert_eq!(align_score, 2);
+    /// assert_eq!(s1_aligned, Sequence::from("ATTAGAC-AG"));
+    /// assert_eq!(s2_aligned, Sequence::from("AT-AGACCAT"));
+    /// ```
     pub fn overlap_alignment(&mut self, seq1: &Sequence, seq2: &Sequence,
-                                score: &dyn Fn(&u8, &u8) -> i32, a: i32, b: i32) -> (i32, Sequence, Sequence) {
+                                score: &dyn Fn(&u8, &u8) -> i32, a: i32, b: i32) -> Result<(i32, Sequence, Sequence)> {
 
         // Allocate a larger buffer if sequences cannot fit
         if seq1.len() > self.buffer_size.0 || seq2.len() > self.buffer_size.1 {
@@ -172,11 +317,39 @@ impl SequenceAligner  {
         let trace_valid = |_: &usize, l: &usize| -> bool { *l != 0 };
         let (s1_aligned, s2_aligned) = self.backtrack(seq1, seq2, &mut k, &mut l, &trace_valid);
 
-        (alignment_score, s1_aligned, s2_aligned)
+        Ok((alignment_score, s1_aligned, s2_aligned))
     }
 
+    /// Compute the semiglobal alignment of two genetic strings
+    ///
+    /// Maximize the alignment score over `seq1` and `seq2` in a scenario, where any gaps appearing as prefixes 
+    /// or suffixes of `seq1` and `seq2` do not contribute to the score of the alignment.
+    /// 
+    /// # Arguments
+    /// * `seq1`, `seq2` - sequences to align
+    /// * `score` - scoring function to be used during alignment 
+    /// * `a` - penalty for opening a gap
+    /// * `b` - penalty for extending a gap
+    ///
+    /// # Example
+    /// ```
+    /// use biotech::alignment::aligner::SequenceAligner;
+    /// use biotech::alignment::score::unit;
+    /// use biotech::ds::sequence::Sequence;
+    /// 
+    /// let mut aligner = SequenceAligner::new();
+    ///
+    /// let s1 = Sequence::from("TAGCACTTGGATTCTCGG");
+    /// let s2 = Sequence::from("CAGCGTGG");
+    /// let (align_score, s1_aligned, s2_aligned) = 
+    ///     aligner.semiglobal_alignment(&s1, &s2, &unit, -1, -1).unwrap();
+    /// 
+    /// assert_eq!(align_score, 4);
+    /// assert_eq!(s1_aligned, Sequence::from("TAGCA-CTTGGATTCTCGG"));
+    /// assert_eq!(s2_aligned, Sequence::from("---CAGCGTGG--------"));
+    /// ```
     pub fn semiglobal_alignment(&mut self, seq1: &Sequence, seq2: &Sequence, 
-                                    score: &dyn Fn(&u8, &u8) -> i32, a: i32, b: i32) -> (i32, Sequence, Sequence) {
+                                    score: &dyn Fn(&u8, &u8) -> i32, a: i32, b: i32) -> Result<(i32, Sequence, Sequence)> {
 
         // Allocate a larger buffer if sequences cannot fit
         if seq1.len() > self.buffer_size.0 || seq2.len() > self.buffer_size.1 {
@@ -258,7 +431,7 @@ impl SequenceAligner  {
         s1_aligned.reverse();
         s2_aligned.reverse();
 
-        (alignment_score, s1_aligned, s2_aligned)
+        Ok((alignment_score, s1_aligned, s2_aligned))
     }
 
     fn compute_scores_global(&mut self, seq1: &Sequence, seq2: &Sequence, score: &dyn Fn(&u8, &u8) -> i32, a: i32, b: i32) {

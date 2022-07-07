@@ -99,40 +99,6 @@ pub fn n_statistic(tile: &Tile, xx: usize) -> usize {
     nxx
 }
 
-pub fn infer_number_rna(protein: &Sequence) -> u128 {
-    let codon_combs: HashMap<u8, u128> = HashMap::from([
-        (b'F', 2),
-        (b'I', 3),
-        (b'V', 4),
-        (b'L', 6),
-        (b'S', 6),
-        (b'P', 4),
-        (b'M', 1),
-        (b'T', 4),
-        (b'A', 4),
-        (b'Y', 2),
-        (b'-', 3),
-        (b'H', 2),
-        (b'N', 2),
-        (b'D', 2),
-        (b'Q', 2),
-        (b'K', 2),
-        (b'E', 2),
-        (b'C', 2),
-        (b'G', 4),
-        (b'R', 6),
-        (b'W', 1),
-    ]);
-
-    // Initialize with 3 as for number of STOP codons
-    let mut rna_combinations: u128 = 3;
-    // Compute number of combinations
-    for amino in protein {
-        rna_combinations = (rna_combinations * codon_combs.get(amino).unwrap()) % 1000000;
-    }
-    rna_combinations
-}
-
 pub fn permutations<T: Clone>(n: usize, a: &mut Vec<T>, result: &mut Vec<Vec<T>>) {
     if n == 1 {
         result.push(a.clone());

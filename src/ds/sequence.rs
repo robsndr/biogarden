@@ -213,7 +213,6 @@ impl<'a> IntoIterator for &'a Sequence {
     }
 }
 
-
 /*** Utility Traits ***/ 
 // Iterator Trait
 impl<'a> IntoIterator for &'a mut Sequence {
@@ -254,23 +253,3 @@ impl fmt::Display for Sequence {
         write!(f, "{}", temp)
     }
 }
-
-// impl Index<usize> for Sequence {
-//     type Output = u8;
-//     fn index<'a>(&'a self, i: usize) -> &'a u8 {
-//         &self.chain[i]
-//     }
-// }
-
-// impl<'a> Index<usize> for &'a Sequence {
-//     type Output = u8;
-//     fn index<'b>(&'b self, i: usize) -> &'b u8 {
-//         &self.chain[i]
-//     }
-// }
-
-// impl IndexMut<usize> for Sequence {
-//     fn index_mut<'a>(&'a mut self, i: usize) -> &'a mut Sequence {
-//         &mut self.data[i]
-//     }
-// }

@@ -1,4 +1,5 @@
 // use crate biotech;
+use biotech::alignment;
 use biotech::analysis;
 use biotech::ds::sequence::Sequence;
 use biotech::ds::tile::Tile;
@@ -229,4 +230,81 @@ mod integration {
             result
         );
     }
+
+    #[test]
+    fn global_alignment() {
+        let inputs = read_sequences("input/global_alignment.fasta");
+        let outputs = read_sequences("output/global_alignment.fasta");
+        let mut aligner = alignment::aligner::SequenceAligner::new();
+        let scoring = alignment::score::blosum62;
+
+        let (align_score, s1_aligned, s2_aligned) = aligner
+            .global_alignment(&inputs[0], &inputs[1], &scoring, -11, -1)
+            .unwrap();
+
+        assert_eq!(align_score, 232);
+        assert_eq!(s1_aligned, outputs[0]);
+        assert_eq!(s2_aligned, outputs[1]);
+    }
+
+    fn local_alignment() {
+        let inputs = read_sequences("input/local_alignment.fasta");
+        let outputs = read_sequences("output/local_alignment.fasta");
+        let mut aligner = alignment::aligner::SequenceAligner::new();
+        let scoring = alignment::score::blosum62;
+
+        let (align_score, s1_aligned, s2_aligned) = aligner
+            .local_alignment(&inputs[0], &inputs[1], &scoring, -11, -1)
+            .unwrap();
+
+        assert_eq!(align_score, 20431);
+        assert_eq!(s1_aligned, outputs[0]);
+        assert_eq!(s2_aligned, outputs[1]);
+    }
+
+    fn fitting_alignment() {
+        let inputs = read_sequences("input/fitting_alignment.fasta");
+        let outputs = read_sequences("output/fitting_alignment.fasta");
+        let mut aligner = alignment::aligner::SequenceAligner::new();
+        let scoring = alignment::score::unit;
+
+        let (align_score, s1_aligned, s2_aligned) = aligner
+            .fitting_alignment(&inputs[0], &inputs[1], &scoring, -1, -1)
+            .unwrap();
+
+        assert_eq!(align_score, 145);
+        assert_eq!(s1_aligned, outputs[0]);
+        assert_eq!(s2_aligned, outputs[1]);
+    }
+
+    fn overlap_alignment() {
+        let inputs = read_sequences("input/overlap_alignment.fasta");
+        let outputs = read_sequences("output/overlap_alignment.fasta");
+        let mut aligner = alignment::aligner::SequenceAligner::new();
+        let scoring = alignment::score::unit;
+
+        let (align_score, s1_aligned, s2_aligned) = aligner
+            .overlap_alignment(&inputs[0], &inputs[1], &scoring, -2, -2)
+            .unwrap();
+
+        assert_eq!(align_score, 698);
+        assert_eq!(s1_aligned, outputs[0]);
+        assert_eq!(s2_aligned, outputs[1]);
+    }
+
+    fn semiglobal_alignment() {
+        let inputs = read_sequences("input/semiglobal_alignment.fasta");
+        let outputs = read_sequences("output/semiglobal_alignment.fasta");
+        let mut aligner = alignment::aligner::SequenceAligner::new();
+        let scoring = alignment::score::unit;
+
+        let (align_score, s1_aligned, s2_aligned) = aligner
+            .semiglobal_alignment(&inputs[0], &inputs[1], &scoring, -1, -1)
+            .unwrap();
+
+        assert_eq!(align_score, 982);
+        assert_eq!(s1_aligned, outputs[0]);
+        assert_eq!(s2_aligned, outputs[1]);
+    }
+
 }

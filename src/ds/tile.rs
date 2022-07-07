@@ -39,10 +39,6 @@ impl Tile
         self.data.is_empty()
     }
 
-    // pub fn extend(&mut self, data: Vec<Sequence>) {
-    //     self.data.extend(data);
-    // }
-
     pub fn extend(&mut self, b: Tile) {
         self.data.extend(b.data);
     }
@@ -178,4 +174,3 @@ impl PartialEq for Tile {
         self.data == other.data
     }
 }
-

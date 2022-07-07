@@ -5,7 +5,7 @@ use std::ops::{Index};
 use crate::ds::graph::Graph;
 use crate::ds::graph::GraphProperties;
 
-// SuffixTreeBuilder Algorithm
+/// Build suffix tree in O(n) using Ukkonnen's Algorithm
 pub struct SuffixTreeBuilder {
     // Sequence to be processed
     // seq: T, 

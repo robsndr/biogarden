@@ -5,6 +5,7 @@ use crate::ds::sequence::Sequence;
 use crate::ds::graph::Graph;
 use crate::ds::graph::GraphProperties;
 
+/// Build DeBruijn graph
 pub struct DeBruijnBuilder {}
 
 impl DeBruijnBuilder {

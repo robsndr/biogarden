@@ -19,20 +19,7 @@ pub enum GraphErr {
     CannotAddEdge,
 
     /// The given weight is invalid
-    InvalidWeight,
-
-    // The operation cannot be performed as it will
-    // create a cycle in the graph.
-    // CycleError,
-
-    // #[cfg(feature = "dot")]
-    // /// Could not render .dot file
-    // CouldNotRender,
-
-    // #[cfg(feature = "dot")]
-    // /// The name of the graph is invalid. Check [this](https://docs.rs/dot/0.1.1/dot/struct.Id.html#method.new)
-    // /// out for more information.
-    // InvalidGraphName,
+    InvalidWeight
 }
 
 // Allow this type to be treated like an error

@@ -102,6 +102,7 @@ pub fn connected_components<N, E>(g: &mut Graph<N, E>) -> Vec<HashSet::<u64>>
 
 
 // Find cycles within a graph using Johnson's algorithm
+// TODO: Move cycle detection as member of graph
 pub fn cycles<N, E>(graph: &mut Graph<N, E>) -> Vec<Vec::<u64>> 
             where N: fmt::Display + Clone , E: fmt::Display + Clone
 {
@@ -182,7 +183,7 @@ pub fn cycles<N, E>(graph: &mut Graph<N, E>) -> Vec<Vec::<u64>>
     cycles
 }
 
-
+// TODO: Move eulerian circuit detection as member of graph
 pub fn eulerian_circuit<N, E>(graph: &mut Graph<N, E>, source: u64) -> Vec<Vec<u64> >
             where N: fmt::Display + Clone , E: fmt::Display + Clone
 {
