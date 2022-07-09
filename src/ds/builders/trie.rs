@@ -35,7 +35,7 @@ impl fmt::Display for TrieNode  {
     }
 }
 
-// TODO: make generic
+/// Build Trie 
 pub struct Trie {
     graph: Graph<TrieNode, u8>,
     // map letters to positional representation

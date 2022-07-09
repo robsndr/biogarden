@@ -2,7 +2,9 @@ use crate::ds::graph::GraphErr;
 use std::error::Error;
 use std::fmt;
 
+
 #[derive(Debug)] // Allow the use of "{:?}" format specifier
+/// Error variants
 pub enum BioError {
     InvalidInputSize,
     InvalidArgumentRange,

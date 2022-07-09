@@ -5,6 +5,7 @@ use std::ops::{Index, IndexMut};
 use super::sequence::Sequence;
 
 #[derive(Debug, Clone)]
+/// Genetic sequence aggregation container
 pub struct Tile {
     pub data: Vec<Sequence>,
 }

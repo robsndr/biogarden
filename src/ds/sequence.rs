@@ -6,6 +6,7 @@ use std::ops::Add;
 use std::fmt; 
 
 #[derive(Debug, Clone)]
+// Data structure representing genetic sequences
 pub struct Sequence {
     pub chain: Vec<u8>,
     pub id: Option<String>,
