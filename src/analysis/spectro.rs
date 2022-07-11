@@ -51,9 +51,12 @@ lazy_static! {
 /// let protein = Sequence::from("SKADYEK");
 /// assert_eq!(weighted_mass(&protein).unwrap(), 821.3919199999999);
 /// ```
-pub fn weighted_mass(protein: &Sequence) -> Result<f64> {
+pub fn weighted_mass<'a, T>(protein: &'a T) -> Result<f64>
+where
+    &'a T: IntoIterator<Item = &'a u8>,
+{
     let mut mass: f64 = 0.0;
-    for amino in protein {
+    for amino in protein.into_iter() {
         mass += MONOISOTOPIC_MASS_TABLE
             .get(amino)
             .ok_or(BioError::ItemNotFound)?;
@@ -76,21 +79,21 @@ pub fn weighted_mass(protein: &Sequence) -> Result<f64> {
 /// use biotech::analysis::spectro::spectral_mass_shift;
 ///
 /// let spec_1 = [
-///     186.07931, 
-///     287.12699, 
-///     548.20532, 
-///     580.18077, 
-///     681.22845, 
-///     706.27446, 
+///     186.07931,
+///     287.12699,
+///     548.20532,
+///     580.18077,
+///     681.22845,
+///     706.27446,
 ///     782.27613
 /// ];
-/// 
-/// let spec_2 = [
-///     101.04768, 
-///     158.06914, 
-///     202.09536, 
-///     318.09979, 
-///     419.14747, 
+///
+/// let spec_2 = vec![
+///     101.04768,
+///     158.06914,
+///     202.09536,
+///     318.09979,
+///     419.14747,
 ///     463.17369
 /// ];
 ///
@@ -99,10 +102,16 @@ pub fn weighted_mass(protein: &Sequence) -> Result<f64> {
 /// assert_eq!(peak_count, 3);
 /// assert_eq!(shift, 8504.0);
 /// ```
-pub fn spectral_mass_shift(s1: &[f64], s2: &[f64]) -> Result<(usize, f64)> {
+pub fn spectral_mass_shift<'a, T: ?Sized, G: ?Sized>(s1: &'a T, s2: &'a G) -> Result<(usize, f64)>
+where
+    &'a T: IntoIterator<Item = &'a f64>,
+    <&'a T as IntoIterator>::IntoIter: Clone,
+    &'a G: IntoIterator<Item = &'a f64>,
+    <&'a G as IntoIterator>::IntoIter: Clone,
+{
     // Calculate minkovsky difference for s1 x s2
     // TODO: Introduce better approximation/rounding function
-    let minkovsky_diff: Vec<i64> = iproduct!(s1.iter(), s2.iter())
+    let minkovsky_diff: Vec<i64> = iproduct!(s1.into_iter(), s2.into_iter())
         .map(|(v, x)| ((v - x) * 100.0).ceil() as i64)
         .collect();
 
@@ -134,20 +143,23 @@ pub fn spectral_mass_shift(s1: &[f64], s2: &[f64]) -> Result<(usize, f64)> {
 ///
 /// let protein = Sequence::from("IASWMQS");
 /// let spectrum = prefix_spectrum(&protein);
-/// 
+///
 /// let result = [
-///     113.08406, 
-///     184.12117, 
-///     271.1532, 
-///     457.23251000000005, 
-///     588.273, 
-///     716.33158, 
+///     113.08406,
+///     184.12117,
+///     271.1532,
+///     457.23251000000005,
+///     588.273,
+///     716.33158,
 ///     803.36361
 /// ];
 ///
 /// assert_eq!(spectrum.unwrap(), result);
 /// ```
-pub fn prefix_spectrum(seq: &Sequence) -> Result<Vec<f64>> {
+pub fn prefix_spectrum<'a, T>(seq: &'a T) -> Result<Vec<f64>>
+where
+    &'a T: IntoIterator<Item = &'a u8>,
+{
     let mut weight_sum = 0_f64;
     let spectrum: Result<Vec<f64>> = seq
         .into_iter()
@@ -173,20 +185,24 @@ pub fn prefix_spectrum(seq: &Sequence) -> Result<Vec<f64>> {
 ///
 /// let protein = Sequence::from("IASWMQS");
 /// let spectrum = suffix_spectrum(&protein);
-/// 
+///
 /// let result = [
-///     87.03203, 
-///     215.09061000000003, 
-///     346.13110000000006, 
-///     532.21041, 
-///     619.24244, 
-///     690.27955, 
+///     87.03203,
+///     215.09061000000003,
+///     346.13110000000006,
+///     532.21041,
+///     619.24244,
+///     690.27955,
 ///     803.36361
 /// ];
 ///
 /// assert_eq!(spectrum.unwrap(), result);
 /// ```
-pub fn suffix_spectrum(seq: &Sequence) -> Result<Vec<f64>> {
+pub fn suffix_spectrum<'a, T>(seq: &'a T) -> Result<Vec<f64>>
+where
+    &'a T: IntoIterator<Item = &'a u8>,
+    <&'a T as IntoIterator>::IntoIter: DoubleEndedIterator,
+{
     let mut weight_sum = 0_f64;
     let spectrum: Result<Vec<f64>> = seq
         .into_iter()
@@ -198,7 +214,7 @@ pub fn suffix_spectrum(seq: &Sequence) -> Result<Vec<f64>> {
             Ok(weight_sum)
         })
         .collect();
-    spectrum
+    return spectrum;
 }
 
 /// Constructs the complete mass spectrum for a given sequence (prefix + suffix spectrum)
@@ -214,18 +230,22 @@ pub fn suffix_spectrum(seq: &Sequence) -> Result<Vec<f64>> {
 /// let protein = Sequence::from("IASW");
 /// let spectrum = complete_spectrum(&protein);
 /// let result = [
-///     113.08406, 
-///     184.12117, 
-///     271.1532, 
+///     113.08406,
+///     184.12117,
+///     271.1532,
 ///     457.23251000000005,
-///     186.07931, 
-///     273.11134, 
-///     344.14844999999997, 
+///     186.07931,
+///     273.11134,
+///     344.14844999999997,
 ///     457.23250999999993
 /// ];
 /// assert_eq!(spectrum.unwrap(), result);
 /// ```
-pub fn complete_spectrum(seq: &Sequence) -> Result<Vec<f64>> {
+pub fn complete_spectrum<'a, T>(seq: &'a T) -> Result<Vec<f64>>
+where
+    &'a T: IntoIterator<Item = &'a u8>,
+    <&'a T as IntoIterator>::IntoIter: DoubleEndedIterator,
+{
     let mut spectrum = prefix_spectrum(seq)?;
     spectrum.extend(suffix_spectrum(seq)?);
     Ok(spectrum)
@@ -244,9 +264,9 @@ pub fn complete_spectrum(seq: &Sequence) -> Result<Vec<f64>> {
 ///
 /// let spectrum = [3524.8542, 3710.9335, 3841.974, 3970.0326, 4057.0646];
 /// let error_margin = 0.01_f64;
-/// let inferred_protein = infer_protein(&spectrum, error_margin);
+/// let inferred_protein = infer_protein(&spectrum, error_margin).unwrap();
 ///
-/// assert_eq!(inferred_protein.unwrap(), Sequence::from("WMQS"));
+/// assert_eq!(inferred_protein, Sequence::from("WMQS"));
 /// ```
 pub fn infer_protein(spectrum: &[f64], margin: f64) -> Result<Sequence> {
     let mut result = Sequence::new();
@@ -286,11 +306,11 @@ pub fn infer_protein(spectrum: &[f64], margin: f64) -> Result<Sequence> {
 /// proteins.push(Sequence::from("PVSMGAD"));
 ///
 /// let spectrum = [
-///     445.17838, 
-///     115.02694, 
-///     186.07931, 
-///     314.13789, 
-///     317.1198, 
+///     445.17838,
+///     115.02694,
+///     186.07931,
+///     314.13789,
+///     317.1198,
 ///     215.09061
 /// ];
 ///

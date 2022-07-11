@@ -1,4 +1,4 @@
-use std::collections::{HashSet, HashMap};
+use std::collections::HashSet;
 use std::fmt;
 
 use crate::ds::tile::Tile;

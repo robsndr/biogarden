@@ -6,7 +6,7 @@ use std::ops::Add;
 use std::fmt; 
 
 #[derive(Debug, Clone)]
-// Data structure representing genetic sequences
+/// Data structure representing genetic sequences
 pub struct Sequence {
     pub chain: Vec<u8>,
     pub id: Option<String>,
@@ -234,6 +234,7 @@ impl IntoIterator for Sequence {
         self.chain.into_iter()
     }
 }
+
 
 impl FromIterator<u8> for Sequence {
     fn from_iter<I: IntoIterator<Item=u8>>(iter: I) -> Self {

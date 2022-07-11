@@ -231,7 +231,7 @@ pub fn shortest_common_supersequence(seq1: &Sequence, seq2: &Sequence) -> Sequen
     superseq.extend(s1);
     superseq.extend(s2);
 
-    Sequence::from(superseq.as_slice())
+    Sequence::from(superseq)
 }
 
 /// Return the longest common substring of multiple genetic sequences
@@ -413,6 +413,7 @@ pub fn reverse_complement_substrings(dna: &Sequence, min_len: usize, max_len: us
 /// assert_eq!(subsequences(&a, &b, limit), reverses);
 /// ```
 pub fn subsequences(a: &Sequence, b: &Sequence, limit: Option<usize>) -> Vec<Vec<usize>> {
+    // TODO: Refactor into Iterator, such that limit is not needed
     let mut result = vec![];
     let mut temp = Vec::<usize>::new();
     let a_idx: usize = 0;

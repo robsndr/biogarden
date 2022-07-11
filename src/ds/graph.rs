@@ -1,49 +1,10 @@
 use std::collections::{HashMap, HashSet};
-use rand::{thread_rng, Rng};
+// use rand::{thread_rng, Rng};
 use std::io::Write;
 use std::fs::File;
 use std::error::Error;
 
 use std::fmt;
-
-#[derive(Clone, Debug, PartialEq)]
-/// Graph operation error
-pub enum GraphErr {
-    /// There is no vertex with the given id in the graph
-    NoSuchVertex,
-
-    /// There is no such edge in the graph
-    NoSuchEdge,
-
-    /// Could not add an edge to the graph
-    CannotAddEdge,
-
-    /// The given weight is invalid
-    InvalidWeight
-}
-
-// Allow this type to be treated like an error
-impl Error for GraphErr {
-    fn source(&self) -> Option<&(dyn Error + 'static)>{
-        match *self {
-            GraphErr::NoSuchVertex => None,
-            GraphErr::NoSuchEdge => None,
-            GraphErr::CannotAddEdge => None,
-            GraphErr::InvalidWeight => None,
-        }
-    }
-}
-
-impl fmt::Display for GraphErr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            GraphErr::NoSuchVertex   => write!(f, "The vertex does not exist!"),
-            GraphErr::NoSuchEdge     => write!(f, "The edge does not exist in the graph!"),
-            GraphErr::CannotAddEdge  => write!(f, "The requested ede cannot be added to the graph!"),
-            GraphErr::InvalidWeight  => write!(f, "The provided weight is invalid!"),
-        }
-    }
-}
 
 #[derive(Clone, Debug)]
 pub struct GraphProperties { pub directed: bool}
@@ -328,5 +289,44 @@ impl<N: fmt::Display + Clone, E: fmt::Display + Clone> Graph<N, E> {
         }
 
         writeln!(&mut w, "}}").unwrap();
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+/// Graph operation error
+pub enum GraphErr {
+    /// There is no vertex with the given id in the graph
+    NoSuchVertex,
+
+    /// There is no such edge in the graph
+    NoSuchEdge,
+
+    /// Could not add an edge to the graph
+    CannotAddEdge,
+
+    /// The given weight is invalid
+    InvalidWeight
+}
+
+// Allow this type to be treated like an error
+impl Error for GraphErr {
+    fn source(&self) -> Option<&(dyn Error + 'static)>{
+        match *self {
+            GraphErr::NoSuchVertex => None,
+            GraphErr::NoSuchEdge => None,
+            GraphErr::CannotAddEdge => None,
+            GraphErr::InvalidWeight => None,
+        }
+    }
+}
+
+impl fmt::Display for GraphErr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            GraphErr::NoSuchVertex   => write!(f, "The vertex does not exist!"),
+            GraphErr::NoSuchEdge     => write!(f, "The edge does not exist in the graph!"),
+            GraphErr::CannotAddEdge  => write!(f, "The requested ede cannot be added to the graph!"),
+            GraphErr::InvalidWeight  => write!(f, "The provided weight is invalid!"),
+        }
     }
 }

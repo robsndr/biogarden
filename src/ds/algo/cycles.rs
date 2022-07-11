@@ -1,12 +1,7 @@
 use std::collections::{HashSet, HashMap};
 use std::fmt;
 
-use crate::ds::tile::Tile;
-use crate::ds::sequence::Sequence;
 use crate::ds::graph::Graph;
-use crate::ds::graph::GraphProperties;
-
-use super::dfs::Dfs;
 
 // Find cycles within a graph using Johnson's algorithm
 // TODO: Move cycle detection as member of graph

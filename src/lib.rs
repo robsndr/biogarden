@@ -4,7 +4,7 @@ pub mod alignment;
 pub mod analysis;
 /// Pattern matching, transcription, error correction, complements
 pub mod processing;
-/// Type-generic data structures
+/// Data structures
 pub mod ds;
 /// Fasta Input/Output
 pub mod io;
