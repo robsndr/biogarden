@@ -16,3 +16,7 @@ itertools = "0.8.2"
 allwords = "0.1.2"
 num = "0.2.1"
 lazy_static = "1.4.0"
+
+[[example]]
+name = "simple"
+path = "examples/example.rs"

@@ -1,28 +1,3 @@
-# BioGarden
-
-BioGarden is a collection of algorithms created as a project to learn about bioinformatics and rust.
-It currently supports algorithms related to sequence alignment, analysis, statistics and pattern matching.
-
-### Installation
-
-- `Cargo.toml`
-
-```toml
-[dependencies]
-biogarden = "0.11"
-```
-
-- CLI application
-
-```
-$ cargo install biogarden
-```
-
-### Usage
-
-For simple cases, sequences can be treated directly within the source:
-
-```rust
 use biogarden::ds::sequence::Sequence;
 use biogarden::ds::tile::Tile;
 
@@ -66,8 +41,7 @@ fn main() {
     
     let a_rna = transcribe_dna(a_comp);
     println!("[A] RNA: {}", a_rna);
+    
+    let a_prot = translate_rna(a_rna, Some(1));
+    println!("[A] Prot: {}", a_prot);
 }
-```
-For cases where multiple long sequences are used, reading data from a file is more practical:
-```
-```

@@ -3,7 +3,7 @@ use std::error::Error;
 use std::fmt;
 
 
-#[derive(Debug)] // Allow the use of "{:?}" format specifier
+#[derive(Debug)] 
 /// Error variants
 pub enum BioError {
     InvalidInputSize,
@@ -13,7 +13,6 @@ pub enum BioError {
     GraphError(GraphErr),
 }
 
-// Allow the use of "{}" format specifier
 impl fmt::Display for BioError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -26,7 +25,6 @@ impl fmt::Display for BioError {
     }
 }
 
-// Allow this type to be treated like an error
 impl Error for BioError {
     fn source(&self) -> Option<&(dyn Error + 'static)>{
         match self {
