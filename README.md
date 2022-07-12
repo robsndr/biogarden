@@ -1,2 +1,2 @@
 # BioGarden
-BioGarden is a collection of algorithms created to learn something about bioinformatics and rust. 
+BioGarden is a collection of algorithms created as a project to learn about bioinformatics and rust. 
