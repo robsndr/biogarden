@@ -20,8 +20,8 @@ use crate::analysis::seq::hamming_distance;
 ///
 /// # Example
 /// ```
-/// use biotech::processing::transformers::transcribe_dna;
-/// use biotech::ds::sequence::Sequence;
+/// use biogarden::processing::transformers::transcribe_dna;
+/// use biogarden::ds::sequence::Sequence;
 ///
 /// let dna = Sequence::from("GATGGAACTTGACTACGTAAATT");
 /// let rna = Sequence::from("GAUGGAACUUGACUACGUAAAUU");
@@ -44,8 +44,8 @@ pub fn transcribe_dna(dna: Sequence) -> Sequence {
 ///
 /// # Example
 /// ```
-/// use biotech::processing::transformers::complement_dna;
-/// use biotech::ds::sequence::Sequence;
+/// use biogarden::processing::transformers::complement_dna;
+/// use biogarden::ds::sequence::Sequence;
 ///
 /// let seq = Sequence::from("AAAACCCGGT");
 /// let complement = Sequence::from("ACCGGGTTTT");
@@ -78,9 +78,9 @@ pub fn complement_dna(dna: Sequence) -> Sequence {
 ///
 /// # Example
 /// ```
-/// use biotech::processing::transformers::translate_rna;
-/// use biotech::ds::sequence::Sequence;
-/// use biotech::ds::tile::Tile;
+/// use biogarden::processing::transformers::translate_rna;
+/// use biogarden::ds::sequence::Sequence;
+/// use biogarden::ds::tile::Tile;
 ///
 /// let rna = Sequence::from("AUGGCCAUGGCGCCCAGAACUGAGAUCAAUAGUACCCGUAUUAACGGGUGA");
 /// let mut result = Tile::new();
@@ -155,9 +155,9 @@ pub fn translate_rna(rna: Sequence, limit: Option<usize>) -> Tile {
 ///
 /// # Example
 /// ```
-/// use biotech::processing::transformers::open_reading_frames;
-/// use biotech::ds::sequence::Sequence;
-/// use biotech::ds::tile::Tile;
+/// use biogarden::processing::transformers::open_reading_frames;
+/// use biogarden::ds::sequence::Sequence;
+/// use biogarden::ds::tile::Tile;
 ///
 /// let dna = Sequence::from("AGCCATGTAGCTAACTCAGGTTACATGGGGATGACCCCGCGACT\
 ///                             TGGATTAGAGTCTCTTTTGGAATAAGCCTGAATGATCCGAGTAGCATCTCAG");
@@ -201,9 +201,9 @@ pub fn open_reading_frames(dna: &Sequence) -> Tile {
 ///
 /// # Example
 /// ```
-/// use biotech::processing::transformers::splice_introns;
-/// use biotech::ds::sequence::Sequence;
-/// use biotech::ds::tile::Tile;
+/// use biogarden::processing::transformers::splice_introns;
+/// use biogarden::ds::sequence::Sequence;
+/// use biogarden::ds::tile::Tile;
 ///
 /// let prna = Sequence::from("ATGGTCTACATAGCTGACAAACAGCACGTAGCAATCGGTCGAATCTC\
 ///                             GAGAGGCATATGGTCACATGATCGGTCGAGCGTGTTTCAAAGTTTGCGCCTAG");
@@ -240,8 +240,8 @@ pub fn splice_introns(mut pre_rna: Sequence, introns: &Tile) -> Sequence {
 ///
 /// # Example
 /// ```
-/// use biotech::processing::transformers::k_mer_composition;
-/// use biotech::ds::sequence::Sequence;
+/// use biogarden::processing::transformers::k_mer_composition;
+/// use biogarden::ds::sequence::Sequence;
 ///
 /// let seq = Sequence::from("CTTCGAAAGTTTGGGCCGAGTCTTACAGTCGGTCTTGAAGCAAAGTAACGAACTCCACGG");
 /// let k = 2; // calculate 2-mer composition
@@ -285,8 +285,8 @@ pub fn k_mer_composition(seq: &Sequence, k: usize, alphabet: &[u8]) -> Result<Ve
 ///
 /// # Example
 /// ```
-/// use biotech::processing::transformers::generate_k_mers;
-/// use biotech::ds::sequence::Sequence;
+/// use biogarden::processing::transformers::generate_k_mers;
+/// use biogarden::ds::sequence::Sequence;
 ///
 /// let seq = Sequence::from("AGTCGGTCTTG");
 /// let k = 9;
@@ -326,9 +326,9 @@ pub fn generate_k_mers(seq: &Sequence, k: usize) -> Result<Vec<Sequence>> {
 ///
 /// # Example
 /// ```
-/// use biotech::processing::transformers::correct_read_errors;
-/// use biotech::ds::sequence::Sequence;
-/// use biotech::ds::tile::Tile;
+/// use biogarden::processing::transformers::correct_read_errors;
+/// use biogarden::ds::sequence::Sequence;
+/// use biogarden::ds::tile::Tile;
 ///
 /// let mut reads = Tile::new();
 /// reads.push(Sequence::from("TTCAT"));
@@ -400,9 +400,9 @@ pub fn correct_read_errors(
 ///
 /// # Example
 /// ```
-/// use biotech::processing::transformers::sort_lexicographically;
-/// use biotech::ds::sequence::Sequence;
-/// use biotech::ds::tile::Tile;
+/// use biogarden::processing::transformers::sort_lexicographically;
+/// use biogarden::ds::sequence::Sequence;
+/// use biogarden::ds::tile::Tile;
 ///
 /// let mut reads = Tile::new();
 /// reads.push(Sequence::from("TAT"));

@@ -13,8 +13,8 @@ use crate::ds::builders::suffix_tree::SuffixTreeBuilder;
 ///
 /// # Example
 /// ```
-/// use biotech::analysis::seq::count_nucleotides;
-/// use biotech::ds::sequence::Sequence;
+/// use biogarden::analysis::seq::count_nucleotides;
+/// use biogarden::ds::sequence::Sequence;
 /// use std::collections::HashMap;
 ///
 /// let dna = Sequence::from("AGCTTTTCATTCT");
@@ -39,8 +39,8 @@ pub fn count_nucleotides(seq: &Sequence) -> HashMap<u8, usize> {
 ///
 /// # Example
 /// ```
-/// use biotech::analysis::seq::gc_content;
-/// use biotech::ds::sequence::Sequence;
+/// use biogarden::analysis::seq::gc_content;
+/// use biogarden::ds::sequence::Sequence;
 ///
 /// let dna = Sequence::from("CCTGCGGAAGATCGGCACTAGAATAGCCAGAACCGTTT");
 /// assert_eq!(gc_content(&dna), 0.5263157894736842)
@@ -63,8 +63,8 @@ pub fn gc_content(seq: &Sequence) -> f64 {
 ///
 /// # Example
 /// ```
-/// use biotech::analysis::seq::hamming_distance;
-/// use biotech::ds::sequence::Sequence;
+/// use biogarden::analysis::seq::hamming_distance;
+/// use biogarden::ds::sequence::Sequence;
 ///
 /// let a = Sequence::from("GAGCCTACTAACGGGAT");
 /// let b = Sequence::from("CATCGTAATGACGGCCT");
@@ -94,8 +94,8 @@ pub fn hamming_distance(seq1: &Sequence, seq2: &Sequence) -> Result<usize> {
 ///
 /// # Example
 /// ```
-/// use biotech::analysis::seq::edit_distance;
-/// use biotech::ds::sequence::Sequence;
+/// use biogarden::analysis::seq::edit_distance;
+/// use biogarden::ds::sequence::Sequence;
 ///
 /// let a = Sequence::from("ACTGGATTC");
 /// let b = Sequence::from("ACGT");
@@ -142,8 +142,8 @@ pub fn edit_distance(seq1: &Sequence, seq2: &Sequence) -> Result<usize> {
 ///
 /// # Example
 /// ```
-/// use biotech::analysis::seq::transition_transversion_ratio;
-/// use biotech::ds::sequence::Sequence;
+/// use biogarden::analysis::seq::transition_transversion_ratio;
+/// use biogarden::ds::sequence::Sequence;
 ///
 /// let a = Sequence::from("TTAGGGACTGGATTATTTCGTGATCGTTGTAGTTATTGGAAGTACGGGCATCAACCCAGTT");
 /// let b = Sequence::from("TCAACGGCTGGATAATTTCGCGATCGTGCTGGTTACTGGCGGTACGAGTGTTCCTTTGGGT");
@@ -187,8 +187,8 @@ pub fn transition_transversion_ratio(seq1: &Sequence, seq2: &Sequence) -> Result
 ///
 /// # Example
 /// ```
-/// use biotech::analysis::seq::linguistic_complexity;
-/// use biotech::ds::sequence::Sequence;
+/// use biogarden::analysis::seq::linguistic_complexity;
+/// use biogarden::ds::sequence::Sequence;
 ///
 /// let a = Sequence::from("ATTTGGATT");
 /// assert_eq!(linguistic_complexity(&a).unwrap(), 0.875);

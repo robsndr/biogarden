@@ -66,9 +66,9 @@ impl SequenceAligner  {
     ///
     /// # Example
     /// ```
-    /// use biotech::alignment::aligner::SequenceAligner;
-    /// use biotech::alignment::score::blosum62;
-    /// use biotech::ds::sequence::Sequence;
+    /// use biogarden::alignment::aligner::SequenceAligner;
+    /// use biogarden::alignment::score::blosum62;
+    /// use biogarden::ds::sequence::Sequence;
     /// 
     /// let mut aligner = SequenceAligner::new();
     ///
@@ -132,9 +132,9 @@ impl SequenceAligner  {
     ///
     /// # Example
     /// ```
-    /// use biotech::alignment::aligner::SequenceAligner;
-    /// use biotech::alignment::score::blosum62;
-    /// use biotech::ds::sequence::Sequence;
+    /// use biogarden::alignment::aligner::SequenceAligner;
+    /// use biogarden::alignment::score::blosum62;
+    /// use biogarden::ds::sequence::Sequence;
     /// 
     /// let mut aligner = SequenceAligner::new();
     ///
@@ -197,9 +197,9 @@ impl SequenceAligner  {
     ///
     /// # Example
     /// ```
-    /// use biotech::alignment::aligner::SequenceAligner;
-    /// use biotech::alignment::score::unit;
-    /// use biotech::ds::sequence::Sequence;
+    /// use biogarden::alignment::aligner::SequenceAligner;
+    /// use biogarden::alignment::score::unit;
+    /// use biogarden::ds::sequence::Sequence;
     /// 
     /// let mut aligner = SequenceAligner::new();
     ///
@@ -272,9 +272,9 @@ impl SequenceAligner  {
     ///
     /// # Example
     /// ```
-    /// use biotech::alignment::aligner::SequenceAligner;
-    /// use biotech::alignment::score::unit;
-    /// use biotech::ds::sequence::Sequence;
+    /// use biogarden::alignment::aligner::SequenceAligner;
+    /// use biogarden::alignment::score::unit;
+    /// use biogarden::ds::sequence::Sequence;
     /// 
     /// let mut aligner = SequenceAligner::new();
     ///
@@ -333,9 +333,9 @@ impl SequenceAligner  {
     ///
     /// # Example
     /// ```
-    /// use biotech::alignment::aligner::SequenceAligner;
-    /// use biotech::alignment::score::unit;
-    /// use biotech::ds::sequence::Sequence;
+    /// use biogarden::alignment::aligner::SequenceAligner;
+    /// use biogarden::alignment::score::unit;
+    /// use biogarden::ds::sequence::Sequence;
     /// 
     /// let mut aligner = SequenceAligner::new();
     ///

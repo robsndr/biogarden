@@ -1,10 +1,10 @@
-// use crate biotech;
-use biotech::alignment;
-use biotech::analysis;
-use biotech::ds::sequence::Sequence;
-use biotech::ds::tile::Tile;
-use biotech::io::fasta::*;
-use biotech::processing;
+// use crate biogarden;
+use biogarden::alignment;
+use biogarden::analysis;
+use biogarden::ds::sequence::Sequence;
+use biogarden::ds::tile::Tile;
+use biogarden::io::fasta::*;
+use biogarden::processing;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
@@ -247,6 +247,7 @@ mod integration {
         assert_eq!(s2_aligned, outputs[1]);
     }
 
+    #[test]
     fn local_alignment() {
         let inputs = read_sequences("input/local_alignment.fasta");
         let outputs = read_sequences("output/local_alignment.fasta");
@@ -262,6 +263,7 @@ mod integration {
         assert_eq!(s2_aligned, outputs[1]);
     }
 
+    #[test]
     fn fitting_alignment() {
         let inputs = read_sequences("input/fitting_alignment.fasta");
         let outputs = read_sequences("output/fitting_alignment.fasta");
@@ -277,6 +279,7 @@ mod integration {
         assert_eq!(s2_aligned, outputs[1]);
     }
 
+    #[test]
     fn overlap_alignment() {
         let inputs = read_sequences("input/overlap_alignment.fasta");
         let outputs = read_sequences("output/overlap_alignment.fasta");
@@ -292,6 +295,7 @@ mod integration {
         assert_eq!(s2_aligned, outputs[1]);
     }
 
+    #[test]
     fn semiglobal_alignment() {
         let inputs = read_sequences("input/semiglobal_alignment.fasta");
         let outputs = read_sequences("output/semiglobal_alignment.fasta");

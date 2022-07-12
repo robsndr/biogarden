@@ -19,8 +19,8 @@ use crate::error::{BioError, Result};
 ///
 /// # Example
 /// ```
-/// use biotech::processing::patterns::find_motif;
-/// use biotech::ds::sequence::Sequence;
+/// use biogarden::processing::patterns::find_motif;
+/// use biogarden::ds::sequence::Sequence;
 ///
 /// let genome = Sequence::from("GATATATGCATATACTT");
 /// let motif = Sequence::from("ATAT");
@@ -70,8 +70,8 @@ pub fn find_motif(seq: &Sequence, pat: &Sequence) -> Vec<usize> {
 ///
 /// # Example
 /// ```
-/// use biotech::processing::patterns::longest_common_subsequence;
-/// use biotech::ds::sequence::Sequence;
+/// use biogarden::processing::patterns::longest_common_subsequence;
+/// use biogarden::ds::sequence::Sequence;
 ///
 /// let a = Sequence::from("AACCTTGG");
 /// let b = Sequence::from("ACACTGTGA");
@@ -130,8 +130,8 @@ pub fn longest_common_subsequence(seq1: &Sequence, seq2: &Sequence) -> Sequence 
 ///
 /// # Example
 /// ```
-/// use biotech::processing::patterns::longest_increasing_subsequence;
-/// use biotech::ds::sequence::Sequence;
+/// use biogarden::processing::patterns::longest_increasing_subsequence;
+/// use biogarden::ds::sequence::Sequence;
 ///
 /// let seq = Vec::from([5, 1, 4, 2, 5, 3, 9]);
 ///
@@ -187,8 +187,8 @@ pub fn longest_increasing_subsequence(seq: &[u64]) -> Vec<u64> {
 ///
 /// # Example
 /// ```
-/// use biotech::processing::patterns::shortest_common_supersequence;
-/// use biotech::ds::sequence::Sequence;
+/// use biogarden::processing::patterns::shortest_common_supersequence;
+/// use biogarden::ds::sequence::Sequence;
 ///
 /// let a = Sequence::from("TGCATA");
 /// let b = Sequence::from("ATCTGAT");
@@ -254,9 +254,9 @@ pub fn shortest_common_supersequence(seq1: &Sequence, seq2: &Sequence) -> Sequen
 ///
 /// # Example
 /// ```
-/// use biotech::processing::patterns::longest_common_substring;
-/// use biotech::ds::tile::Tile;
-/// use biotech::ds::sequence::Sequence;
+/// use biogarden::processing::patterns::longest_common_substring;
+/// use biogarden::ds::tile::Tile;
+/// use biogarden::ds::sequence::Sequence;
 /// use std::collections::HashSet;
 /// 
 /// let mut sequences = Tile::new();
@@ -345,8 +345,8 @@ pub fn longest_common_substring(tile: &Tile, alphabet: &HashSet::<u8>, bound: us
 /// 
 /// # Example
 /// ```
-/// use biotech::processing::patterns::reverse_complement_substrings;
-/// use biotech::ds::sequence::Sequence;
+/// use biogarden::processing::patterns::reverse_complement_substrings;
+/// use biogarden::ds::sequence::Sequence;
 ///
 /// let a = Sequence::from("TCAATGCATGCGGGTCTATATGCAT");
 /// let min_bound = 4;
@@ -397,8 +397,8 @@ pub fn reverse_complement_substrings(dna: &Sequence, min_len: usize, max_len: us
 /// 
 /// # Example
 /// ```
-/// use biotech::processing::patterns::subsequences;
-/// use biotech::ds::sequence::Sequence;
+/// use biogarden::processing::patterns::subsequences;
+/// use biogarden::ds::sequence::Sequence;
 ///
 /// let a = Sequence::from("ACGTACGTGACG");
 /// let b = Sequence::from("GTA");

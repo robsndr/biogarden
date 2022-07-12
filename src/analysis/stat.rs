@@ -21,8 +21,8 @@ use crate::ds::tile::Tile;
 ///
 /// # Example
 /// ```
-/// use biotech::ds::sequence::Sequence;
-/// use biotech::analysis::stat::expected_restriction_sites;
+/// use biogarden::ds::sequence::Sequence;
+/// use biogarden::analysis::stat::expected_restriction_sites;
 ///
 /// let recognition_seq = Sequence::from("AG");
 /// let n = 10;
@@ -64,9 +64,9 @@ pub fn expected_restriction_sites(seq: &Sequence, n: usize, gc_content: &[f64]) 
 ///
 /// # Example
 /// ```
-/// use biotech::analysis::stat::n_statistic;
-/// use biotech::ds::sequence::Sequence;
-/// use biotech::ds::tile::Tile;
+/// use biogarden::analysis::stat::n_statistic;
+/// use biogarden::ds::sequence::Sequence;
+/// use biogarden::ds::tile::Tile;
 ///
 /// let mut contigs = Tile::new();
 /// contigs.push(Sequence::from("GATTACA"));

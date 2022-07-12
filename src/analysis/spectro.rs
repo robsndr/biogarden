@@ -45,8 +45,8 @@ lazy_static! {
 ///
 /// # Example
 /// ```
-/// use biotech::analysis::spectro::weighted_mass;
-/// use biotech::ds::sequence::Sequence;
+/// use biogarden::analysis::spectro::weighted_mass;
+/// use biogarden::ds::sequence::Sequence;
 ///
 /// let protein = Sequence::from("SKADYEK");
 /// assert_eq!(weighted_mass(&protein).unwrap(), 821.3919199999999);
@@ -76,7 +76,7 @@ where
 ///
 /// # Example
 /// ```
-/// use biotech::analysis::spectro::spectral_mass_shift;
+/// use biogarden::analysis::spectro::spectral_mass_shift;
 ///
 /// let spec_1 = [
 ///     186.07931,
@@ -138,8 +138,8 @@ where
 ///
 /// # Example
 /// ```
-/// use biotech::analysis::spectro::prefix_spectrum;
-/// use biotech::ds::sequence::Sequence;
+/// use biogarden::analysis::spectro::prefix_spectrum;
+/// use biogarden::ds::sequence::Sequence;
 ///
 /// let protein = Sequence::from("IASWMQS");
 /// let spectrum = prefix_spectrum(&protein);
@@ -180,8 +180,8 @@ where
 ///
 /// # Example
 /// ```
-/// use biotech::analysis::spectro::suffix_spectrum;
-/// use biotech::ds::sequence::Sequence;
+/// use biogarden::analysis::spectro::suffix_spectrum;
+/// use biogarden::ds::sequence::Sequence;
 ///
 /// let protein = Sequence::from("IASWMQS");
 /// let spectrum = suffix_spectrum(&protein);
@@ -224,8 +224,8 @@ where
 ///
 /// # Example
 /// ```
-/// use biotech::analysis::spectro::complete_spectrum;
-/// use biotech::ds::sequence::Sequence;
+/// use biogarden::analysis::spectro::complete_spectrum;
+/// use biogarden::ds::sequence::Sequence;
 ///
 /// let protein = Sequence::from("IASW");
 /// let spectrum = complete_spectrum(&protein);
@@ -259,8 +259,8 @@ where
 ///
 /// # Example
 /// ```
-/// use biotech::analysis::spectro::infer_protein;
-/// use biotech::ds::sequence::Sequence;
+/// use biogarden::analysis::spectro::infer_protein;
+/// use biogarden::ds::sequence::Sequence;
 ///
 /// let spectrum = [3524.8542, 3710.9335, 3841.974, 3970.0326, 4057.0646];
 /// let error_margin = 0.01_f64;
@@ -295,9 +295,9 @@ pub fn infer_protein(spectrum: &[f64], margin: f64) -> Result<Sequence> {
 ///
 /// # Example
 /// ```
-/// use biotech::analysis::spectro::match_protein;
-/// use biotech::ds::sequence::Sequence;
-/// use biotech::ds::tile::Tile;
+/// use biogarden::analysis::spectro::match_protein;
+/// use biogarden::ds::sequence::Sequence;
+/// use biogarden::ds::tile::Tile;
 ///
 /// let mut proteins = Tile::new();
 /// proteins.push(Sequence::from("GSDMQS"));
