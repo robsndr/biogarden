@@ -14,9 +14,13 @@ use std::fmt;
 pub type Text = Vec<u8>;
 pub type TextSlice<'a> = &'a [u8];
 
+use crate::ds::sequence::Sequence;
+use crate::ds::tile::Tile;
+
 /// Trait for FASTA readers.
 pub trait FastaRead {
     fn read(&mut self, record: &mut Record) -> io::Result<()>;
+    fn read_all(&mut self, matrix: &mut Tile) -> io::Result<()>;
 }
 
 /// A FASTA reader.
@@ -115,6 +119,18 @@ where
             record.seq.push_str(self.line.trim_end());
         }
 
+        Ok(())
+    }
+
+    fn read_all(&mut self, matrix: &mut Tile) -> io::Result<()> {
+        let mut record = Record::new();
+        loop {
+            self.read(&mut record)?;
+            if record.is_empty() {
+                break;
+            }
+            matrix.push(Sequence::from(record.clone()));
+        }
         Ok(())
     }
 }

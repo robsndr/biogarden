@@ -2,6 +2,10 @@
 name = "biogarden"
 version = "0.1.0"
 edition = "2021"
+repository = "https://github.com/symm3try/biogarden/"
+license = "MIT"
+keywords = ["bioinformatics"]
+description = "A collection of basic bioinformatics algorithms"
 
 [dependencies]
 ndarray  = "0.15.4"
@@ -19,4 +23,8 @@ lazy_static = "1.4.0"
 
 [[example]]
 name = "simple"
-path = "examples/example.rs"
+path = "examples/simple.rs"
+
+[[example]]
+name = "file"
+path = "examples/from_file.rs"
