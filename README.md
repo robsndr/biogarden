@@ -1,7 +1,6 @@
 # BioGarden
 
 BioGarden is a collection of algorithms created as a project to learn about bioinformatics and rust.
-It currently supports algorithms related to sequence alignment, analysis, statistics and pattern matching.
 
 ### Installation
 
