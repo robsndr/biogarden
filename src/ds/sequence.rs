@@ -133,7 +133,7 @@ where
 {
     type Output = Idx::Output;
 
-    fn index(&self, index: Idx) -> &'a Self::Output {
+    fn index(&self, index: Idx) -> &Self::Output {
         &self.chain[index]
     }
 }
